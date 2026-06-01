@@ -58,7 +58,7 @@ This gate answers:
 | Correctly identifies `productIntelligence` as active but missing from README/screen_map | **PASS** | Section 5 flags "NO — missing from docs"; Section 7 matrix marks "Missing from docs" |
 | Correctly identifies `creatorStudio` as active but missing from README/screen_map | **PASS** | Section 5 flags "NO — missing from docs"; Section 7 matrix marks "Missing from docs" |
 | Correctly identifies `contentReview` as active but missing from README/screen_map | **PASS** | Section 5 flags "NO — missing from docs"; Section 7 matrix notes docs/App.jsx discrepancy |
-| Correctly notes docs say review is absorbed into ContentStudio while contentReview remains live | **PASS** | Section 9 conflict register: "screen_map says `content` absorbs review/preview temporarily; App.jsx has both `content` (ContentStudioPage) and `contentReview` (ContentReviewPreviewUnifiedPage) as active separate screens" |
+| Correctly notes docs say review is absorbed into `ContentStudio` while `contentReview` remains live | **PASS** | Section 9 conflict register: "`screen_map` says `content` absorbs review/preview temporarily; `App.jsx` has both `content` (ContentStudioPage) and `contentReview` (ContentReviewPreviewUnifiedPage) as active separate screens" |
 | Preserves all 23 screens and does not recommend deletion | **PASS** | Section 11: "Preserve all 23 existing screens"; Section 7 does not mark any screen deprecated |
 | Treats App.jsx as strongest evidence of current UI surface | **PASS** | Section 11: "Treat App.jsx as stronger evidence than README/docs where they diverge" |
 | Does not let marketing-os override Nashir scope | **PASS** | Section 11: "Do not reduce Nashir to match marketing-os"; Section 3 confirms marketing-os is reference-only |
@@ -119,7 +119,7 @@ The only count error (22 → 23 page components) was corrected by the Gemini rem
 |---|---|---|
 | Starting backend/API before V1 scope decision can bind the wrong screens | **HIGH** | V1 Scope Decision Gate must close before any backend slice begins |
 | Extracting marketing-os ideas before scope approval can increase product drift | **MEDIUM** | marketing-os extraction gate is blocked until Nashir V1 scope is approved |
-| Treating README/screen_map alone as authority omits 3 active screens | **HIGH** | Resolved by reconciliation gate; App.jsx is the authoritative current state |
+| Treating `README`/`screen_map` alone as authority omits 3 active screens | **HIGH** | Resolved by reconciliation gate; `App.jsx` is the authoritative current state |
 | Treating App.jsx alone without scope decision could over-expand V1 scope | **MEDIUM** | V1 Scope Decision Gate will explicitly classify each screen |
 | Leaving `productIntelligence`, `creatorStudio`, `contentReview` unclassified blocks clean implementation sequencing | **HIGH** | V1 Scope Decision Gate resolves this |
 | Creator Studio's significant investment may create pressure to commit to it prematurely | **MEDIUM** | Decision must be made explicitly, not implied by investment |
@@ -164,7 +164,7 @@ That gate must decide:
 | Is `productIntelligence` V1 or Extended V1? | Active screen with `onNavigate` to campaigns |
 | Is `creatorStudio` V1 or Extended V1? | Significant investment; dedicated fixture + generated types |
 | Is `contentReview` separate from `content` (ContentStudio), merged, or Extended V1? | Both are live; screen_map says merged but code says separate |
-| Should README and screen_map be updated after the V1 decision? | 3 undocumented screens need README/screen_map entries or explicit deferral notes |
+| Should `README` and `screen_map` be updated after the V1 decision? | 3 undocumented screens need `README`/`screen_map` entries or explicit deferral notes |
 
 ---
 
@@ -196,7 +196,7 @@ NO-GO: Production/pilot readiness claims.
 | `npm run build` | **PASSED** — built successfully |
 | `git status --short` | Only new review gate doc untracked |
 | `git diff --stat` | Only `docs/nashir_product_scope_reconciliation_review_gate.md` (new file) |
-| Forbidden files check | **PASS** — no src/, package.json, package-lock.json, build, or marketing-os files modified |
+| Forbidden files check | **PASS** — no `src/`, `package.json`, `package-lock.json`, `build`, or `marketing-os` files modified |
 
 ---
 
