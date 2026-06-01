@@ -34,7 +34,7 @@ This is a documentation-only planning gate.
 | Observation | Detail |
 |---|---|
 | Project owner confirmation | `nashir-ui-prototype` is the desired Nashir product UI and must be the product source of truth |
-| `marketing-os /nashir/` inspection | Manually inspected; found materially different from the desired Nashir experience |
+| `marketing-os `/nashir/`` inspection | Manually inspected; found materially different from the desired Nashir experience |
 | Consequence for marketing-os UI | Nashir development must not continue on `marketing-os` static UI surface |
 | Repository name ambiguity | The word `prototype` in the repository name creates ambiguity — it may cause reviewers or tools to treat the product as disposable or incomplete by default |
 | Required action | Formal identity establishment + future controlled rename plan |
@@ -103,7 +103,7 @@ The future rename gate must address:
 | Rule | Status |
 |---|---|
 | Nashir will not be built inside `marketing-os` | **CONFIRMED** |
-| Nashir will not use `marketing-os /ui/nashir/` as product UI | **CONFIRMED** |
+| Nashir will not use `marketing-os `/ui/nashir/`` as product UI | **CONFIRMED** |
 | Nashir will not inherit marketing-os UI, journey, or operational complexity by default | **CONFIRMED** |
 | marketing-os code must not be copied into Nashir without a future selective extraction/adoption gate | **CONFIRMED** |
 | marketing-os may be referenced as an archive/source of reusable ideas only | **CONFIRMED** |
@@ -140,7 +140,7 @@ The following must be explicitly rejected:
 | Disallowed action | Reason |
 |---|---|
 | Making marketing-os the runtime base for Nashir | Nashir has its own React/Vite stack; marketing-os is Node.js/Express |
-| Continuing to expand `marketing-os /ui/nashir/` as product UI | This surface is not the Nashir product UI |
+| Continuing to expand `marketing-os `/ui/nashir/`` as product UI | This surface is not the Nashir product UI |
 | Importing unwanted marketing-os modules or patterns | May introduce irrelevant complexity |
 | Accepting marketing-os journey/entity assumptions that conflict with Nashir | Nashir's approved journey and screens are the authority |
 | Reducing Nashir screens/features to match marketing-os limitations | Nashir must not be simplified to fit marketing-os scope |
@@ -195,7 +195,7 @@ NO-GO: Copying files from marketing-os in this PR.
 | Renaming without a gate can break remotes, documentation, and references | **MEDIUM** | Rename deferred to a dedicated execution gate |
 | Copying marketing-os code can import irrelevant complexity | **MEDIUM** | Extraction gate required before any adoption |
 | Ignoring marketing-os entirely may lose useful governance/backend lessons | **LOW** | Allowed study via extraction gate |
-| Continuing to build UI in marketing-os risks product drift | **HIGH** | Resolved: `marketing-os /ui/nashir/` is reclassified as non-product surface |
+| Continuing to build UI in marketing-os risks product drift | **HIGH** | Resolved: `marketing-os `/ui/nashir/`` is reclassified as non-product surface |
 | Treating mock UI as production-ready risks false progress | **HIGH** | Section 4 explicitly separates source-of-truth from production readiness |
 | Having two UI authorities creates long-term conflict | **HIGH** | Resolved by this gate: only this repository is the Nashir product authority |
 
@@ -210,7 +210,7 @@ NO-GO: Copying files from marketing-os in this PR.
 | Product authority | `nashir-ui-prototype` is the Nashir product repository |
 | Future name | Plan rename to `nashir` via a separate execution gate |
 | `marketing-os` relationship | Reference-only extraction source; not Nashir product base |
-| `marketing-os /ui/nashir/` | Reclassified as non-product technical harness |
+| `marketing-os `/ui/nashir/`` | Reclassified as non-product technical harness |
 | Further UI development | Continue independently in `nashir-ui-prototype` |
 | Adoption from marketing-os | Via separate knowledge extraction gate only |
 

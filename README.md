@@ -1,6 +1,6 @@
 # Nashir UI Prototype
 
-> **Repository status:** هذا المستودع هو مرجع واجهة المنتج ومصدر الحقيقة لـ Nashir، ومن المخطط إعادة تسميته إلى `nashir` من خلال بوابة تنفيذ مستقبلية منفصلة. هو ليس جاهزًا للإنتاج بعد.
+> **Repository status:** هذا المستودع هو المرجع الرئيسي المعتمد لواجهة وتجربة منتج Nashir، ومن المخطط إعادة تسميته إلى `nashir` من خلال بوابة تنفيذ مستقبلية منفصلة. وهو ليس جاهزًا للإنتاج بعد.
 >
 > **Repository status (English):** This repository is the Nashir product UI/source-of-truth and is planned to be renamed to `nashir` through a future controlled rename gate. It is not yet production-ready.
 
