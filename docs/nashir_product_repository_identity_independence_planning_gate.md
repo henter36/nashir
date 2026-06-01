@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Gate type | Product repository identity and independence planning gate — documentation only |
-| Status | Draft |
+| Status | Planning gate — GO after PR approval |
 | Date | 2026-06-01 |
 | Scope | Formally establishes `nashir-ui-prototype` as the Nashir product repository and UI/source-of-truth; plans future rename to `nashir`; defines independence from `marketing-os` code while allowing selective knowledge extraction |
 | Repository rename performed | NO |
@@ -222,7 +222,7 @@ NO-GO: Copying files from marketing-os in this PR.
 |---|---|
 | `npm run lint` | **PASSED** — no lint errors |
 | `npm run build` | **PASSED** — built successfully |
-| `git status --short` | Only new docs file untracked |
+| `git status --short` | Clean working tree after commit |
 | Forbidden files check | **PASS** — no src/, package.json, package-lock.json, SQL, backend, API, or prototype files modified |
 
 No `npm test` script exists. Verification via lint and build only.
