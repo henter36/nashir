@@ -35,7 +35,7 @@ This gate reconciles what is currently built, what is documented, and what needs
 | `README.md` | Lists 20 approved screens in a table; matches `screen_map.md` 20-screen inventory; does not mention `productIntelligence`, `creatorStudio`, or `contentReview`; defines the core journey |
 | `docs/screen_map.md` | 20 approved screens with screen ID, label, file path, role, user type, status, notes; 7 removed standalone screens listed; core journey defined; governance notes present; does not include `productIntelligence`, `creatorStudio`, or `contentReview` |
 | `src/App.jsx` | 23 screen routes defined; all `enabled: true`; lazy-loaded; includes `productIntelligence`, `creatorStudio`, and `contentReview` which are not in README or screen_map |
-| `src/pages/` | 22 `.jsx` page files + 2 `.css` companions (CreatorStudioPage.css, ProductIntelligencePage.css); all 22 page components are imported and rendered in App.jsx; no orphaned page files |
+| `src/pages/` | 23 `.jsx` page files + 2 `.css` companions (CreatorStudioPage.css, ProductIntelligencePage.css); all 23 page components are imported and rendered in App.jsx; no orphaned page files |
 | `src/data/` | `creatorStudioFlowFixture.js`, `dashboardData.js`, `readinessFixture.js` — mock data fixtures; confirms Creator Studio has its own dedicated mock data |
 | `src/generated/` | `creator-studio-openapi-types/` — generated OpenAPI types specifically for Creator Studio; confirms Creator Studio has active development investment |
 | `src/App.dashboard.backup.jsx` | Backup file; not imported or active; does not affect scope |
@@ -120,7 +120,7 @@ App.jsx defines 23 screens — all with `enabled: true`. The following table is 
 
 ## 6. Actual Page File Inventory
 
-22 page component files found in `src/pages/` (plus 2 `.css` companion files):
+23 page component files found in `src/pages/` (plus 2 `.css` companion files):
 
 | File | App.jsx route | Used by navigation | Notes |
 |---|---|---|---|
@@ -148,7 +148,7 @@ App.jsx defines 23 screens — all with `enabled: true`. The following table is 
 | `CostMonitorPage.jsx` | `costMonitor` | YES | |
 | `SettingsPage.jsx` | `settings` | YES | |
 
-**No orphaned page files.** All 22 page components are actively imported and rendered in App.jsx.
+**No orphaned page files.** All 23 page components are actively imported and rendered in App.jsx.
 
 **Note on `src/App.dashboard.backup.jsx`:** A backup file; not imported; does not affect scope; should be cleaned up in a future housekeeping task.
 
