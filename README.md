@@ -1,5 +1,9 @@
 # Nashir UI Prototype
 
+> **Repository status:** هذا المستودع هو مرجع واجهة المنتج ومصدر الحقيقة لـ Nashir، ومن المخطط إعادة تسميته إلى `nashir` من خلال بوابة تنفيذ مستقبلية منفصلة. هو ليس جاهزًا للإنتاج بعد.
+>
+> **Repository status (English):** This repository is the Nashir product UI/source-of-truth and is planned to be renamed to `nashir` through a future controlled rename gate. It is not yet production-ready.
+
 واجهة React/Vite تجريبية لمنصة **ناشر** ضمن تصور Marketing OS.
 
 هذا المستودع مخصص حاليًا لتثبيت واجهات المنتج ومساراته فقط قبل أي تنفيذ حقيقي. لا يمثل Backend أو API أو Database أو نظام صلاحيات فعلي.
