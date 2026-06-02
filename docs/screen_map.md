@@ -1,9 +1,9 @@
-# Nashir UI Prototype — Screen Map
+# Nashir — Screen Map
 
-**Document Type:** UI Prototype Screen Map  
-**Status:** Current Prototype Reference  
-**Scope:** React/Vite UI only  
-**Backend/API/Database/Auth:** Not implemented  
+**Document Type:** Nashir Product Screen Map
+**Status:** V1 Scope Approved — Updated per PR #66 (Nashir V1 Scope Documentation Update Gate)
+**Scope:** React/Vite UI — 23 active screens
+**Backend/API/Database/Auth:** Not implemented
 
 ## 1. Purpose
 
@@ -27,13 +27,16 @@ The sidebar currently groups screens as follows:
    - Dashboard
    - Store Setup
    - Product Catalog
+   - Product Intelligence *(Extended V1)*
    - Data Sources Hub
    - Asset Library
 
 2. **الحملات والمحتوى**
    - Campaign Wizard
    - Campaigns Unified
+   - Creator Studio *(Extended V1)*
    - Content Studio
+   - Content Review Preview *(Extended V1)*
    - Publishing Queue
 
 3. **التحليلات والقنوات**
@@ -53,28 +56,33 @@ The sidebar currently groups screens as follows:
 
 ## 4. Approved Screens
 
-| Screen ID | Label | File | Primary Role | User Type | Current Status | Notes |
-|---|---|---|---|---|---|---|
-| `dashboard` | لوحة التحكم | `src/pages/DashboardPage.jsx` | Entry point and operational overview | Business user | Active Mock | Should direct the core journey, not overload admin controls. |
-| `storeSetup` | إعداد المتجر | `src/pages/StoreSetupPage.jsx` | Capture store identity, business profile, products/services context | Business user | Active Mock | Must remain the main workspace setup source before campaign creation. |
-| `productCatalog` | كتالوج المنتجات | `src/pages/ProductCatalogPage.jsx` | Manage mock product/service records used by campaigns | Business user | Active Mock | Later should align with actual product database or commerce integration. |
-| `dataSourcesHub` | مركز المصادر البياناتية | `src/pages/DataSourcesHubPage.jsx` | Display and simulate source/integration readiness | Business/Admin | Active Mock | No real scraping, OAuth, or API connection. |
-| `assetLibrary` | مكتبة الأصول | `src/pages/AssetLibraryPage.jsx` | Manage creative assets and media references | Business user | Active Mock | Must later distinguish uploaded assets, generated assets, and licensed assets. |
-| `campaigns` | معالج الحملات | `src/pages/CampaignWizardPage.jsx` | Main campaign creation flow | Business user | Active Mock | This is the current official campaign creation screen. |
-| `campaignsList` | الحملات | `src/pages/CampaignsUnifiedPage.jsx` | Unified campaign list and campaign-detail surface | Business user | Active Mock | Replaces standalone list/detail separation for now. |
-| `content` | المحتوى والمراجعة | `src/pages/ContentStudioPage.jsx` | Content generation, editing, review, and approval surface | Business/Reviewer | Active Mock | Temporarily absorbs standalone review/preview responsibilities. |
-| `publishingQueue` | جدولة النشر | `src/pages/PublishingQueuePage.jsx` | Simulated scheduling and publishing queue | Business/Reviewer | Active Mock | Must not imply real publishing. |
-| `analytics` | التحليلات | `src/pages/AnalyticsUnifiedPage.jsx` | Unified analytics and smart analytics surface | Business/Admin | Active Mock | Replaces standalone smart analytics. |
-| `templateEngine` | محرك القوالب | `src/pages/TemplateEnginePage.jsx` | Manage reusable content/template concepts | Admin/Power user | Active Mock | Needs later governance around prompt/template versioning. |
-| `multiPlatform` | متعدد القنوات | `src/pages/MultiPlatformPage.jsx` | Simulate multi-channel readiness and publishing governance | Business/Reviewer | Active Mock | No real social, WhatsApp, or email publishing. |
-| `teamCollaboration` | تعاون الفريق | `src/pages/TeamCollaborationPage.jsx` | Roles, comments, review collaboration, and local audit-like activity | Team/Reviewer | Active Mock | Real implementation needs RBAC and immutable audit logs. |
-| `workflowRuns` | تشغيلات النظام | `src/pages/WorkflowRunsPage.jsx` | Show simulated workflow runs and statuses | Admin | Active Mock | Later depends on actual orchestration/workflow backend. |
-| `systemAdmin` | إدارة النظام | `src/pages/SystemAdminPage.jsx` | Administrative configuration mock | Admin | Active Mock | Must remain clearly non-production. |
-| `secrets` | الأسرار والمفاتيح | `src/pages/SecretsAndKeysPage.jsx` | Mock surface for secrets/key governance | Admin | Active Mock | Must never store real secrets in frontend state. |
-| `modelRouting` | توجيه النماذج | `src/pages/ModelRoutingPage.jsx` | Simulate model-provider routing and policy | Admin/Governance | Active Mock | Later requires policy engine, cost constraints, and fallback rules. |
-| `promptGovernance` | حوكمة المطالبات | `src/pages/PromptGovernancePage.jsx` | Simulate prompt lifecycle, risk, review, and versioning | Admin/Governance | Active Mock | Later requires prompt registry, approvals, version locks, and audit events. |
-| `costMonitor` | مراقبة التكلفة | `src/pages/CostMonitorPage.jsx` | Simulate AI cost tracking and budget guardrails | Admin/Finance | Active Mock | Later needs provider usage metering and hard spend controls. |
-| `settings` | الإعدادات | `src/pages/SettingsPage.jsx` | General local prototype settings | Business/Admin | Active Mock | Must later split user, workspace, billing, and governance settings. |
+V1 scope approved by PR #64 (Nashir V1 Scope Decision Gate) and reviewed by PR #65.
+
+| Screen ID | Label | File | V1 Classification | Primary Role | User Type | Current Status | Notes |
+|---|---|---|---|---|---|---|---|
+| `dashboard` | لوحة التحكم | `src/pages/DashboardPage.jsx` | **V1 Core** | Entry point and operational overview | Business user | Active Mock | Should direct the core journey, not overload admin controls. |
+| `storeSetup` | إعداد المتجر | `src/pages/StoreSetupPage.jsx` | **V1 Core** | Capture store identity, business profile, products/services context | Business user | Active Mock | Must remain the main workspace setup source before campaign creation. |
+| `productCatalog` | كتالوج المنتجات | `src/pages/ProductCatalogPage.jsx` | **V1 Core** | Manage mock product/service records used by campaigns | Business user | Active Mock | Later should align with actual product database or commerce integration. |
+| `productIntelligence` | استوديو تحليل المنتج | `src/pages/ProductIntelligencePage.jsx` | **Extended V1** | Product analysis and intelligence linked to campaign creation | Business user | Active Mock | Active screen added after PR #62 reconciliation; not deprecated; backend deferred. |
+| `dataSourcesHub` | مركز المصادر البياناتية | `src/pages/DataSourcesHubPage.jsx` | **V1 Core** | Display and simulate source/integration readiness | Business/Admin | Active Mock | No real scraping, OAuth, or API connection. |
+| `assetLibrary` | مكتبة الأصول | `src/pages/AssetLibraryPage.jsx` | **V1 Core** | Manage creative assets and media references | Business user | Active Mock | Must later distinguish uploaded assets, generated assets, and licensed assets. |
+| `campaigns` | معالج الحملات | `src/pages/CampaignWizardPage.jsx` | **V1 Core** | Main campaign creation flow | Business user | Active Mock | This is the current official campaign creation screen. |
+| `campaignsList` | الحملات | `src/pages/CampaignsUnifiedPage.jsx` | **V1 Core** | Unified campaign list and campaign-detail surface | Business user | Active Mock | Replaces standalone list/detail separation for now. |
+| `creatorStudio` | استوديو صانع المحتوى | `src/pages/CreatorStudioPage.jsx` | **Extended V1** | AI-assisted content creation studio | Business user | Active Mock | Active screen with dedicated fixture, generated types, and package script; not deprecated; re-evaluate for acceleration. |
+| `content` | المحتوى | `src/pages/ContentStudioPage.jsx` | **V1 Core** | Content generation, editing, review, and approval surface | Business/Reviewer | Active Mock | Core content production surface. |
+| `contentReview` | المراجعة والمعاينة | `src/pages/ContentReviewPreviewUnifiedPage.jsx` | **Extended V1** | Separate content review and preview surface | Business/Reviewer | Active Mock | Active screen separate from ContentStudio despite earlier docs implying absorption; explicit merge vs. standalone decision needed before backend. |
+| `publishingQueue` | جدولة النشر | `src/pages/PublishingQueuePage.jsx` | **V1 Core** | Simulated scheduling and publishing queue | Business/Reviewer | Active Mock | Must not imply real publishing. |
+| `analytics` | التحليلات | `src/pages/AnalyticsUnifiedPage.jsx` | **V1 Core** | Unified analytics and smart analytics surface | Business/Admin | Active Mock | Replaces standalone smart analytics. |
+| `templateEngine` | محرك القوالب | `src/pages/TemplateEnginePage.jsx` | **V1 Admin/Governance** | Manage reusable content/template concepts | Admin/Power user | Active Mock | Needs later governance around prompt/template versioning. |
+| `multiPlatform` | متعدد القنوات | `src/pages/MultiPlatformPage.jsx` | **V1 Support** | Simulate multi-channel readiness and publishing governance | Business/Reviewer | Active Mock | No real social, WhatsApp, or email publishing. |
+| `teamCollaboration` | تعاون الفريق | `src/pages/TeamCollaborationPage.jsx` | **V1 Support** | Roles, comments, review collaboration, and local audit-like activity | Team/Reviewer | Active Mock | Real implementation needs RBAC and immutable audit logs. |
+| `workflowRuns` | تشغيلات النظام | `src/pages/WorkflowRunsPage.jsx` | **V1 Admin/Governance** | Show simulated workflow runs and statuses | Admin | Active Mock | Later depends on actual orchestration/workflow backend. |
+| `systemAdmin` | إدارة النظام | `src/pages/SystemAdminPage.jsx` | **V1 Admin/Governance** | Administrative configuration mock | Admin | Active Mock | Must remain clearly non-production. |
+| `secrets` | الأسرار والمفاتيح | `src/pages/SecretsAndKeysPage.jsx` | **V1 Admin/Governance** | Mock surface for secrets/key governance | Admin | Active Mock | Must never store real secrets in frontend state. |
+| `modelRouting` | توجيه النماذج | `src/pages/ModelRoutingPage.jsx` | **V1 Admin/Governance** | Simulate model-provider routing and policy | Admin/Governance | Active Mock | Later requires policy engine, cost constraints, and fallback rules. |
+| `promptGovernance` | حوكمة المطالبات | `src/pages/PromptGovernancePage.jsx` | **V1 Admin/Governance** | Simulate prompt lifecycle, risk, review, and versioning | Admin/Governance | Active Mock | Later requires prompt registry, approvals, version locks, and audit events. |
+| `costMonitor` | مراقبة التكلفة | `src/pages/CostMonitorPage.jsx` | **V1 Admin/Governance** | Simulate AI cost tracking and budget guardrails | Admin/Finance | Active Mock | Later needs provider usage metering and hard spend controls. |
+| `settings` | الإعدادات | `src/pages/SettingsPage.jsx` | **V1 Admin/Governance** | General local prototype settings | Business/Admin | Active Mock | Must later split user, workspace, billing, and governance settings. |
 
 ## 5. Removed Standalone Screens
 
@@ -90,22 +98,24 @@ The following standalone pages are intentionally removed from the current screen
 | `SmartAnalyticsPage` | Separate smart analytics | Merged into `AnalyticsUnifiedPage`. |
 | `CampaignDetailPage` | Standalone campaign detail | Merged into `CampaignsUnifiedPage`. |
 
-## 6. Core Journey
+## 6. Approved V1 Core Journey
 
-The current core journey should be stabilized in this order:
+Approved in PR #64 (Nashir V1 Scope Decision Gate):
 
 ```text
 Dashboard
-→ StoreSetup
-→ ProductCatalog / DataSourcesHub
-→ CampaignWizard
-→ CampaignsUnified
-→ ContentStudio
-→ PublishingQueue / MultiPlatform
+→ Store Setup
+→ Product Catalog
+→ Data Sources Hub
+→ Asset Library
+→ Campaign Wizard
+→ Campaigns
+→ Content Studio
+→ Publishing Queue
 → Analytics
 ```
 
-Administration and governance screens support the above journey but should not dominate the first-time business user experience.
+This is the minimum merchant value loop. V1 Support and Admin/Governance screens support the journey. Extended V1 screens (`productIntelligence`, `creatorStudio`, `contentReview`) are active product surfaces with deferred backend implementation.
 
 ## 7. Governance Notes
 
