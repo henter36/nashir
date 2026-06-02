@@ -280,7 +280,7 @@ Workspace
 - `id` — identity
 - `displayName` — display
 - `email` — identity (PII)
-- `status` — status: active / invited / disabled
+- `status` — status: active / invited / suspended
 - `createdAt`, `updatedAt` — audit
 
 ### WorkspaceMember
