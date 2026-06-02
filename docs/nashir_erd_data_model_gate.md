@@ -447,7 +447,7 @@ Workspace
 | Entity | Status candidates |
 |---|---|
 | Workspace | active · inactive · suspended |
-| WorkspaceMember | active · invited · disabled |
+| WorkspaceMember | active · invited · suspended |
 | Product | draft · active · archived |
 | DataSource / ChannelConnection | not_connected · connected · error · expired |
 | Campaign | draft · generating · review · ready · scheduled · active · paused · completed · archived |
