@@ -398,7 +398,10 @@ Cascade and archive implications are sufficiently documented for planning.
 | Audit-required operations flagged | **PASS** | Lifecycle, member, campaign, publishing, credential, and settings audit needs are listed |
 | Version/concurrency requirements identified | **PASS** | Drafts, content items, campaigns, and publishing jobs are planned |
 | URL versioning does not affect schema | **PASS** | URL prefix decision remains separate from table design |
+| OpenAPI Auth/RBAC/Workspace alignment | **PASS** | Verified that the OpenAPI contract reflects the authentication scheme placeholders, workspace-scoped route structure, `workspaceId` path scoping, guard-chain expectations, and permission expectations established in the Auth/RBAC/Workspace Identity design |
 | No OpenAPI change required by this review | **PASS** | No blocking cross-contract inconsistency found |
+
+This review confirms that SQL/Schema Planning does not weaken or bypass the Auth/RBAC/Workspace Identity gates; persistence planning must preserve workspace boundaries and authorization-binding semantics through `Workspace`, `User`, and `WorkspaceMember`.
 
 ---
 
