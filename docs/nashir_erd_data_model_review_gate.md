@@ -360,8 +360,8 @@ NO-GO: Production/pilot readiness claims.
 |---|---|
 | `npm run lint` | **PASSED** |
 | `npm run build` | **PASSED** |
-| `git status --short` | Only new review gate doc untracked |
-| `git diff --stat` | Only `docs/nashir_erd_data_model_review_gate.md` (new file) |
+| `git status --short` | Working tree clean after commit; gate changes limited to documentation |
+| `git diff --stat` | Diff limited to ERD/Data Model documentation files |
 | Forbidden files check | **PASS** — no `src/`, `package.json`, `README.md`, `docs/screen_map.md`, or `marketing-os` files modified |
 
 ---
