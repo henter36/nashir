@@ -2,825 +2,682 @@
 
 | Field | Value |
 |---|---|
-| Gate type | SQL Schema Planning Gate — documentation only |
-| Status date | 2026-05-31 |
-| Scope | Translates approved ERD, Auth/RBAC, workspace isolation, OpenAPI security metadata, and marketing-os schema patterns into a V1 SQL schema candidate plan |
-| Prerequisite gate | `docs/nashir_openapi_security_yaml_patch_review_gate.md` — merged, READY |
+| Gate type | SQL/Schema planning gate — documentation only |
+| Status | Planning complete |
+| Date | 2026-06-02 |
+| Scope | Translates the approved ERD/Data Model, Auth/RBAC/Workspace Identity, and OpenAPI V1 contract into a planned PostgreSQL persistence model without writing SQL migrations or implementation code |
+| Prerequisite gates | `docs/nashir_openapi_yaml_deferred_decisions_review_gate.md` — merged (PR #80) |
 | SQL DDL created | NO |
 | Migrations created | NO |
+| ORM models created | NO |
 | Backend routes implemented | NO |
 | Auth/RBAC implementation approved | NO |
-| OpenAPI YAML changes approved in this slice | NO |
-| UI API integration approved | NO |
-| marketing-os | Read-only in this slice |
+| Generated client approved | NO |
+| UI changes | NO |
+| Package/build changes | NO |
+| marketing-os extraction | NO |
+| Production readiness claimed | NO |
 
 ---
 
-## 1. Status and Scope
+## 1. Purpose and Scope
 
-This is a SQL Schema Planning Gate only.
+This is a SQL/Schema planning gate only.
 
-**No SQL DDL is created.**
+**No SQL DDL files are created.**
 
-**No migrations are created.**
+**No database migrations are created.**
+
+**No ORM models or seed files are created.**
 
 **No backend routes are implemented.**
 
 **No auth/RBAC implementation is approved.**
 
-**No OpenAPI YAML change is approved in this slice.**
+**No generated TypeScript types, SDK, or runtime client is produced.**
 
-**No UI API integration is approved.**
+**No UI or source code changes are made.**
 
-**marketing-os is read-only in this slice.**
+**No package or build changes are made.**
 
-This gate answers:
+**No marketing-os extraction is authorized.**
 
-> What future SQL schema should Nashir V1 use, which entities/tables are in scope, what relationships and constraints are required, and what must remain blocked before migration implementation?
+**No production readiness is claimed.**
+
+### Why SQL/Schema planning comes after OpenAPI deferred decisions and before Backend Slice 1
+
+The SQL schema must be derived from:
+1. **Approved entity model** (ERD/Data Model Gate, PR #71/72) — defines entities, relationships, and field categories.
+2. **Approved status enums** (OpenAPI Deferred Decisions Gate, PR #79) — locks status values that will become PostgreSQL enum types.
+3. **Approved approval/lifecycle operations** (PR #79) — defines ContentDraft state machine transitions that schema must support.
+4. **Approved idempotency/concurrency semantics** (PR #79) — identifies which tables need version fields and idempotency records.
+
+Writing migrations before these decisions are stable creates expensive schema drift. This gate produces a planning document that the SQL Schema Authoring Gate and Backend Slice 1 Planning Gate can execute against a stable contract.
 
 ---
 
-## 2. Source Inputs Reviewed
+## 2. Inputs Reviewed
 
-### Verified — nashir-ui-prototype (local)
+### Direct source inputs
 
-| Source | Finding |
+| Input | Finding |
 |---|---|
-| `docs/nashir_erd_reconciliation_gate.md` | V1 ERD candidate complete; Asset naming conflict documented; 27 IN-status entities |
-| `docs/nashir_auth_rbac_workspace_identity_gate.md` | 35 permission codes (33 V1 + 2 DEFER); 7 roles; 3 SQL gate conditions (C-RV01/C-RV02/C-RV03) |
-| `docs/nashir_auth_rbac_review_gate.md` | READY WITH WATCH ITEMS; C-RV01/C-RV02/C-RV03 are SQL-gate conditions |
-| `docs/nashir_openapi_source_of_truth_gate.md` | nashir_v1_openapi.yaml is current authority; migration blocked until Backend Slice 0 |
-| `docs/nashir_openapi_security_mapping_gate.md` | All 35 operations mapped; workspace scope confirmed via route for all |
-| `docs/nashir_openapi_security_yaml_patch_planning_gate.md` | x-extension contract confirmed; guard chain patterns documented |
-| `docs/nashir_openapi_security_yaml_patch_review_gate.md` | READY FOR SQL SCHEMA PLANNING; no blockers |
-| `docs/nashir_marketing_os_reconciliation_gate.md` | marketing-os CONDITIONALLY VIABLE; Asset naming B-R01 documented |
-| `docs/nashir_backend_home_decision.md` | marketing-os SELECTED AS CANDIDATE |
-| `docs/nashir_production_architecture_boundary_gate.md` | PostgreSQL candidate; backend/DB undecided at time of writing |
-| `docs/workspace_and_minimum_identity_decision.md` | V1: one workspace → one StoreProfile; multi-store deferred |
-| `docs/nashir_v1_openapi.yaml` | All operations; security metadata; entity schemas |
+| `docs/nashir_erd_data_model_gate.md` (PR #71) | 17 V1 Core logical entities + IntegrationCredential; field-level logical model; relationship model; workspace root; approved status enums for WorkspaceMember and AnalyticsSnapshot |
+| `docs/nashir_erd_data_model_review_gate.md` (PR #72) | All 71 criteria PASS; entity model confirmed |
+| `docs/nashir_auth_rbac_workspace_identity_gate.md` (PR #73) | 7 roles; 24 permission groups; workspace scoping rules; `nashir.content.approve` vs `nashir.content.manage` boundaries |
+| `docs/nashir_v1_openapi.yaml` | 62 paths, 157 schemas, 37 parameters; all 4 status enums approved (CampaignStatus, ContentDraftStatus, CampaignContentItemStatus, PublishingJobStatus); ContentDraft lifecycle ops; idempotency/concurrency headers |
+| `docs/nashir_openapi_yaml_deferred_decisions_gate.md` (PR #79) | Status enums resolved; ContentDraft sub-resource ops authored; idempotency/concurrency headers added; response envelope approved |
+| `docs/nashir_openapi_yaml_deferred_decisions_review_gate.md` (PR #80) | All 15 criteria PASS; SQL/Schema Planning Gate authorized |
+| `README.md` | 23 screens; V1 Core journey; Nashir-first |
+| `docs/screen_map.md` | 23 screens with V1 Classification |
 
-### Verified — henter36/marketing-os (local sibling clone, read-only)
+### Historical context gates
 
-| Source | Finding |
+| Gate | Finding |
 |---|---|
-| `README.md` | Contract-first; Pilot/Production NO-GO; Sprint 5 NO-GO |
-| `package.json` | pg ^8.20.0 confirmed |
-| `docs/marketing_os_v5_6_5_phase_0_1_schema.sql` | **Base schema — key findings:** PostgreSQL with pgcrypto; tables: customer_accounts, users, roles, permissions, workspaces, role_permissions, workspace_members, brand_profiles, brand_voice_rules, prompt_templates, media_jobs, media_assets, media_asset_versions, review_tasks, approval_decisions, publish_jobs, manual_publish_evidence, audit_logs; append-only trigger on audit_logs |
-| `docs/marketing_os_v5_6_5_phase_0_1_schema_patch_003.sql` | **Nashir evidence tables:** nashir_evidence (uuid PK, workspace_id FK, nashir_campaign_id, evidence_type, channel, status enum, actor FKs, timestamps, constraints); nashir_evidence_lifecycle_events (lifecycle event log) |
-| `docs/marketing_os_v5_6_5_phase_0_1_schema_patch_004.sql` | **Nashir campaign table:** nashir_campaigns (uuid PK, workspace_id FK, campaign_name, nashir_campaign_status enum, created_by FK, timestamps, constraints, indexes) |
-| `scripts/db-migrate.js` | Migration runner uses psql `\i` includes with pg_advisory_lock; strict sequential order; 5-file chain confirmed (base + patches 001-004) |
+| PR #62–66 — Product Scope | 23 screens approved |
+| PR #67–68 — Productization Roadmap | 7-phase roadmap; SQL/Schema planning before backend |
+| PR #69–70 — Backend/API Strategy | Nashir-first; Node.js; PostgreSQL-compatible |
+| PR #73–74 — Auth/RBAC | Role and permission model |
+| PR #75–78 — API Contract/OpenAPI | Route families; entity-to-API coverage; error behavior |
 
-### Key verified findings
+### Confirmed baseline
 
-> **FINDING-SQL1 (CONFIRMED — not assumption):** PostgreSQL is the database engine. Evidence: marketing-os uses pgcrypto extension, UUID primary keys via `gen_random_uuid()`, `timestamptz`, `REFERENCES` foreign keys, `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN NULL; END $$` enum creation, `pg_advisory_lock`, psql `\i` include syntax.
-
-> **FINDING-SQL2:** Existing marketing-os tables reusable for Nashir: `workspaces`, `users`, `roles`, `permissions`, `role_permissions`, `workspace_members`, `audit_logs`, `prompt_templates`. These are in the base schema already applied.
-
-> **FINDING-SQL3:** Existing Nashir-specific tables in marketing-os: `nashir_campaigns` (Patch 004), `nashir_evidence` (Patch 003), `nashir_evidence_lifecycle_events` (Patch 003).
-
-> **FINDING-SQL4:** Next Nashir SQL patch will be `schema_patch_005.sql` (and beyond). Migration numbering is sequential and cannot be skipped.
-
-> **FINDING-SQL5:** marketing-os `prompt_templates` table type enum (`caption`, `ad_copy`, `image_prompt`, `video_script`, `report`, `reply`) does not align with Nashir's prompt governance model. Nashir prompt governance requires versioned, approval-state-bound templates with human review. A separate `nashir_prompt_templates` table or a reconciliation of the existing table is required.
+- Backend is Nashir-first; marketing-os is reference-only.
+- PostgreSQL-compatible persistence is the planned direction (PR #69/70).
+- No real backend, schema, migrations, or generated client exists yet.
+- All entity status enums are now locked (PR #79).
 
 ---
 
-## 3. Planning Question
+## 3. Current Facts, Planning Decisions, and Deferred Items
 
-**What future SQL schema should Nashir V1 use, which entities/tables are in scope, what relationships and constraints are required, and what must remain blocked before migration implementation?**
+### Approved facts from previous gates
 
-**Summary:** Nashir V1 SQL schema is PostgreSQL-based, extending the existing marketing-os migration chain with new Nashir-prefixed patch files. The workspace/RBAC/audit foundation is already in the base schema. Three existing Nashir tables (campaigns, evidence, evidence_lifecycle) are already in patches 003 and 004. A defined set of new Nashir-prefixed tables is needed for the full V1 surface; the exact implementation count must be confirmed in SQL Schema Review Gate after reuse decisions are closed. The migration ownership lives in marketing-os. No SQL implementation is approved in this gate.
+| Fact | Source |
+|---|---|
+| All merchant-owned entities must include `workspace_id` | PR #71/73 |
+| `User` may be global; access via `WorkspaceMember` | PR #71/73 |
+| `WorkspaceMember` links User to Workspace with role; status: active/invited/suspended | PR #71/73 |
+| IntegrationCredential stores vault reference only; no raw secret | PR #71/73/79 |
+| AuditEvent is append-only; never modifiable or deletable | PR #71/73 |
+| AnalyticsSnapshot must carry `sourceSummary`; status: available/partial/stale/unavailable | PR #71/72 |
+| CampaignStatus: draft/generating/review/ready/scheduled/active/paused/completed/archived | PR #79 |
+| ContentDraftStatus: draft/ready_for_review/approved/rejected/archived | PR #79 |
+| CampaignContentItemStatus: draft/ready_for_review/approved/rejected/archived | PR #79 |
+| PublishingJobStatus: draft/scheduled/queued/simulated/failed/cancelled | PR #79 |
+| ContentApproval is immutable after creation; self-approval forbidden | PR #73/79 |
+| ContentApproval stores `rejectionReason` and `requiredChanges` from reject request | PR #79 |
+| Lifecycle POSTs require idempotency key and resource version support | PR #79 |
+| URL versioning (`/v1/`) deferred to Backend Slice 1 Planning Gate exit | PR #79/80 |
+| `simulated` PublishingJob status is distinct from any future real publishing status | PR #71/79 |
 
----
+### Planning decisions made in this gate
 
-## 4. Authority and Repository Boundary
+| Decision | Detail |
+|---|---|
+| Database engine | PostgreSQL (UUIDs via `gen_random_uuid()`; `timestamptz`; enum types) |
+| Primary key format | UUID v4 for all tables |
+| `workspace_id` scope | NOT NULL foreign key on all workspace-scoped tables; always path-derived, never from request body |
+| Soft-delete pattern | `archived_at TIMESTAMPTZ` nullable column for archivable entities; `NULL` = active, non-NULL = archived |
+| Server-owned fields | `id`, `workspace_id`, `created_at`, `updated_at`, `archived_at` never accepted from client |
+| Status columns | PostgreSQL ENUM type for approved status enums; nullable during initial schema design for new enum types |
+| Audit fields | `created_at`, `updated_at` on all mutable tables; `occurred_at` on append-only tables |
+| Idempotency | Candidate `idempotency_keys` table for lifecycle POST deduplication |
+| Version/concurrency | `version INTEGER DEFAULT 1` on mutable entities with lifecycle POSTs |
+| IntegrationCredential | `vault_ref TEXT NOT NULL`; no raw secret column |
+| AuditEvent | No UPDATE, no DELETE; append-only enforced at application layer; `occurred_at` not `updated_at` |
+| Cascade deletion | No `ON DELETE CASCADE` on business data; prefer explicit soft-archive or nullify on removal |
 
-- **nashir-ui-prototype** remains the planning/contract/UI prototype repository. No schema files are created here.
-- **marketing-os** is the candidate future backend/schema home. Future SQL migrations belong in `marketing-os/docs/` as new numbered patch files (starting at `schema_patch_005.sql`).
-- This document does not move schema ownership to marketing-os. The Backend Slice 0 Planning gate must formally approve the migration PR structure.
-- No schema files are created in nashir-ui-prototype.
-- No marketing-os files are modified.
+### Deferred items
 
----
-
-## 5. Database Engine Assessment
-
-**Database engine: PostgreSQL — CONFIRMED (not candidate)**
-
-Evidence (from `marketing_os_v5_6_5_phase_0_1_schema.sql`):
-- `CREATE EXTENSION IF NOT EXISTS pgcrypto` (PostgreSQL extension)
-- `gen_random_uuid()` (PostgreSQL function)
-- `timestamptz` (PostgreSQL type)
-- `uuid` (PostgreSQL type)
-- `jsonb` (PostgreSQL type)
-- `pg_advisory_lock` (PostgreSQL advisory locking)
-- `DO $$ BEGIN ... END $$` (PostgreSQL procedural block)
-- psql `\i` include syntax in migration driver
-
-**PostgreSQL version requirement:** marketing-os `package.json` specifies `node: ">=20"` for Node.js; `pg ^8.20.0` for the pg driver. PostgreSQL 14+ is implied by feature usage.
-
-**DB-engine decision status:** RESOLVED — PostgreSQL is approved through marketing-os precedent and the decision to use marketing-os as the backend home.
-
-**DB-engine blocks migration implementation?** No. DB engine is confirmed. What blocks migration implementation is: (1) Backend Slice 0 Planning gate, (2) SQL Schema Review Gate, (3) SQL Schema Implementation Planning Gate.
-
----
-
-## 6. V1 Domain Groups
-
-1. **Identity and tenancy** — Workspace, User, WorkspaceMember, Role, Permission, RolePermission
-2. **Store and catalog** — StoreProfile, Product, Asset
-3. **Campaign and content** — Campaign, CampaignContent, PreviewArtifact, Evidence
-4. **Creator Studio** — Session, ContentIdea, CampaignAngle, AudienceSegment, PublishWindow, ContextDraft, TransferDraft, ReadinessAssessment
-5. **Publishing** — PublishingQueueItem
-6. **Governance and review** — PromptTemplate, PromptGovernanceVersion, ApprovalDecision
-7. **AI operations and cost** — ModelRoutingRule, AIProvider, CostUsageRecord
-8. **Integrations and data sources** — DataSource, IntegrationConnection (deferred)
-9. **Audit and evidence** — AuditLog (reuse), Evidence (existing Patch 003)
-10. **Workflow references** — WorkflowDefinition (advisory only, defer)
-
----
-
-## 7. Candidate Table Inventory
-
-| Candidate Table Name | Domain | Source Entity | V1 Status | Persistence Reason | Workspace Scoped | Store Scoped | Privacy | Lifecycle Owner | SQL Readiness |
-|---|---|---|---|---|---|---|---|---|---|
-| `workspaces` | Identity/tenancy | Workspace | **IN — REUSE** | Marketing-os base schema | — (IS the boundary) | — | LOW | Platform/admin | **READY** |
-| `users` | Identity/tenancy | User | **IN — REUSE** | Marketing-os base schema | Multiple | — | HIGH | Auth provider | **READY** |
-| `roles` | Identity/tenancy | Role | **IN — REUSE/EXTEND** | Marketing-os base schema | YES | — | LOW | Platform/admin | **READY** |
-| `permissions` | Identity/tenancy | Permission | **IN — REUSE/EXTEND** | Marketing-os base schema; add 35 Nashir codes | YES | — | LOW | Platform/admin | **READY — needs seed data** |
-| `role_permissions` | Identity/tenancy | RolePermission | **IN — REUSE/EXTEND** | Marketing-os base schema; add Nashir assignments | — | — | LOW | Platform/admin | **READY — needs seed data** |
-| `workspace_members` | Identity/tenancy | WorkspaceMember | **IN — REUSE** | Marketing-os Slice 0 verified | YES | — | MEDIUM | Workspace admin | **READY** |
-| `audit_logs` | Audit | AuditEvent | **IN — REUSE** | Marketing-os base schema; append-only trigger | YES | — | MEDIUM | Platform (append-only) | **READY** |
-| `nashir_store_profiles` | Store/catalog | StoreProfile | **IN — NEW** | Commerce identity; 1:1 with workspace | YES | — | LOW–MEDIUM | Business user | **NEEDS CLARIFICATION** |
-| `nashir_products` | Store/catalog | Product | **IN — NEW** | Catalog records; productId canonical | YES | Implicit | LOW | Business user | **NEEDS CLARIFICATION** |
-| `nashir_assets` | Store/catalog | Asset (OpenAPI: `Asset`) | **IN — NEW** | Asset metadata; assetId canonical; SQL name ≠ OpenAPI name | YES | Implicit | LOW–MEDIUM | Content manager | **NEEDS CLARIFICATION** |
-| `nashir_campaigns` | Campaign/content | Campaign | **IN — EXISTS (Patch 004)** | Campaign organizational unit | YES | — | LOW | Campaign manager | **READY** |
-| `nashir_campaign_content_items` | Campaign/content | CampaignContent | **IN — NEW** | Content draft + review state; campaignContentId canonical | YES | Implicit | LOW–MEDIUM | Content creator | **NEEDS CLARIFICATION** |
-| `nashir_campaign_content_assets` | Campaign/content | CampaignContentAsset | **IN — NEW** | Junction table preserving referential integrity between campaign content and assets | YES | Implicit | LOW | Content creator | **NEEDS CLARIFICATION** |
-| `nashir_preview_artifacts` | Campaign/content | PreviewArtifact | **IN — NEW** | Preview metadata only; no binary | YES | Implicit | LOW | Content creator | **NEEDS CLARIFICATION** |
-| `nashir_evidence` | Evidence | Evidence/ManualPublishEvidence | **IN — EXISTS (Patch 003)** | User-provided publishing proof | YES | — | MEDIUM | Publisher | **READY** |
-| `nashir_evidence_lifecycle_events` | Evidence | EvidenceLifecycleEvent | **IN — EXISTS (Patch 003)** | Evidence state history | YES | — | MEDIUM | Platform (append-only) | **READY** |
-| `nashir_publishing_queue_items` | Publishing | PublishingQueueItem | **IN — NEW** | Scheduling metadata; references approved content | YES | Implicit | LOW | Publisher | **NEEDS CLARIFICATION** |
-| `nashir_creator_studio_sessions` | Creator Studio | CreatorStudioSession | **IN — NEW** | TTL-managed; HIGH privacy | YES | Implicit | **HIGH** | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_creator_content_ideas` | Creator Studio | ContentIdea | **IN — NEW** | Session-scoped; draft AI advisory | YES | Implicit | LOW–MEDIUM | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_creator_campaign_angles` | Creator Studio | CampaignAngle | **IN — NEW** | Session-scoped; draft AI advisory | YES | Implicit | LOW | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_creator_audience_segments` | Creator Studio | AudienceSegment | **IN — NEW** | Session-scoped; consent-gated | YES | Implicit | MEDIUM | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_creator_publish_windows` | Creator Studio | PublishWindow | **IN — NEW** | Session-scoped; advisory | YES | Implicit | LOW | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_creator_context_drafts` | Creator Studio | CreatorContextDraft | **IN — NEW** | TTL-managed; state machine | YES | Implicit | MEDIUM | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_creator_transfer_drafts` | Creator Studio | CreatorTransferDraft | **IN — NEW** | TTL-managed; destination-typed | YES | Implicit | MEDIUM | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_creator_readiness_assessments` | Creator Studio | ReadinessAssessment | **IN — NEW** | Advisory snapshot; expires | YES | Implicit | LOW | Creator Studio | **NEEDS CLARIFICATION** |
-| `nashir_prompt_templates` | Governance | PromptTemplate | **IN — NEW (or EVALUATE REUSE)** | Versioned; governance-critical; see FINDING-SQL5 | YES | — | MEDIUM | Prompt governance admin | **NEEDS CLARIFICATION** |
-| `nashir_prompt_governance_versions` | Governance | PromptGovernanceVersion | **IN — NEW** | Version-bound; approval state | YES | — | MEDIUM | Prompt governance admin | **NEEDS CLARIFICATION** |
-| `nashir_approval_decisions` | Governance | ReviewDecision/ApprovalDecision | **IN — NEW or EVALUATE REUSE** | Human approval record; content-version-bound | YES | Implicit | LOW | Reviewer/admin | **NEEDS CLARIFICATION** |
-| `nashir_model_routing_rules` | AI ops | ModelRoutingRule | **IN — NEW** | Advisory snapshot; no live probe | YES | — | LOW | Platform/admin | **NEEDS CLARIFICATION** |
-| `nashir_ai_providers` | AI ops | AIProvider | **IN — NEW** | Advisory snapshot; vault_ref only | YES | — | MEDIUM | Platform/admin | **NEEDS CLARIFICATION** |
-| `nashir_cost_usage_records` | AI ops | CostUsageRecord | **IN — NEW (or EVALUATE reuse of cost_events)** | Advisory; not billing | YES | — | LOW | Platform/cost admin | **NEEDS CLARIFICATION** |
-| `nashir_data_sources` | Integrations | DataSource | **DEFER** | V1: UI-only or minimal reference; connector execution deferred | YES | — | MEDIUM | Post-V1 | **DEFER** |
-| `nashir_integration_connections` | Integrations | IntegrationConnection | **DEFER** | OAuth/connector management; deferred | YES | — | HIGH | Post-V1 | **DEFER** |
-| `nashir_workflow_definitions` | Workflow | WorkflowDefinition | **DEFER** | Advisory metadata only; no execution | YES | — | LOW | Post-V1 | **DEFER** |
+| Item | Gate |
+|---|---|
+| Exact SQL DDL (column types, constraints, indexes) | SQL Schema Authoring Gate |
+| Migration file creation | SQL Schema Authoring Gate |
+| ORM model definitions | Backend Slice 1 Planning Gate |
+| Auth provider table (sessions, tokens) | Backend Slice 1 Planning Gate |
+| URL versioning (`/v1/`) final decision | Backend Slice 1 Planning Gate exit |
+| Vault provider integration for IntegrationCredential | Security Gate |
+| PDPL/GCC data residency enforcement | Future legal/compliance gate |
+| AuditEvent retention policy | Future legal/compliance gate |
+| Role/permission seed data | Backend Slice 1 Planning Gate |
+| Post-V1 Admin/Governance tables (Template, PromptVersion, ModelRoute, UsageCostEvent, WorkflowRun) | Admin/Governance gate |
+| Extended V1 tables (ProductInsight, CreatorStudioArtifact, ReviewDecision) | Extended V1 gate |
 
 ---
 
-## 8. Entity-to-OpenAPI Mapping
+## 4. Persistence Design Principles
 
-| OpenAPI Operation Group | Candidate Tables | Read/Write | Required Permission | Workspace Scope Source | Audit/Evidence Req | Schema Readiness |
+| Principle | Detail |
+|---|---|
+| Workspace-scoped by default | Every merchant-owned entity has `workspace_id UUID NOT NULL REFERENCES workspaces(id)` |
+| User is global | `users` table is not workspace-scoped; access to business records goes through `workspace_members` |
+| WorkspaceMember is the authorization binding | All API-layer authorization checks resolve through `workspace_members` to get role; `status = 'active'` required |
+| No merchant-owned data without workspace_id | Violation of this principle is a cross-workspace leakage risk |
+| No cross-workspace leakage | All queries include `workspace_id = $workspace_id` predicate; never relies on caller assertion |
+| Server-owned fields | `id`, `workspace_id`, `created_at`, `updated_at` are controlled by the persistence layer; never accepted from client |
+| AuditEvent append-only | No `UPDATE` or `DELETE` on `audit_events`; application layer enforces this; considered for DB trigger backup |
+| IntegrationCredential vault-only | `integration_credentials` row stores `vault_ref TEXT` not the raw secret; vault provider handles the secret |
+| AnalyticsSnapshot lineage | `source_summary TEXT NOT NULL` on `analytics_snapshots`; status must be one of the approved four values |
+| Soft archive preferred | Entities that support archive (products, assets, campaigns, content drafts, etc.) use `archived_at TIMESTAMPTZ` nullable; no hard delete for merchant data in V1 |
+| Contract-first alignment | Column names and types derived from OpenAPI schema field names; divergence must be documented |
+| No raw secrets in general rows | No plaintext password, API key, or OAuth token in any row outside the vault reference pattern |
+
+---
+
+## 5. Logical Table Inventory
+
+| Table | Source Entity | Workspace-Scoped | Primary Key | Lifecycle/Status | Soft-Delete | V1 Required |
 |---|---|---|---|---|---|---|
-| Products | nashir_products | R/W | nashir.product.read / nashir.product.write | route → workspace_id | W: audit_logs | NEEDS CLARIFICATION |
-| Assets | nashir_assets | R/W + link | nashir.asset.read / nashir.asset.write / nashir.asset.link | route → workspace_id | W: audit_logs | NEEDS CLARIFICATION |
-| Campaign Content | nashir_campaign_content_items, nashir_preview_artifacts | R/W | nashir.content.* | route → workspace_id | W: audit_logs | NEEDS CLARIFICATION |
-| Content review/approval | nashir_campaign_content_items (status), nashir_approval_decisions, nashir_evidence | R/W | nashir.content.submit_review, nashir.approval.decide | route → workspace_id | REQUIRED: audit_logs + evidence | NEEDS CLARIFICATION |
-| AI Readiness | nashir_workflow_definitions (advisory), nashir_ai_providers, nashir_model_routing_rules | R | nashir.workflow.read, nashir.model_routing.read, nashir.prompt_governance.read | route → workspace_id | None (advisory) | DEFER (workflow), NEEDS CLARIFICATION |
-| Creator Studio sessions | nashir_creator_studio_sessions | R/W | nashir.creator_studio.use | route → workspace_id | W: audit_logs | NEEDS CLARIFICATION |
-| Creator context drafts | nashir_creator_context_drafts, nashir_creator_content_ideas etc. | R/W | nashir.creator_studio.transfer.create | route → workspace_id | W: audit_logs | NEEDS CLARIFICATION |
-| Creator transfer drafts | nashir_creator_transfer_drafts | R/W | nashir.creator_studio.use (GET) / nashir.creator_studio.transfer.create (POST) | route → workspace_id | W: audit_logs | NEEDS CLARIFICATION |
-| Prompt readiness | nashir_prompt_templates, nashir_prompt_governance_versions | R | nashir.prompt_governance.read | route → workspace_id | None | NEEDS CLARIFICATION |
-| Provider/model readiness | nashir_ai_providers, nashir_model_routing_rules | R | nashir.model_routing.read | route → workspace_id | None | NEEDS CLARIFICATION |
+| `workspaces` | Workspace | Root | UUID | `status` (active/inactive/suspended) | NO (suspended, not deleted) | **YES** |
+| `users` | User | Global | UUID | `status` (active/invited/suspended) | NO | **YES** |
+| `workspace_members` | WorkspaceMember | YES | UUID | `status` (active/invited/suspended) | YES — `archived_at` | **YES** |
+| `store_profiles` | StoreProfile | YES | UUID | `status` (active/inactive) | NO (status only) | **YES** |
+| `products` | Product | YES | UUID | `status` (draft/active/archived) | YES — `archived_at` | **YES** |
+| `data_sources` | DataSource | YES | UUID | `connection_status` | NO | **YES** |
+| `channel_connections` | ChannelConnection | YES | UUID | `connection_status` | NO | **YES** |
+| `integration_credentials` | IntegrationCredential | YES | UUID | — (vault ref metadata) | YES — revoked via `archived_at` | **YES (deferred full impl)** |
+| `assets` | Asset | YES | UUID | `status` (active/archived) | YES — `archived_at` | **YES** |
+| `campaigns` | Campaign | YES | UUID | `status` CampaignStatus enum | YES — `archived_at` | **YES** |
+| `campaign_briefs` | CampaignBrief | YES | UUID | — | NO | **YES** |
+| `campaign_content_items` | CampaignContentItem | YES | UUID | `status` CampaignContentItemStatus enum | YES — `archived_at` | **YES** |
+| `content_drafts` | ContentDraft | YES | UUID | `status` ContentDraftStatus enum | YES — `archived_at` | **YES** |
+| `content_approvals` | ContentApproval | YES | UUID | `decision` (approved/rejected) — immutable | NO (append-only) | **YES** |
+| `publishing_jobs` | PublishingJob | YES | UUID | `status` PublishingJobStatus enum | YES — `cancelled_at` | **YES** |
+| `publishing_statuses` | PublishingStatus | YES | UUID | `status TEXT` — append-only | NO (append-only) | **YES** |
+| `analytics_snapshots` | AnalyticsSnapshot | YES | UUID | `status` (available/partial/stale/unavailable) | NO | **YES** |
+| `audit_events` | AuditEvent | YES | UUID | — (append-only) | NO (append-only) | **YES** |
+| `idempotency_keys` | (system) | YES | UUID | `status` (pending/completed/failed) | NO | **V1 Required (lifecycle POSTs)** |
+| `roles` | Role | Global | UUID | — | NO | **YES (seed data)** |
+| `permissions` | Permission | Global | UUID | — | NO | **YES (seed data)** |
+| `role_permissions` | RolePermission | Global | (composite) | — | NO | **YES (seed data)** |
+
+**Admin/Governance (deferred):** `templates`, `prompt_versions`, `model_routes`, `usage_cost_events`, `workflow_runs`
+
+**Extended V1 (deferred):** `product_insights`, `creator_studio_artifacts`, `review_decisions`
 
 ---
 
-## 9. Identity/RBAC Schema Plan
+## 6. Field Planning by Entity
 
-### Approach: Extend existing marketing-os tables
+### `workspaces`
+- **Identity:** `id UUID PK`
+- **Display:** `name TEXT NOT NULL`
+- **Status:** `status workspace_status_enum NOT NULL DEFAULT 'active'`
+- **Audit:** `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 
-The marketing-os base schema already has `roles`, `permissions`, `role_permissions`, `workspace_members`. These are proven (Slice 0 verified). Nashir extends them with:
+### `users`
+- **Identity:** `id UUID PK`
+- **Display/PII:** `display_name TEXT`, `email TEXT UNIQUE NOT NULL` — PII; auth provider may own this
+- **Status:** `status user_status_enum NOT NULL DEFAULT 'invited'`
+- **Audit:** `created_at`, `updated_at`
 
-**roles table** — add 7 Nashir role seed rows: owner, admin, creator, reviewer, publisher, billing_admin, viewer (all `role_scope: 'workspace'`, `is_system_role: true`). Some of these already exist in marketing-os; verify before inserting to avoid duplicates.
+### `workspace_members`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `user_id UUID NOT NULL REFERENCES users(id)`
+- **Business:** `role_code TEXT NOT NULL` — references role seed data
+- **Status:** `status workspace_member_status_enum NOT NULL DEFAULT 'invited'`
+- **Operational:** `joined_at TIMESTAMPTZ`, `archived_at TIMESTAMPTZ`
+- **Audit:** `created_at`, `updated_at`
+- **Unique constraint:** `(workspace_id, user_id)` — one membership per user per workspace
 
-**permissions table** — add 33 Nashir-specific V1 permission codes (the 35 defined minus 2 DEFER integration codes). Use existing marketing-os insert pattern.
+### `store_profiles`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL UNIQUE REFERENCES workspaces(id)` — one per workspace
+- **Display:** `store_name TEXT NOT NULL`, `store_url TEXT`, `brand_summary TEXT`, `target_market_summary TEXT`, `default_language TEXT`
+- **Status:** `status store_profile_status_enum NOT NULL DEFAULT 'inactive'`
+- **Audit:** `created_at`, `updated_at`
 
-**role_permissions table** — add Nashir role-permission assignment rows per Section 9 of `docs/nashir_auth_rbac_workspace_identity_gate.md`.
+### `products`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Display:** `name TEXT NOT NULL`, `description TEXT`, `category TEXT`, `price_placeholder TEXT` — commerce integration deferred
+- **Status:** `status product_status_enum NOT NULL DEFAULT 'draft'`
+- **Soft-delete:** `archived_at TIMESTAMPTZ`
+- **Audit:** `created_at`, `updated_at`
 
-### C-RV01 resolution: nashir.admin.manage vs workspace.manage
+### `data_sources`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Operational:** `type TEXT NOT NULL`, `provider TEXT NOT NULL`, `display_name TEXT NOT NULL`, `connection_status TEXT NOT NULL DEFAULT 'not_connected'`, `last_sync_status TEXT`
+- **Audit:** `created_at`, `updated_at`
 
-`workspace.manage` covers workspace settings updates. `nashir.admin.manage` is reserved for Nashir-specific system-level admin actions that go beyond workspace settings (e.g., bulk admin operations, system configuration specific to Nashir). Both are owner/admin only. The boundary in V1: `workspace.manage` for workspace metadata; `nashir.admin.manage` for Nashir-specific operational actions not covered by workspace.manage. This distinction must be explicit in the permission seed description field.
+### `channel_connections`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `data_source_id UUID REFERENCES data_sources(id)` — optional
+- **Operational:** `provider TEXT NOT NULL`, `channel_type TEXT NOT NULL`, `display_name TEXT NOT NULL`, `connection_status TEXT NOT NULL DEFAULT 'not_connected'`, `capability_summary TEXT`
+- **Audit:** `created_at`, `updated_at`
 
-### C-RV02 resolution: RA (Requires Additional Approval) semantics for reviewer + nashir.evidence.manage
+### `integration_credentials`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `channel_connection_id UUID REFERENCES channel_connections(id)` — optional
+- **Credential (safe only):** `credential_type TEXT NOT NULL`, `vault_ref TEXT NOT NULL` — opaque vault reference; never a raw secret
+- **Lifecycle:** `archived_at TIMESTAMPTZ` — revoke by archiving
+- **Audit:** `created_at`
 
-`RA` in the role-permission matrix means: the role holds the permission but the system must enforce an additional approval check at the service layer (not just RBAC). For `reviewer + nashir.evidence.manage`: reviewer can call evidence.manage operations, but the service must verify that the reviewer is not managing their own evidence record (similar to self-approval denial). This is a service invariant, not a RBAC gate. RA is documented as a service-layer flag, not a separate permission code.
+### `assets`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `product_id UUID REFERENCES products(id)`, `campaign_content_item_id UUID REFERENCES campaign_content_items(id)` — both optional
+- **Display:** `title TEXT NOT NULL`, `asset_type TEXT NOT NULL`, `source TEXT`
+- **Storage:** `storage_reference TEXT` — placeholder; Storage Gate finalizes
+- **Status:** `status asset_status_enum NOT NULL DEFAULT 'active'`
+- **Soft-delete:** `archived_at TIMESTAMPTZ`
+- **Audit:** `created_at`, `updated_at`
 
-### C-RV03 resolution: permission pattern description correction
+### `campaigns`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Display:** `name TEXT NOT NULL`, `objective TEXT`
+- **Relationships:** `primary_product_id UUID REFERENCES products(id)` — optional
+- **Status:** `status campaign_status_enum NOT NULL DEFAULT 'draft'`
+- **Version:** `version INTEGER NOT NULL DEFAULT 1` — for optimistic concurrency
+- **Soft-delete:** `archived_at TIMESTAMPTZ`
+- **Audit:** `created_at`, `updated_at`
 
-The canonical pattern is `nashir.domain.action` (dots only). The Auth/RBAC gate's Section 5 Identity table had a typographic error (`nashir_domain.action` with underscore). The SQL seed data must use dots: `nashir.product.read`, `nashir.content.create`, etc. No underscore between nashir and domain.
+### `campaign_briefs`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `campaign_id UUID NOT NULL UNIQUE REFERENCES campaigns(id)` — one per campaign
+- **Display:** `objective TEXT`, `audience_summary TEXT`, `channel_summary TEXT`, `tone TEXT`, `constraints TEXT`
+- **Audit:** `created_at`, `updated_at`
 
-### RBAC seed data plan
+### `campaign_content_items`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `campaign_id UUID NOT NULL REFERENCES campaigns(id)`, `current_draft_id UUID REFERENCES content_drafts(id)` — optional circular; set after first draft created
+- **Operational:** `content_type TEXT NOT NULL`, `channel TEXT NOT NULL`
+- **Status:** `status campaign_content_item_status_enum NOT NULL DEFAULT 'draft'`
+- **Version:** `version INTEGER NOT NULL DEFAULT 1`
+- **Soft-delete:** `archived_at TIMESTAMPTZ`
+- **Audit:** `created_at`, `updated_at`
 
-- No destination service actor in V1 RBAC seed data.
-- No system admin role that bypasses workspace isolation (system admin must still operate within workspace scope in V1).
-- Existing marketing-os roles (creator, reviewer, publisher, billing_admin, viewer, owner, admin) likely already exist in the base schema seed — verify and supplement, do not duplicate.
-- Self-approval denial: NOT a RBAC gate. It is a service-layer invariant for `approveCampaignContent` and `rejectCampaignContent`. The rule: actor who created the content cannot be the approver. Enforced in service code, not in permission table.
+### `content_drafts`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `campaign_content_item_id UUID NOT NULL REFERENCES campaign_content_items(id)`, `created_by_user_id UUID REFERENCES users(id)`
+- **Content:** `body TEXT`, `language TEXT`
+- **Operational:** `version_number INTEGER NOT NULL DEFAULT 1`
+- **Status:** `status content_draft_status_enum NOT NULL DEFAULT 'draft'`
+- **Version:** `version INTEGER NOT NULL DEFAULT 1` — for optimistic concurrency
+- **Soft-delete:** `archived_at TIMESTAMPTZ`
+- **Audit:** `created_at`, `updated_at`
+
+### `content_approvals`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `content_draft_id UUID NOT NULL REFERENCES content_drafts(id)`, `reviewer_user_id UUID NOT NULL REFERENCES users(id)`
+- **Decision (server-owned):** `decision content_approval_decision_enum NOT NULL` — set by server; never from client body
+- **Metadata:** `note TEXT`, `rejection_reason TEXT`, `required_changes TEXT[]` — nullable; populated on reject
+- **Operational:** `decided_at TIMESTAMPTZ`
+- **Audit:** `created_at` only — immutable after creation; no `updated_at`
+- **Note:** Self-approval forbidden at application layer (reviewer_user_id ≠ content draft's created_by_user_id)
+
+### `publishing_jobs`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `campaign_id UUID NOT NULL REFERENCES campaigns(id)`, `campaign_content_item_id UUID REFERENCES campaign_content_items(id)`, `target_channel_connection_id UUID REFERENCES channel_connections(id)` — optional
+- **Operational:** `scheduled_at TIMESTAMPTZ`
+- **Status:** `status publishing_job_status_enum NOT NULL DEFAULT 'draft'`
+- **Version:** `version INTEGER NOT NULL DEFAULT 1`
+- **Lifecycle:** `cancelled_at TIMESTAMPTZ`
+- **Audit:** `created_at`, `updated_at`
+
+### `publishing_statuses`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Relationships:** `publishing_job_id UUID NOT NULL REFERENCES publishing_jobs(id)`
+- **Operational:** `status TEXT NOT NULL`, `status_message TEXT`, `occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- **Audit:** `created_at` only — append-only; no `updated_at`
+
+### `analytics_snapshots`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Status:** `status analytics_snapshot_status_enum NOT NULL`
+- **Subject:** `subject_type TEXT NOT NULL` — campaign/product/channel_connection, `subject_id UUID NOT NULL`
+- **Content:** `metric_summary JSONB`, `source_summary TEXT NOT NULL` — required; distinguishes real vs mock/partial
+- **Temporal:** `snapshot_at TIMESTAMPTZ NOT NULL`
+- **Audit:** `created_at` only — no client writes
+
+### `audit_events`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Actor:** `actor_user_id UUID REFERENCES users(id)` — nullable for system actions
+- **Event:** `action TEXT NOT NULL`, `target_type TEXT NOT NULL`, `target_id UUID NOT NULL`
+- **Payload:** `metadata_summary JSONB` — no raw secrets; safe summary only
+- **Temporal:** `occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- **Audit:** `created_at` only — append-only; no `updated_at`
+
+### `idempotency_keys`
+- **Identity:** `id UUID PK`
+- **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
+- **Key:** `idempotency_key TEXT NOT NULL`, `route_family TEXT NOT NULL`, `actor_user_id UUID REFERENCES users(id)`
+- **Payload:** `request_hash TEXT`, `response_status INTEGER`, `response_body JSONB` — cached response for replay
+- **Status:** `status TEXT NOT NULL DEFAULT 'pending'` — pending/completed/failed
+- **Temporal:** `expires_at TIMESTAMPTZ NOT NULL`, `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- **Unique constraint:** `(workspace_id, route_family, idempotency_key, actor_user_id)`
 
 ---
 
-## 10. Workspace and Store Isolation Plan
+## 7. Relationship and Cardinality Planning
 
-| Table | workspace_id Required | store_id / store_profile_id Required | Scope Derivation | Guard Dependency | Risk |
-|---|---|---|---|---|---|
-| workspaces | — (IS workspace) | — | Self | None | None |
-| users | Via workspace_members join | — | Via membership | None | None |
-| workspace_members | YES | — | Direct | workspaceContextGuard | LOW |
-| roles / permissions / role_permissions | — (system global) | — | System-level | None | LOW |
-| nashir_store_profiles | YES | — (1:1 with workspace) | Direct | workspaceContextGuard | LOW |
-| nashir_products | YES | Implicit via workspace's store | Via workspace | workspaceContextGuard | LOW |
-| nashir_assets | YES | Implicit | Via workspace | workspaceContextGuard | LOW |
-| nashir_campaigns | YES | — | Direct | workspaceContextGuard | LOW |
-| nashir_campaign_content_items | YES | Implicit | Via campaign | workspaceContextGuard | MEDIUM |
-| nashir_preview_artifacts | YES | Implicit | Via content item | workspaceContextGuard | LOW |
-| nashir_evidence | YES | — | Direct (Patch 003 confirmed) | workspaceContextGuard | LOW |
-| nashir_publishing_queue_items | YES | Implicit | Via approved content | workspaceContextGuard | MEDIUM |
-| nashir_creator_studio_sessions | YES | Implicit | Direct | workspaceContextGuard + nonDisclosingMembershipCheck | HIGH |
-| nashir_creator_context_drafts | YES | Implicit | Via session | workspaceContextGuard | MEDIUM |
-| nashir_creator_transfer_drafts | YES | Implicit | Via context draft | workspaceContextGuard | MEDIUM |
-| nashir_creator_* advisory | YES | Implicit | Via session | workspaceContextGuard | LOW–MEDIUM |
-| nashir_prompt_templates | YES | — | Direct | workspaceContextGuard | MEDIUM |
-| nashir_model_routing_rules | YES | — | Direct | workspaceContextGuard | LOW |
-| nashir_ai_providers | YES | — | Direct | workspaceContextGuard | LOW |
-| nashir_cost_usage_records | YES | — | Direct | workspaceContextGuard | LOW |
-| audit_logs | YES (existing) | — | Direct | workspaceContextGuard | LOW |
-
-**Cross-workspace access: NO-GO.** All repository methods must include `workspace_id` explicitly. Body `workspace_id` is rejected by `rejectBodyWorkspaceId` guard (documented in nashir_v1_openapi.yaml x-guard-chain for all mutating operations).
-
-**V1 store scope:** storeProfileId should be available as a nullable foreign key on `nashir_products` and `nashir_assets` even if not used functionally in V1, to enable Post-V1 multi-store scoping without schema migration.
-
----
-
-## 11. Creator Studio Lifecycle and TTL Plan
-
-| Entity/Table | TTL Required | Expiry Behavior | Cleanup Responsibility | Privacy Risk | Migration Note |
-|---|---|---|---|---|---|
-| `nashir_creator_studio_sessions` | YES — max 24h | Session expiry invalidates all child drafts; GET returns 410 Gone for expired | Background cleanup job or lazy expiry check | **HIGH** — creator handle must be opaque reference only; never store raw handle | TTL column: `expires_at timestamptz NOT NULL`; status includes `expired` |
-| `nashir_creator_content_ideas` | YES — via session TTL | Deleted or expired with parent session | Same as session | LOW–MEDIUM | `session_id` FK; `expires_at` from parent |
-| `nashir_creator_campaign_angles` | YES — via session TTL | Same | Same | LOW | `session_id` FK |
-| `nashir_creator_audience_segments` | YES — via session TTL | Same; consent-gated data | Same | MEDIUM — aggregate only; no individual PII | `session_id` FK; `consent_ref` column |
-| `nashir_creator_publish_windows` | YES — via session TTL | Same | Same | LOW | `session_id` FK |
-| `nashir_creator_context_drafts` | YES — max 24h; capped by session TTL | GET returns 410 Gone; transfer endpoints must reject expired drafts | Background cleanup or lazy check | MEDIUM — references session (high-privacy parent) | `expires_at` from session; `status` includes `expired` |
-| `nashir_creator_transfer_drafts` | YES — max 24h; capped by context draft TTL | GET returns 410 Gone | Same | MEDIUM | `expires_at` from context draft |
-| `nashir_creator_readiness_assessments` | YES — max 24h | Must be re-evaluated before each use | Same | LOW | `expires_at` column |
-
-**Creator handle storage rule:** `creator_handle_ref` in `nashir_creator_studio_sessions` must be stored as an opaque reference string only. It must never contain a raw platform handle, username, or OAuth token. This is a DDL-level column naming and application-layer enforcement requirement.
-
-**Automatic creation prevention:** `createCreatorStudioSession` has `x-no-automatic-execution: true`. This must be enforced at both the frontend layer (no page-load API call) and the backend layer (guard/service validation). No database trigger should create sessions automatically.
-
-**payloadSummary sensitivity:** `nashir_creator_transfer_drafts.payload_summary` (or equivalent JSON column) must not store raw platform tokens, raw prompt text, or credentials. Only opaque references and structured metadata.
-
-**Destination service actor:** deferred. No destination service account row in V1 RBAC seed. Not modeled as a user or role in V1.
-
----
-
-## 12. Campaign, Content, Review, and Publishing Plan
-
-### nashir_campaigns (EXISTS — Patch 004)
-
-Already defined with: `nashir_campaign_id`, `workspace_id`, `campaign_name`, `campaign_status` enum (draft/generated/in_review/approved/rejected/archived/requires_reapproval/blocked_until_review/published), `created_by_user_id`, timestamps.
-
-**Gap:** Does not include `store_profile_id` for future store scoping. A future patch should add a nullable `store_profile_id` column.
-
-### nashir_campaign_content_items (NEW)
-
-Key conceptual columns: `campaign_content_id`, `workspace_id`, `campaign_id` (FK to nashir_campaigns), `product_id` (FK to nashir_products), `title`, `channel`, `content_type`, `body_content` (text), `review_status` (enum: draft/ready_for_review/in_review/approved/rejected), `version` (opaque string or integer), `created_by_user_id`, timestamps.
-
-**Self-approval prevention:** must be enforced at service layer. No SQL constraint can express "approver ≠ creator" cleanly across tables without a trigger. Service must check: approver_user_id ≠ created_by_user_id. Document as service invariant.
-
-**Optimistic concurrency:** `version` field (string or timestamp-based) supports If-Match / X-Resource-Version headers from nashir_v1_openapi.yaml.
-
-### nashir_preview_artifacts (NEW)
-
-Key conceptual columns: `preview_artifact_id`, `workspace_id`, `campaign_content_id` (FK), `channel`, `format`, `display_summary`, `review_status`, `created_at`.
-
-### nashir_approval_decisions (NEW or EVALUATE REUSE)
-
-`approval_decisions` exists in marketing-os base schema. Evaluate whether Nashir's content approval can reuse it (action: approve/reject on `nashir_campaign_content_items`). If the existing table's schema is too tightly coupled to `media_asset_versions`, create `nashir_approval_decisions` with: `approval_id`, `workspace_id`, `campaign_content_id` (FK), `decision` (approved/rejected/changes_requested), `decided_by_user_id` (must ≠ created_by_user_id on content), `decision_note`, `rejection_reason`, `required_changes` (text[]), `created_at`.
-
-### nashir_publishing_queue_items (NEW)
-
-Key conceptual columns: `queue_item_id`, `workspace_id`, `campaign_content_id` (FK — must be approved, non-expired, non-archived), `status` (pending/scheduled/published/cancelled), `scheduled_by_user_id`, `human_confirmed` (boolean, default false), timestamps.
-
-**No automatic external publishing.** Publishing requires human confirmation (`human_confirmed = true` before any status transition to `scheduled`).
-
----
-
-## 13. Product, Store, Asset, and Data Source Plan
-
-### nashir_store_profiles (NEW)
-
-Key conceptual columns: `store_profile_id`, `workspace_id` (UNIQUE — 1:1 in V1), `store_name`, `store_url`, `category`, `activity`, `language`, `tone`, `audience_defaults` (jsonb), `channel_preferences` (text[]), `setup_status` (enum: incomplete/ready), timestamps.
-
-### nashir_products (NEW)
-
-Key conceptual columns: `product_id`, `workspace_id`, `store_profile_id` (nullable FK — for future multi-store scoping), `name` (display only; not identity), `category`, `price` (numeric), `currency`, `sku`, `stock_status` (enum), `image_url`, `video_url`, `description`, `status` (draft/active/archived), `version` (optimistic concurrency), timestamps.
-
-### nashir_assets (NEW — SQL name ≠ OpenAPI schema name)
-
-**Confirmed naming:** SQL table is `nashir_assets`. OpenAPI schema name remains `Asset`. No renaming of generated types.
-
-Key conceptual columns: `asset_id`, `workspace_id`, `linked_product_id` (nullable FK to nashir_products), `name` (display only), `asset_type` (enum: image/video/logo/document/text/design), `url` (metadata reference; not binary upload), `preview_url`, `rights_status` (enum: needs_review/approved/rejected/unknown), `usage_rights` (enum: owned/licensed/user_generated/unknown), `source`, `quality`, `status` (draft/active/archived), `version`, timestamps.
-
-### nashir_data_sources (DEFER)
-
-UI-only in V1. No persistence table in V1 SQL. Any minimal reference entity (name, type, status) may be deferred to a future gate.
-
-### nashir_integration_connections (DEFER)
-
-OAuth/connector execution deferred. No table in V1. Vault references for integration tokens: stored in external vault only; no raw token column.
-
----
-
-## 14. Prompt Governance, Model Routing, and Cost Plan
-
-### prompt_templates vs nashir_prompt_templates
-
-**DECISION NEEDED before SQL Implementation:** The existing `prompt_templates` table has `template_type` enum (caption, ad_copy, image_prompt, video_script, report, reply) which does not align with Nashir prompt governance requirements. Nashir needs: versioned templates, human approval state, deprecated/active/draft governance states, workspace-scoped, referenced by `promptTemplateId` in OpenAPI.
-
-**Recommendation (not final):** Create `nashir_prompt_templates` as a separate table to avoid conflicting semantics. Evaluate at SQL Schema Review Gate.
-
-### nashir_prompt_governance_versions (NEW)
-
-Key conceptual columns: `prompt_version_id`, `workspace_id`, `prompt_template_id` (FK), `version_number` (integer), `approval_status` (enum: draft/active/deprecated/blocked), `version_body` (text — internal; not exposed raw in API responses), `approved_by_user_id` (nullable), `approved_at` (nullable), timestamps.
-
-### nashir_model_routing_rules (NEW)
-
-Advisory snapshot only. Key conceptual columns: `model_route_id`, `workspace_id`, `route_name` (display only), `primary_model_id`, `fallback_model_ids` (text[]), `provider_id` (FK to nashir_ai_providers), `route_health` (enum), `route_policy` (jsonb), `score` (integer, advisory), `last_updated_at`, timestamps.
-
-### nashir_ai_providers (NEW)
-
-Advisory snapshot; no raw secrets. Key conceptual columns: `provider_id`, `workspace_id`, `provider_name` (display only), `health_status` (enum), `supported_capabilities` (text[]), `supported_models` (text[]), `secret_reference_name` (vault reference — NOT raw key), `score` (advisory), `last_tested_at`, timestamps.
-
-### nashir_cost_usage_records (NEW or EVALUATE reuse of cost_events)
-
-`cost_events` exists in marketing-os. Evaluate reuse. If column semantics differ, create `nashir_cost_usage_records` with: `cost_record_id`, `workspace_id`, `campaign_id` (nullable FK), `model_route_id` (nullable FK), `usage_type`, `amount` (numeric — NOT billing), `currency`, `is_advisory` (always true), `recorded_at`, timestamps.
-
-**Not billing. Not invoice. Not payment.** This is advisory tracking only.
-
----
-
-## 15. Audit and Evidence Schema Plan
-
-### audit_logs (REUSE — already exists)
-
-Key verified columns: `audit_log_id`, `workspace_id`, `customer_account_id`, `actor_user_id`, `action`, `entity_type`, `entity_id`, `before_snapshot` (jsonb), `after_snapshot` (jsonb), `metadata` (jsonb), `correlation_id`, `occurred_at`. Has append-only trigger (no UPDATE or DELETE allowed).
-
-**Nashir usage:** Add Nashir-specific `action` values using the format `nashir.domain.action` (e.g., `nashir.campaign_content.approved`, `nashir.creator_studio_session.created`). These are string values in the `action` column — no schema change needed if the existing `varchar(160)` is long enough.
-
-**Immutable requirement:** The existing append-only trigger on `audit_logs` satisfies this requirement. No separate Nashir audit mechanism needed.
-
-### nashir_evidence (REUSE — Patch 003)
-
-Already defined. Append-only via business rule. Status enum: submitted/accepted/rejected/invalidated/superseded.
-
-### nashir_evidence_lifecycle_events (REUSE — Patch 003)
-
-Already defined. Lifecycle event log for evidence state transitions. actor_user_id, reason_code, reviewer_notes.
-
----
-
-## 16. Column-Level Conceptual Plan
-
-All groups below are conceptual only. No SQL DDL.
-
-### Identity and tenancy (REUSE)
-
-**workspaces:** workspace_id (uuid PK), workspace_name, workspace_status, created_at, updated_at — already exists.
-
-**users:** user_id (uuid PK), email, user_status, created_at — already exists.
-
-**roles:** role_id (uuid PK), role_code (unique string, e.g., `creator`), role_name (display), role_scope (workspace), is_system_role (boolean) — already exists; extend seed.
-
-**permissions:** permission_id (uuid PK), permission_code (unique string, e.g., `nashir.product.read`), permission_name, domain — already exists; extend seed.
-
-**role_permissions:** role_permission_id (uuid PK), role_code, permission_code — already exists; extend seed.
-
-**workspace_members:** member_id (uuid PK), workspace_id (FK), user_id (FK), role_code, member_status (invited/active/disabled/removed), invited_at, joined_at — already exists.
-
-### Store and catalog (NEW)
-
-**nashir_store_profiles:** store_profile_id (uuid PK), workspace_id (uuid FK, UNIQUE), store_name (varchar NOT NULL), category, activity, language, tone, audience_defaults (jsonb), channel_preferences (text[]), setup_status (enum), created_at, updated_at. Indexes: workspace_id (unique).
-
-**nashir_products:** product_id (uuid PK), workspace_id (uuid FK), store_profile_id (uuid FK nullable — Post-V1 multi-store), name (varchar NOT NULL — display only), category, price (numeric), currency (varchar(10)), sku, stock_status (enum), image_url (text), video_url (text), description (text), status (enum: draft/active/archived), version (varchar — optimistic concurrency), created_by (uuid FK users), created_at, updated_at. Indexes: (workspace_id), (workspace_id, status).
-
-**nashir_assets:** asset_id (uuid PK), workspace_id (uuid FK), linked_product_id (uuid FK nullable → nashir_products), name (varchar NOT NULL — display only), asset_type (enum: image/video/logo/document/text/design), url (text), preview_url (text), rights_status (enum: needs_review/approved/rejected/unknown), usage_rights (enum), source, quality, status (enum: draft/active/archived), version (varchar), created_by (uuid FK users), created_at, updated_at. Indexes: (workspace_id), (workspace_id, status), (workspace_id, linked_product_id).
-
-### Campaign and content (NEW + EXISTING)
-
-**nashir_campaigns (EXISTING Patch 004):** nashir_campaign_id (uuid PK), workspace_id (uuid FK), campaign_name (varchar NOT NULL), campaign_status (enum), created_by (uuid FK users), created_at, updated_at. Future column: store_profile_id (nullable FK — add in Patch 005+).
-
-**nashir_campaign_content_items:** campaign_content_id (uuid PK), workspace_id (uuid FK), campaign_id (uuid FK → nashir_campaigns nullable — CampaignContent may exist without a campaign parent in V1), product_id (uuid FK NOT NULL → nashir_products), title (varchar NOT NULL), channel (varchar NOT NULL), content_type (varchar NOT NULL), body_content (text), cta (text), audience_summary (text), offer_summary (text), review_status (enum: draft/ready_for_review/in_review/approved/rejected), version (varchar — optimistic concurrency), created_by (uuid FK users), created_at, updated_at. Indexes: (workspace_id), (workspace_id, review_status), (workspace_id, product_id).
-
-**nashir_campaign_content_assets:** campaign_content_asset_id (uuid PK), workspace_id (uuid FK), campaign_content_id (uuid FK → nashir_campaign_content_items), asset_id (uuid FK → nashir_assets), sort_order (integer nullable), created_at. Purpose: replaces `selected_asset_ids uuid[]` so PostgreSQL can enforce referential integrity, workspace alignment, and asset deletion behavior through foreign keys. Indexes: (workspace_id, campaign_content_id), (workspace_id, asset_id).
-
-**nashir_preview_artifacts:** preview_artifact_id (uuid PK), workspace_id (uuid FK), campaign_content_id (uuid FK NOT NULL), channel (varchar NOT NULL), format (varchar NOT NULL), display_summary (text NOT NULL), review_status (enum), created_at. Indexes: (workspace_id, campaign_content_id). Asset references must be resolved through `nashir_campaign_content_assets`, not a local `uuid[]` column.
-
-**nashir_approval_decisions:** approval_id (uuid PK), workspace_id (uuid FK), campaign_content_id (uuid FK NOT NULL), decision (enum: approved/rejected/changes_requested), decided_by (uuid FK users — NOT NULL; must ≠ content creator; service-layer check), decision_note (text), rejection_reason (text), required_changes (text[]), created_at. Indexes: (workspace_id, campaign_content_id).
-
-### Creator Studio (NEW)
-
-**nashir_creator_studio_sessions:** session_id (uuid PK), workspace_id (uuid FK), actor_user_id (uuid FK users NOT NULL), selected_platform (enum: Instagram/TikTok/YouTube/X/Snapchat), creator_handle_ref (text — OPAQUE REFERENCE ONLY; never raw handle), source (enum: manual — V1 only), manual_context (jsonb), status (enum: active/expired/blocked), created_at, expires_at (timestamptz NOT NULL), transferred_at (nullable). Indexes: (workspace_id, actor_user_id), (expires_at) WHERE status = 'active'.
-
-**nashir_creator_content_ideas:** idea_id (uuid PK), workspace_id (uuid FK), session_id (uuid FK → nashir_creator_studio_sessions), title, content_type, platform, rationale, confidence_label, status (enum: draft/human_review_required/accepted), created_at, expires_at. Indexes: (workspace_id, session_id).
-
-**nashir_creator_campaign_angles:** angle_id (uuid PK), workspace_id (uuid FK), session_id (uuid FK), label, audience, rationale, confidence_label, status, created_at, expires_at. Indexes: (workspace_id, session_id).
-
-**nashir_creator_audience_segments:** segment_id (uuid PK), workspace_id (uuid FK), session_id (uuid FK), label, platform, share (numeric), confidence_label, data_source, consent_ref (opaque), created_at, expires_at. Indexes: (workspace_id, session_id).
-
-**nashir_creator_publish_windows:** window_id (uuid PK), workspace_id (uuid FK), session_id (uuid FK), day_of_week, time_range, note, platform, confidence_label, data_source, created_at, expires_at. Indexes: (workspace_id, session_id).
-
-**nashir_creator_context_drafts:** draft_id (uuid PK), workspace_id (uuid FK), session_id (uuid FK NOT NULL), idea_id (uuid FK nullable), angle_id (uuid FK nullable), segment_id (uuid FK nullable), window_id (uuid FK nullable), prompt_template_id (uuid FK nullable → nashir_prompt_templates), status (enum: draft/incomplete/needs_consent/needs_human_review/ready_for_transfer/blocked/expired), human_review_required (boolean default true), created_at, expires_at. Indexes: (workspace_id, session_id), (workspace_id, status), (expires_at) WHERE status NOT IN ('expired','blocked').
-
-**nashir_creator_transfer_drafts:** transfer_id (uuid PK), workspace_id (uuid FK), context_draft_id (uuid FK NOT NULL), session_id (uuid FK NOT NULL), destination_module (enum: content_studio/campaign_wizard/publishing_queue/prompt_governance), status (enum: pending_review/expired), payload_summary (jsonb — NO raw tokens, NO raw prompt text, opaque refs only), human_review_required (boolean default true), created_at, expires_at. Indexes: (workspace_id, context_draft_id), (workspace_id, destination_module).
-
-**nashir_creator_readiness_assessments:** assessment_id (uuid PK), workspace_id (uuid FK), draft_id (uuid FK NOT NULL), overall_status (enum), findings (jsonb), blockers (text[]), warnings (text[]), created_at, expires_at. Indexes: (workspace_id, draft_id).
-
-### Prompt governance (NEW)
-
-**nashir_prompt_templates:** prompt_template_id (uuid PK), workspace_id (uuid FK), template_name (varchar NOT NULL — display only; not identity), created_by (uuid FK users), status (enum: active/deprecated/archived), created_at, updated_at. Indexes: (workspace_id), (workspace_id, status).
-
-**nashir_prompt_governance_versions:** prompt_version_id (uuid PK), workspace_id (uuid FK), prompt_template_id (uuid FK NOT NULL), version_number (integer NOT NULL), version_body (text NOT NULL — internal; not returned raw in API), approval_status (enum: draft/active/deprecated/blocked), approved_by (uuid FK users nullable), approved_at (nullable timestamptz), created_at. Indexes: (workspace_id, prompt_template_id), (workspace_id, approval_status).
-
-### AI ops (NEW)
-
-**nashir_ai_providers:** provider_id (uuid PK), workspace_id (uuid FK), health_status (enum), supported_capabilities (text[]), supported_models (text[]), secret_reference_name (text — vault ref only, NOT raw secret), score (integer advisory), last_tested_at (nullable), updated_at. Indexes: (workspace_id).
-
-**nashir_model_routing_rules:** model_route_id (uuid PK), workspace_id (uuid FK), primary_model_id (text NOT NULL), fallback_model_ids (text[]), provider_id (uuid FK nullable → nashir_ai_providers), route_health (enum), route_policy (jsonb), score (integer advisory), updated_at. Indexes: (workspace_id).
-
-**nashir_cost_usage_records:** cost_record_id (uuid PK), workspace_id (uuid FK), campaign_id (uuid nullable FK), model_route_id (uuid nullable FK), usage_type (varchar NOT NULL), amount (numeric NOT NULL), currency (varchar(10) NOT NULL), is_advisory (boolean default true), recorded_at (timestamptz NOT NULL), created_at. Indexes: (workspace_id, recorded_at), (workspace_id, campaign_id).
-
-### Publishing (NEW)
-
-**nashir_publishing_queue_items:** queue_item_id (uuid PK), workspace_id (uuid FK), campaign_content_id (uuid FK NOT NULL — must be approved, non-expired, non-archived), status (enum: pending/scheduled/cancelled), scheduled_by (uuid FK users NOT NULL), human_confirmed (boolean default false), created_at, updated_at. Indexes: (workspace_id, status), (workspace_id, campaign_content_id).
-
----
-
-## 17. Relationships and Cardinality
-
-| Parent Entity | Child Entity | Relationship | Cardinality | Cascade/Delete | Audit Impact | Risk |
-|---|---|---|---|---|---|---|
-| Workspace | StoreProfile (nashir_store_profiles) | Has | 1:1 in V1 | No cascade delete in V1 (store must be deactivated, not deleted) | YES — workspace changes | LOW |
-| Workspace | WorkspaceMembers | Has | 1:N | Soft delete (member_status = removed) | YES — membership changes | MEDIUM |
-| Workspace | Products (nashir_products) | Has | 1:N | No cascade delete | YES — product create/update | LOW |
-| StoreProfile | Products | Has (nullable in V1) | 1:N (future) | No cascade delete | NO | LOW |
-| Workspace | Assets (nashir_assets) | Has | 1:N | No cascade delete | YES — asset create/update | LOW |
-| Product | Assets | Referenced by | 1:N (via linked_product_id) | No cascade | NO | LOW |
-| Workspace | Campaigns (nashir_campaigns) | Has | 1:N | No cascade delete (archive only) | YES — campaign create | LOW |
-| Campaign | CampaignContentItems | Has | 1:N | No cascade delete (content archived) | YES — content create/update | MEDIUM |
-| CampaignContent | PreviewArtifacts | Has | 1:N | No cascade delete | NO | LOW |
-| CampaignContent | ApprovalDecisions | Has | 1:N | No cascade delete (append-only decision history) | YES — approval/rejection | HIGH |
-| ApprovedContent | PublishingQueueItems | Referenced by | 1:N | No cascade delete | YES — queue item create | MEDIUM |
-| PublishingQueueItem | Evidence | Has (via nashir_evidence) | 1:N | No cascade delete | YES | MEDIUM |
-| Workspace | CreatorStudioSessions | Has | 1:N (TTL-managed) | Expiry (not hard delete) | YES — session create | HIGH |
-| Session | ContentIdeas, Angles, Segments, Windows | Has | 1:N (session-scoped) | Expire with session | NO | LOW |
-| Session | ContextDrafts | Has | 1:N (TTL-managed) | Expire with session | YES — draft create | MEDIUM |
-| ContextDraft | TransferDrafts | Has | 1:N (TTL-managed) | Expire with context draft | YES — transfer create | MEDIUM |
-| ContextDraft | ReadinessAssessments | Has | 1:N | Expire | NO | LOW |
-| Workspace | PromptTemplates | Has | 1:N | No cascade delete (deprecate only) | YES — template governance | MEDIUM |
-| PromptTemplate | PromptGovernanceVersions | Has | 1:N | No cascade delete | YES — version approve | MEDIUM |
-| Entity (any) | AuditLogs | Has | 1:N (append-only) | No delete | N/A (IS audit) | LOW |
-| ModelRoutingRule | AuditLogs | Referenced by | Via action/entity_id | No delete | YES | LOW |
-| IntegrationConnection (deferred) | AuditLogs (deferred) | Referenced by | Via action/entity_id | Deferred | Deferred | DEFER |
-
----
-
-## 18. Status and Lifecycle Values
-
-| Entity | Candidate Status Values | V1 Status | Notes |
-|---|---|---|---|
-| Campaign (nashir_campaigns) | draft, generated, in_review, approved, rejected, archived, requires_reapproval, blocked_until_review, published | **IN (Patch 004)** | Already defined |
-| CampaignContent | draft, ready_for_review, in_review, approved, rejected | **IN** | From nashir_v1_openapi.yaml |
-| ApprovalDecision | approved, rejected, changes_requested | **IN** | Service-layer decision, not a status field on content |
-| PublishingQueueItem | pending, scheduled, cancelled | **IN** | Human confirmation required before `scheduled` |
-| CreatorStudioSession | active, expired, blocked | **IN** | TTL-managed |
-| CreatorContextDraft | draft, incomplete, needs_consent, needs_human_review, ready_for_transfer, blocked, expired | **IN** | From nashir_v1_openapi.yaml |
-| CreatorTransferDraft | pending_review, expired | **IN** | From nashir_v1_openapi.yaml |
-| Evidence (nashir_evidence) | submitted, accepted, rejected, invalidated, superseded | **IN (Patch 003)** | Already defined |
-| IntegrationConnection | — | **DEFER** | Post-V1 |
-| PromptGovernanceVersion | draft, active, deprecated, blocked | **IN** | Human approval required for `active` |
-| WorkflowDefinition | — | **DEFER** | Advisory metadata only if created |
-
----
-
-## 19. Index and Constraint Planning
-
-**Index naming convention (matching marketing-os pattern):** `idx_<table>_<columns_or_purpose>`
-
-**Primary key:** uuid PKs everywhere (`gen_random_uuid()`).
-
-**Core indexes required for V1:**
-- Every workspace-scoped table: `(workspace_id)` — covers list queries
-- Every workspace-scoped table with status: `(workspace_id, status)` — covers filtered list queries
-- Creator Studio TTL entities: table-specific partial indexes on `(expires_at)` for non-terminal TTL statuses; examples: `WHERE status = 'active'` for sessions and `WHERE status = 'pending_review'` for transfer drafts. Do not use `WHERE expires_at > now()` in PostgreSQL partial index predicates; cleanup jobs should compare `expires_at` at runtime.
-- Evidence: `(workspace_id, nashir_campaign_id, evidence_id)` — tenant isolation + lookup
-- AuditLog: existing indexes cover workspace, entity, actor, correlation
-- Session/draft foreign keys: `(workspace_id, session_id)`, `(workspace_id, context_draft_id)`
-
-**Unique constraints:**
-- `nashir_store_profiles.workspace_id` — UNIQUE PARTIAL for active/non-archived rows only (1:1 with workspace in V1; avoid soft-delete conflicts)
-- `nashir_prompt_governance_versions.(workspace_id, prompt_template_id, version_number)` — UNIQUE PARTIAL for active/non-archived rows only (avoid conflicts with archived versions)
-
-**Check constraints (pattern from marketing-os):**
-- `name_not_empty`: `length(trim(column)) > 0` for all name/title columns
-- `expires_at > created_at` for all TTL entities
-- `human_review_required IS TRUE` for transfer drafts (always true in V1)
-
-**Soft delete vs hard delete:** Prefer status-based soft delete (archived/deprecated/expired/removed) over hard deletes for all business entities. Hard deletes only allowed for expired TTL records after retention window.
-
-**Optimistic concurrency:** `version` column (varchar or integer) on entities with If-Match / X-Resource-Version patterns (Products, Assets, CampaignContent, etc.).
-
----
-
-## 20. Migration Sequencing Plan
-
-Future Nashir migrations are numbered after the existing Patch 004:
-
-| Patch | Scope | Dependencies | V1 Priority |
-|---|---|---|---|
-| **Patch 005** | Identity seed extension: add Nashir permission codes (33 V1 codes) + role seed rows to existing `roles`/`permissions`/`role_permissions` tables | Patch 004 applied | **HIGHEST** |
-| **Patch 006** | StoreProfile, Products, Assets tables | Patch 005 applied | HIGH |
-| **Patch 007** | CampaignContentItems, CampaignContentAssets junction table, PreviewArtifacts, ApprovalDecisions | Patch 006 applied | HIGH |
-| **Patch 008** | PublishingQueueItems | Patch 007 applied | MEDIUM |
-| **Patch 009** | Creator Studio tables (sessions, ideas, angles, segments, windows, context drafts, transfer drafts, readiness assessments) | Patch 006 applied | MEDIUM |
-| **Patch 010** | PromptTemplates, PromptGovernanceVersions | Patch 005 applied | MEDIUM |
-| **Patch 011** | ModelRoutingRules, AIProviders, CostUsageRecords | Patch 005 applied | LOW |
-| **Patch 012** | Workflow definitions (advisory metadata only, if approved) | Patch 005 applied | LOW |
-
-**Migration ownership:** All patches live in `marketing-os/docs/` following the naming pattern `marketing_os_v5_6_5_phase_0_1_schema_patch_NNN.sql`. The `scripts/db-migrate.js` array must be extended with each new patch file.
-
-**Actual migrations are blocked** until the Nashir SQL Schema Implementation Planning Gate approves the exact allowed files, verification commands, and rollback criteria.
-
----
-
-## 21. Seed Data Plan
-
-**What seed data is needed:**
-
-| Seed category | Content | Location |
-|---|---|---|
-| Role seed | 7 rows: owner, admin, creator, reviewer, publisher, billing_admin, viewer (verify which already exist in base schema before inserting) | Patch 005 or existing role seed |
-| Permission seed | 33 rows: all V1-active Nashir permission codes from `docs/nashir_auth_rbac_workspace_identity_gate.md` Section 8 | Patch 005 |
-| RolePermission seed | Assignments per the role-to-permission matrix (Section 9 of Auth/RBAC gate) | Patch 005 |
-| Default workspace | NO — no production workspace seed; test workspace only in CI seed | `scripts/db-seed.js` |
-| Secrets | NO — never in seed data | N/A |
-| External tokens | NO | N/A |
-| User production data | NO — no real user data in seed | N/A |
-
-**C-RV03 canonical naming:** All permission codes in seed data must use dot notation: `nashir.product.read`, `nashir.content.create`, etc. (dots throughout; no underscore between nashir and domain).
-
----
-
-## 22. Privacy and Data Governance
-
-| Data Domain | Sensitivity | Retention Risk | Encryption/Secret Handling | Audit Need | Human Review Need | V1 Decision |
-|---|---|---|---|---|---|---|
-| Creator handles (creator_handle_ref) | **HIGH** | HIGH — must expire with session; opaque reference only | Must not be stored raw; opaque token only | YES | YES — consent before any persistence | Opaque column only; never decrypt to raw handle |
-| Social profiles (creator profile snapshots) | **HIGH** | HIGH — platform data; consent required | External vault; ephemeral | YES | YES | DEFER to Post-V1 (OAuth/consent gate) |
-| AI suggestions (ideas, angles) | LOW–MEDIUM | LOW — expires with session | No encryption needed | YES (source provenance) | YES — human review before use | Short-lived; expire with session |
-| Campaign content body | MEDIUM | LOW–MEDIUM | No special encryption; application access control | YES | YES — review/approval flow | Stored in body_content column |
-| Publishing schedules | LOW | LOW | None | YES | YES — human confirmation | stored in publishing_queue_items |
-| API keys / model provider secrets | **HIGH** | HIGH — vault only | Vault storage; DB stores secret_reference_name only | YES | YES | Column name: secret_reference_name (never raw key) |
-| Team/user permissions | MEDIUM | MEDIUM | No encryption; RBAC enforced | YES — all role changes | YES — admin/owner only | Standard RBAC tables |
-| Audit/evidence records | MEDIUM | HIGH — append-only; must not be deleted | No encryption; immutable trigger | SELF-AUDIT | N/A | Reuse audit_logs; append-only trigger |
-| Cost usage records | LOW | LOW | None | YES (advisory) | NO | Advisory column: is_advisory always true |
-| Publishing payload summaries | MEDIUM | MEDIUM — must not expose raw tokens | No raw tokens/prompts in payload_summary jsonb | YES | YES | Column constraint: raw platform tokens prohibited |
-
----
-
-## 23. marketing-os Reuse and Conflict Assessment
-
-| marketing-os Pattern/File | Relevance | Reuse Category | Required Adaptation | Risk |
+| Relationship | Type | Nullable | Cascade Risk | Archive Implication |
 |---|---|---|---|---|
-| Migration chain (`schema_patch_NNN.sql` pattern) | Direct pattern for Nashir migrations | **Reuse after reconciliation** | Add Patch 005+ files following same naming, transaction, advisory-lock pattern | LOW |
-| PostgreSQL DDL patterns (uuid PK, timestamptz, idempotent enum creation) | Column patterns, constraint patterns | **Reuse after reconciliation** | Apply same patterns to Nashir tables | LOW |
-| `workspaces`, `users`, `workspace_members` tables | Workspace/tenant foundation | **Reuse as-is** | Nashir uses same workspace_id FK pattern (Slice 0 verified) | LOW |
-| `roles`, `permissions`, `role_permissions` tables | RBAC authority | **Reuse after reconciliation** | Extend seed data with Nashir codes; verify role deduplication | MEDIUM |
-| `audit_logs` table | Audit authority (append-only) | **Reuse as-is** | Add Nashir action strings to `action` column; no schema change needed | LOW |
-| `prompt_templates` table | Possible partial reuse | **Reuse after reconciliation** | Evaluate whether `template_type` enum can accommodate Nashir prompt governance; likely need `nashir_prompt_templates` | MEDIUM (see FINDING-SQL5) |
-| `nashir_campaigns` table (Patch 004) | Campaign foundation | **Reuse as-is** | Extend with nullable store_profile_id in a future patch | LOW |
-| `nashir_evidence` table (Patch 003) | Evidence foundation | **Reuse as-is** | Already Nashir-specific; extend if needed | LOW |
-| Repository pattern (narrow interface, workspaceId mandatory) | Service/repository architecture | **Reuse after reconciliation** | Nashir repositories follow same pattern | LOW |
-| `scripts/db-migrate.js` | Migration runner | **Reuse after reconciliation** | Add new patch filenames to migrations array | LOW |
-| `scripts/verify-sprint0.js` + openapi-lint | Verification pattern | **Reuse after reconciliation** | Nashir verification script may extend this | LOW |
-| marketing-os prototype/ | Prototype surface | **Reject** | Not applicable | None |
-| marketing-os existing campaigns/media/approval tables | Marketing OS domain | **Reference only** | Do not map Nashir content to media_asset_versions; separate entity models | MEDIUM |
+| Workspace ↔ WorkspaceMember | one-to-many | Required | LOW — member archive does not delete workspace | Archived member loses access; workspace remains |
+| User ↔ WorkspaceMember | one-to-many | Required | LOW | User may be archived independently; workspace membership should be suspended first |
+| Workspace ↔ StoreProfile | one-to-one | Optional (created on setup) | MEDIUM — if workspace deleted, store profile is orphaned | No archive; status change only |
+| Workspace ↔ Product | one-to-many | Required | MEDIUM | Product archived; workspace unaffected |
+| Workspace ↔ DataSource | one-to-many | Required | MEDIUM | DataSource removed; downstream ChannelConnections should nullify data_source_id |
+| DataSource ↔ ChannelConnection | many-to-one (optional) | Nullable | LOW | ChannelConnection.data_source_id nullified on DataSource removal |
+| ChannelConnection ↔ IntegrationCredential | one-to-many (optional) | Nullable | HIGH — credential revoke must audit | Credential archived/revoked; connection status may change |
+| Workspace ↔ Asset | one-to-many | Required | LOW | Asset archived; links to products/content items nullified |
+| Campaign ↔ CampaignBrief | one-to-one | Optional | MEDIUM | Brief archived with campaign |
+| Campaign ↔ CampaignContentItem | one-to-many | Required | MEDIUM | Content items archived with campaign |
+| CampaignContentItem ↔ ContentDraft | one-to-many | Required | MEDIUM — current_draft_id circular FK | current_draft_id nullified on draft archive |
+| ContentDraft ↔ ContentApproval | one-to-many | Required | LOW — approval is immutable | No cascade; approval record preserved on draft archive |
+| Campaign ↔ PublishingJob | one-to-many | Required | MEDIUM | Publishing job cancelled, not cascade-deleted |
+| PublishingJob ↔ PublishingStatus | one-to-many | Required | LOW — append-only | Status records preserved on job archive |
+| Workspace ↔ AnalyticsSnapshot | one-to-many | Required | LOW | Snapshots preserved; not cascade-deleted |
+| Workspace ↔ AuditEvent | one-to-many | Required | LOW | Audit events preserved; never deleted |
 
 ---
 
-## 24. Future Allowed Files for SQL Implementation Slice
+## 8. Status Enum Persistence Planning
 
-**Location:** `marketing-os/docs/` only (verified as the SQL artifact directory).
+| Table.column | Enum | Values | Transition Risk | Audit Required | SQL Type Strategy |
+|---|---|---|---|---|---|
+| `workspaces.status` | workspace_status_enum | active, inactive, suspended | MEDIUM | YES | PostgreSQL ENUM |
+| `users.status` | user_status_enum | active, invited, suspended | LOW | YES (auth provider) | PostgreSQL ENUM |
+| `workspace_members.status` | workspace_member_status_enum | active, invited, suspended | MEDIUM | YES | PostgreSQL ENUM |
+| `store_profiles.status` | store_profile_status_enum | active, inactive | LOW | YES | PostgreSQL ENUM |
+| `products.status` | product_status_enum | draft, active, archived | LOW | YES | PostgreSQL ENUM |
+| `campaign_content_items.status` | campaign_content_item_status_enum | draft, ready_for_review, approved, rejected, archived | HIGH — driven by ContentApproval | YES | PostgreSQL ENUM |
+| `content_drafts.status` | content_draft_status_enum | draft, ready_for_review, approved, rejected, archived | HIGH — lifecycle POSTs | YES | PostgreSQL ENUM |
+| `content_approvals.decision` | content_approval_decision_enum | approved, rejected | CRITICAL — immutable after creation | YES | PostgreSQL ENUM |
+| `campaigns.status` | campaign_status_enum | draft, generating, review, ready, scheduled, active, paused, completed, archived | HIGH | YES | PostgreSQL ENUM |
+| `publishing_jobs.status` | publishing_job_status_enum | draft, scheduled, queued, simulated, failed, cancelled | HIGH — `simulated` must remain distinct | YES | PostgreSQL ENUM |
+| `analytics_snapshots.status` | analytics_snapshot_status_enum | available, partial, stale, unavailable | MEDIUM | YES (on transition) | PostgreSQL ENUM |
 
-**Candidate file names:**
-- `marketing_os_v5_6_5_phase_0_1_schema_patch_005.sql` — RBAC seed extension
-- `marketing_os_v5_6_5_phase_0_1_schema_patch_006.sql` — Store/Product/Asset tables
-- `marketing_os_v5_6_5_phase_0_1_schema_patch_007.sql` — CampaignContent/Preview/Approval
-- `marketing_os_v5_6_5_phase_0_1_schema_patch_008.sql` — PublishingQueue
-- `marketing_os_v5_6_5_phase_0_1_schema_patch_009.sql` — Creator Studio tables
-- `marketing_os_v5_6_5_phase_0_1_schema_patch_010.sql` — PromptTemplates/Versions
-- `marketing_os_v5_6_5_phase_0_1_schema_patch_011.sql` — ModelRouting/AIProviders/Cost
-- `scripts/db-migrate.js` — extend migrations array with Patch 005+ filenames
-- `docs/07_database_schema.sql` — update schema wrapper doc to include new patches
-- Repository test files for new Nashir repositories (TBD after Backend Slice 0 Planning)
-
-**All changes to marketing-os require a separate marketing-os implementation PR under marketing-os gate discipline.**
+**Note:** PostgreSQL ENUM types require ALTER TYPE to add values — plan for extension points. If enum evolution is anticipated, TEXT with CHECK constraints is safer for early development.
 
 ---
 
-## 25. Future Forbidden Files
+## 9. Approval and Review Lifecycle Persistence Planning
 
-| Forbidden File / Category | Reason |
+### submit-review
+- **Trigger:** `content_drafts.status` `draft` → `ready_for_review`
+- **Persistence need:** status update on `content_drafts`; version increment
+- **Audit:** AuditEvent with `action = 'content_draft.submitted_for_review'`
+
+### approve
+- **Trigger:** `content_drafts.status` → `approved`; `campaign_content_items.status` → `approved`
+- **Persistence need:** new row in `content_approvals` (`decision = 'approved'`); status updates
+- **Immutability:** `content_approvals` row is never updated after creation
+- **Self-approval prevention:** application checks `reviewer_user_id ≠ content_draft.created_by_user_id` before insert
+- **Audit:** AuditEvent `content_draft.approved`
+
+### reject
+- **Trigger:** `content_drafts.status` → `rejected`
+- **Persistence need:** new row in `content_approvals` (`decision = 'rejected'`, `rejection_reason`, `required_changes`); status update
+- **Round-trip metadata:** `rejection_reason TEXT` and `required_changes TEXT[]` on `content_approvals` row
+- **Audit:** AuditEvent `content_draft.rejected_by_reviewer`
+
+### withdraw
+- **Trigger:** `content_drafts.status` `ready_for_review` → `rejected` (creator withdrawal)
+- **Persistence need:** status update on `content_drafts`; no new `content_approvals` row (or a distinct system-level withdrawal row — deferred to SQL Schema Authoring Gate)
+- **Authorization check:** `content_draft.created_by_user_id = actor_user_id`
+- **Audit:** AuditEvent `content_draft.withdrawn_by_creator`
+
+### Optimistic concurrency implication
+- `content_drafts.version` must be read and compared before any lifecycle POST
+- Stale version returns 409 Conflict
+- Version incremented after successful transition
+
+---
+
+## 10. Idempotency and Optimistic Concurrency Planning
+
+### Idempotency
+| Aspect | Plan |
 |---|---|
-| `nashir-ui-prototype/src/` | No backend changes in this repo |
-| `nashir-ui-prototype/package.json`, `package-lock.json` | No dependency changes in this repo |
-| `nashir-ui-prototype/src/generated/` | No manual edits; generated only |
-| `nashir-ui-prototype/docs/nashir_v1_openapi.yaml` | No schema changes in this slice |
-| UI API integration files | Not approved |
-| Backend route implementation files | Blocked until Backend Slice 0 Planning |
-| `marketing-os/prototype/` | Not a source of truth |
-| `.env` files or any secrets file | Never commit secrets |
-| Direct production schema changes without migration | Must use numbered migration files |
-| Skipping migration sequence numbers | Migration order is strict; no gaps |
+| Scope | `(workspace_id, route_family, actor_user_id, idempotency_key)` — unique per actor per endpoint family |
+| Candidate table | `idempotency_keys` (see Section 6) |
+| TTL | Candidates: 24h for lifecycle POSTs; configurable per route family |
+| Replay behavior | If key found and `status = 'completed'`, return cached response without re-executing |
+| Conflict behavior | If key found and `status = 'pending'`, return 409 Conflict |
+| Routes that require idempotency | `submitContentDraftReview`, `approveContentDraft`, `rejectContentDraft`, `withdrawContentDraft` (confirmed via OpenAPI `IdempotencyKeyHeader`) |
+| Deferred | Actual `idempotency_keys` table DDL; expiry/cleanup job |
 
----
-
-## 26. Verification Plan for Future SQL Implementation
-
-```sh
-# 1. Whitespace check
-git diff --check
-
-# 2. Only allowed files changed
-git diff --name-only
-
-# 3. Confirm no nashir-ui-prototype src/ or package changes
-git diff -- <nashir-ui-prototype-path>/src/
-git diff -- <nashir-ui-prototype-path>/package.json package-lock.json
-
-# 4. Migration validation (strict mode)
-npm run db:migrate:strict
-
-# 5. Node test suite
-npm test
-
-# 6. Integration tests
-npm run test:integration
-
-# 7. OpenAPI lint
-npm run openapi:lint:strict
-
-# 8. Full strict verification
-npm run verify:strict
-
-# 9. RBAC test for Nashir permission codes
-# Confirm nashir-rbac-permission-mapping.test.js passes with all new codes
-
-# 10. Count migration files matches db-migrate.js array
-grep -c "schema_patch" scripts/db-migrate.js
-
-# 11. Confirm no raw secrets in seed files
-grep -i "password\|secret\|token\|key" docs/*patch*.sql | grep -v "secret_reference_name"
-
-# 12. Git status clean
-git status --short
-```
-
----
-
-## 27. Rollback Plan
-
-- If a migration patch fails CI: revert the patch file commit in marketing-os before it reaches any test database.
-- Do not run partial migrations in production without a migration record.
-- If seed data causes conflict (duplicate role/permission): use `DO $$ BEGIN INSERT ... ON CONFLICT DO NOTHING; END $$` pattern consistent with marketing-os idempotent CREATE statements.
-- Generated/UI files in nashir-ui-prototype are unaffected by SQL migrations.
-- No production data exists to migrate; V1 is a greenfield schema.
-- A separate rollback migration (Patch N+1) that drops the tables should be prepared alongside each forward migration for the first implementation PR.
-
----
-
-## 28. Blocking Findings
-
-| ID | Finding | Severity | Resolution |
-|---|---|---|---|
-| B-SQL01 | Exact migration file paths and PR scope for marketing-os not approved — Backend Slice 0 Planning gate required | **HIGH** | Nashir Backend Slice 0 Planning Gate |
-| B-SQL02 | `prompt_templates` reuse vs `nashir_prompt_templates` decision unresolved — FINDING-SQL5 | **MEDIUM** | Nashir SQL Schema Review Gate |
-| B-SQL03 | Final role seed verification needed: which of the 7 Nashir roles already exist in marketing-os base schema to avoid duplicate inserts | **MEDIUM** | Nashir SQL Schema Review Gate |
-| B-SQL04 | Approval decisions entity decision: reuse existing `approval_decisions` table or create `nashir_approval_decisions` | **MEDIUM** | Nashir SQL Schema Review Gate |
-| B-SQL05 | Cost tracking entity: reuse `cost_events` table or create `nashir_cost_usage_records` | **LOW** | Nashir SQL Schema Review Gate |
-| B-SQL06 | TTL cleanup job ownership and mechanism not defined (background job, lazy check, or scheduled task) | **MEDIUM** | Nashir Backend Slice 0 Planning Gate |
-| B-SQL07 | Integration secret storage vault pattern not formally specified (external vault service name/API) | **MEDIUM** | Nashir Backend Slice 0 Planning Gate |
-| B-SQL08 | Audit/evidence retention policy not formally approved (how long are audit_log records kept) | **LOW** | Future governance gate |
-| B-SQL09 | marketing-os Pilot/Production NO-GO inherited — Nashir production path not independent | **MEDIUM** | Future Nashir Production Readiness Gate |
-
----
-
-## 29. Non-blocking Findings / Watch Items
-
-| ID | Finding | Action |
+### Optimistic concurrency
+| Entity | Version column | Conflict behavior |
 |---|---|---|
-| W-SQL01 | Advanced analytics and ROI modeling remain Post-V1; `nashir_cost_usage_records` is advisory only in V1 | Carry to Backend Slice 0 |
-| W-SQL02 | Model routing and AI provider tables are advisory snapshots only; no live AI execution in V1 | Carry to Backend Slice 0 |
-| W-SQL03 | Integration execution remains deferred; nashir_data_sources and nashir_integration_connections are DEFER | Post-V1 gate |
-| W-SQL04 | Generated types in nashir-ui-prototype are unaffected by SQL planning | Confirmed; no action |
-| W-SQL05 | OpenAPI migration to marketing-os remains blocked until Backend Slice 0 Planning | Carry forward |
-| W-SQL06 | storeProfileId nullable FK on nashir_products and nashir_assets must be included in Patch 006 even if unused in V1, to avoid a schema migration for multi-store Post-V1 | Carry to SQL Schema Review Gate |
-| W-SQL07 | nashir_campaigns (Patch 004) needs a nullable `store_profile_id` column added in a future patch (Patch 006 or separate patch) | Carry to SQL Schema Review Gate |
-| W-SQL08 | The marketing-os `audit_logs` action column is `varchar(160)` — confirm Nashir action strings like `nashir.creator_studio_session.created` fit within 160 chars | Verify at SQL Schema Review Gate |
+| `content_drafts` | `version INTEGER NOT NULL DEFAULT 1` | Lifecycle POST checks version; 409 if stale |
+| `campaign_content_items` | `version INTEGER NOT NULL DEFAULT 1` | Update checks version; 409 if stale |
+| `campaigns` | `version INTEGER NOT NULL DEFAULT 1` | Update checks version; 409 if stale |
+| `publishing_jobs` | `version INTEGER NOT NULL DEFAULT 1` | Confirm/cancel check version; 409 if stale |
+| Other entities | Not required in V1 | Deferred |
 
 ---
 
-## 30. Readiness Assessment
+## 11. Credential Storage Planning
 
-| Dimension | Rating |
+### `integration_credentials` design rules
+| Rule | Detail |
 |---|---|
-| Identity/RBAC seed model | **READY WITH WATCH ITEMS** — existing tables confirmed; seed verification needed |
-| Workspace/store isolation | **READY** — all scoping decisions confirmed |
-| Campaign/content schema | **READY WITH WATCH ITEMS** — candidate columns defined; approval decision entity TBD |
-| Creator Studio TTL schema | **READY WITH WATCH ITEMS** — candidate columns defined; TTL cleanup mechanism TBD |
-| Audit/evidence schema | **READY** — audit_logs reuse confirmed; evidence tables exist |
-| Integration/secret handling | **READY** — vault reference approach confirmed; vault service deferred |
-| marketing-os migration readiness | **READY WITH WATCH ITEMS** — patch 005+ pattern identified; Backend Slice 0 must approve PR |
-| DB engine readiness | **READY** — PostgreSQL confirmed |
-| Backend dependency readiness | **NEEDS CLARIFICATION** — Backend Slice 0 Planning gate required |
+| No raw secret column | `vault_ref TEXT NOT NULL` stores only an opaque vault provider reference identifier |
+| Vault provider | External (e.g., HashiCorp Vault, AWS Secrets Manager); integration deferred to Security Gate |
+| Safe metadata only | `credential_type TEXT`, `vault_ref TEXT`, `channel_connection_id UUID` (optional), `archived_at TIMESTAMPTZ` |
+| Never returned in API response | Confirmed in OpenAPI contract; `IntegrationCredentialResponse` description says "No raw secret value is returned" |
+| Audit on every operation | `audit_events` row on create, revoke, rotation attempt |
+| Rotation | Revoke old row (archive), create new row; atomic at application layer |
+| Deferred | Encryption key management; vault provider selection; secret rotation automation |
 
-**Overall readiness: READY WITH WATCH ITEMS**
-
-The V1 SQL schema plan is sufficiently defined for a schema review gate. Nine blocking findings are documented; all are addressable. The schema cannot be implemented until the SQL Schema Review Gate and SQL Schema Implementation Planning Gate close.
-
----
-
-## 31. Required Follow-up Gates
-
-| Priority | Gate | Dependency | Rationale |
-|---:|---|---|---|
-| 1 | **Nashir SQL Schema Review Gate** | This planning gate — READY WITH WATCH ITEMS | Reviews this planning document; resolves B-SQL02/03/04/05 (prompt_templates, role dedup, approval decisions, cost tracking); confirms column-level conceptual plan |
-| 2 | **Nashir SQL Schema Implementation Planning Gate** | SQL Schema Review Gate | Produces exact allowed files, migration file names, DB seed files, verification commands, rollback criteria for marketing-os migration PRs |
-| 3 | **Nashir Backend Slice 0 Planning** | SQL Schema Implementation Planning Gate | Plans first implementable backend slice; wires guards; selects auth provider; approves migration PR structure; resolves B-SQL01/06/07 |
-| 4 | **Nashir OpenAPI Migration Planning Gate** | Backend Slice 0 Planning | Plans migration of nashir_v1_openapi.yaml to marketing-os |
-| 5 | **Nashir Generated Types Input Update Gate** | OpenAPI Migration Planning Gate | Approves package.json generation script update |
-| 6 | **Nashir UI API Integration Planning Gate** | Backend Slice 0 exists and verified | Plans how nashir-ui-prototype calls the Nashir V1 API |
-
-**SQL Schema Review Gate may proceed immediately** — this planning gate is READY WITH WATCH ITEMS.
-
-**SQL implementation** is blocked until SQL Schema Implementation Planning Gate closes.
-
-**Backend Slice 0** is blocked until SQL Schema Review Gate and SQL Schema Implementation Planning Gate close.
-
----
-
-## 32. Decision
-
-### Final decision
-
-| Area | Status |
+### ChannelConnection safety
+| Rule | Detail |
 |---|---|
-| SQL schema planning complete | **COMPLETE — READY WITH WATCH ITEMS** |
-| Blocking findings | 9 (all addressable; none prevent review gate) |
-| DB engine | **CONFIRMED — PostgreSQL** |
-| GO to Nashir SQL Schema Review Gate | **GO** |
-| CONDITIONAL GO to SQL Schema Implementation Planning Gate | **CONDITIONAL — after SQL Schema Review Gate** |
-| SQL DDL implementation | **NO-GO** |
+| No credential fields on `channel_connections` | Confirmed in ERD and OpenAPI; `channel_connections` row contains only metadata |
+| `data_source_id` is optional metadata link | Not a credential reference |
+
+---
+
+## 12. Audit Planning
+
+### `audit_events` design
+| Aspect | Plan |
+|---|---|
+| Append-only enforcement | Application layer: no UPDATE/DELETE queries on this table; consider DB trigger for belt-and-suspenders |
+| Workspace scope | `workspace_id NOT NULL` on all events |
+| Actor | `actor_user_id UUID REFERENCES users(id)` nullable (system events have no actor) |
+| Resource | `target_type TEXT NOT NULL`, `target_id UUID NOT NULL` |
+| Action | `action TEXT NOT NULL` — dot notation: e.g., `content_draft.submitted_for_review`, `workspace_member.suspended` |
+| Payload | `metadata_summary JSONB` — safe summary only; no raw credentials, no vault refs, no PII unless necessary |
+| Request correlation | Consider `request_id UUID` for correlation with API request logs |
+| Timestamp | `occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()` |
+| Retention | Deferred to legal/compliance gate; PDPL/GCC assessment required |
+| No edit/delete | Enforced at application layer; no API route offers modification |
+
+### Audit-required operations (minimum V1)
+Content draft submit/approve/reject/withdraw; workspace member invite/suspend/activate/remove/role-change; campaign create/archive; publishing job confirm/cancel; integration credential create/revoke; workspace settings update
+
+---
+
+## 13. Analytics Lineage Planning
+
+### `analytics_snapshots` design
+| Aspect | Plan |
+|---|---|
+| `source_summary TEXT NOT NULL` | Required field; distinguishes real from mock/partial/stale; populated by server only |
+| `status` enum | available/partial/stale/unavailable — approved values |
+| Subject linkage | `subject_type TEXT NOT NULL`, `subject_id UUID NOT NULL` — polymorphic subject reference |
+| `snapshot_at TIMESTAMPTZ NOT NULL` | When the snapshot was taken |
+| `metric_summary JSONB` | Flexible metric payload; nullable initially |
+| No cross-workspace data | All snapshots scoped to `workspace_id`; no aggregation across workspaces |
+| Storage tradeoff | JSONB `metric_summary` allows flexible metric data without schema migrations per new metric type; trade-off: harder to query normalized. Deferred to SQL Schema Authoring Gate for final decision |
+| No production metric claims | `status` field enforces partial/stale/unavailable states; `source_summary` documents what is real vs mock |
+
+---
+
+## 14. Indexing and Query Planning
+
+Indexes are planned but not written as SQL. SQL Schema Authoring Gate will finalize DDL.
+
+| Table | Planned Indexes | Rationale |
+|---|---|---|
+| `workspace_members` | `(workspace_id)`, `(user_id)`, `(workspace_id, user_id)` UNIQUE | Membership lookup per workspace; user membership lookup |
+| `products` | `(workspace_id)`, `(workspace_id, status)` | Workspace product list; status filter |
+| `data_sources` | `(workspace_id)` | Workspace data source list |
+| `channel_connections` | `(workspace_id)`, `(workspace_id, provider)` | Workspace connection list; provider filter |
+| `assets` | `(workspace_id)`, `(workspace_id, status)`, `(product_id)`, `(campaign_content_item_id)` | Workspace asset list; relationship links |
+| `campaigns` | `(workspace_id)`, `(workspace_id, status)` | Workspace campaign list; status filter |
+| `campaign_content_items` | `(workspace_id)`, `(campaign_id)`, `(workspace_id, status)` | Campaign content items; workspace-wide content studio |
+| `content_drafts` | `(workspace_id)`, `(campaign_content_item_id)`, `(workspace_id, status)`, `(created_by_user_id)` | Draft lookup; review queue filter |
+| `content_approvals` | `(workspace_id)`, `(content_draft_id)` | Approval history per draft |
+| `publishing_jobs` | `(workspace_id)`, `(workspace_id, status)`, `(campaign_id)` | Publishing queue; campaign jobs |
+| `publishing_statuses` | `(workspace_id)`, `(publishing_job_id)`, `(occurred_at DESC)` | Status trail per job; chronological order |
+| `analytics_snapshots` | `(workspace_id)`, `(workspace_id, subject_type, subject_id)`, `(snapshot_at DESC)` | Subject-specific analytics; chronological |
+| `audit_events` | `(workspace_id)`, `(workspace_id, action)`, `(workspace_id, target_type, target_id)`, `(occurred_at DESC)` | Governance queries; resource audit trail |
+| `idempotency_keys` | `(workspace_id, route_family, idempotency_key, actor_user_id)` UNIQUE, `(expires_at)` | Deduplication lookup; TTL cleanup |
+
+### Uniqueness constraints planned
+| Table | Constraint | Rationale |
+|---|---|---|
+| `workspace_members` | `(workspace_id, user_id)` | One membership per user per workspace |
+| `store_profiles` | `workspace_id` UNIQUE | One store profile per workspace in V1 |
+| `campaign_briefs` | `campaign_id` UNIQUE | One brief per campaign |
+| `idempotency_keys` | `(workspace_id, route_family, idempotency_key, actor_user_id)` | Unique idempotency per actor per route per key |
+
+---
+
+## 15. Delete / Archive Planning
+
+| Entity | Policy | Archived Records Visible | Audit Required | Cascade Risk |
+|---|---|---|---|---|
+| `workspaces` | Status `suspended` only; no delete | YES (suspended status) | YES | HIGH — workspace deletion would orphan all records |
+| `users` | Status `suspended` only; no delete | YES | YES (auth provider) | HIGH — user deletion would orphan workspace_members |
+| `workspace_members` | `archived_at` soft archive | NO (filtered from API) | YES | LOW |
+| `store_profiles` | Status `inactive`; no hard delete | YES | YES | LOW |
+| `products` | `archived_at` soft archive | NO (filtered from API) | YES | MEDIUM — related assets/campaigns link to product |
+| `data_sources` | Hard remove allowed (DELETE endpoint exists); nullify downstream FKs | N/A | YES | MEDIUM — channel_connections.data_source_id → NULL |
+| `channel_connections` | Hard remove allowed; nullify downstream FKs | N/A | YES | MEDIUM — integration_credentials.channel_connection_id → NULL |
+| `integration_credentials` | `archived_at` revoke; never hard delete (audit trail) | NO | YES | LOW |
+| `assets` | `archived_at` soft archive | NO | YES | LOW |
+| `campaigns` | `archived_at` soft archive | NO | YES | MEDIUM — content items and briefs archived implicitly |
+| `campaign_briefs` | Archived with campaign | NO | YES | LOW |
+| `campaign_content_items` | `archived_at` soft archive | NO | YES | LOW |
+| `content_drafts` | `archived_at` soft archive | NO | YES | LOW |
+| `content_approvals` | NEVER delete | YES (always readable) | NO (IS the record) | NO |
+| `publishing_jobs` | `cancelled_at`; no hard delete | YES (cancelled status) | YES | LOW |
+| `publishing_statuses` | NEVER delete (append-only trail) | YES | NO (IS the trail) | NO |
+| `analytics_snapshots` | NEVER delete | YES | YES (on transition) | LOW |
+| `audit_events` | NEVER delete (append-only) | YES | NO (IS the audit) | NO |
+
+---
+
+## 16. OpenAPI-to-SQL Mapping Matrix
+
+| OpenAPI Schema | Planned Table | FK Relationships | Status Enum | Create/Update/Archive | Audit Required | Version Required |
+|---|---|---|---|---|---|---|
+| `Workspace` | `workspaces` | — | `workspace_status_enum` | Update only; no delete | YES | NO |
+| `User` | `users` | — | `user_status_enum` | Auth provider; limited direct update | YES | NO |
+| `WorkspaceMember` | `workspace_members` | workspace_id, user_id | `workspace_member_status_enum` | Create/Update/Archive | YES | NO |
+| `StoreProfile` | `store_profiles` | workspace_id | `store_profile_status_enum` | Upsert | YES | NO |
+| `Product` | `products` | workspace_id | `product_status_enum` | Create/Update/Archive | YES | YES |
+| `DataSource` | `data_sources` | workspace_id | connection_status TEXT | Create/Update/Remove | YES | NO |
+| `ChannelConnection` | `channel_connections` | workspace_id, data_source_id | connection_status TEXT | Create/Update/Remove | YES | NO |
+| `IntegrationCredential` | `integration_credentials` | workspace_id, channel_connection_id | — | Create/Revoke | YES | NO |
+| `Asset` | `assets` | workspace_id, product_id, campaign_content_item_id | `asset_status_enum` | Create/Update/Archive | YES | NO |
+| `Campaign` | `campaigns` | workspace_id, primary_product_id | `campaign_status_enum` | Create/Update/Archive | YES | YES |
+| `CampaignBrief` | `campaign_briefs` | workspace_id, campaign_id | — | Create/Update | YES | NO |
+| `CampaignContentItem` | `campaign_content_items` | workspace_id, campaign_id, current_draft_id | `campaign_content_item_status_enum` | Create/Update/Archive | YES | YES |
+| `ContentDraft` | `content_drafts` | workspace_id, campaign_content_item_id, created_by_user_id | `content_draft_status_enum` | Create/Update/Archive/Lifecycle | YES | YES |
+| `ContentApproval` | `content_approvals` | workspace_id, content_draft_id, reviewer_user_id | `content_approval_decision_enum` | Create only (immutable) | YES | NO |
+| `PublishingJob` | `publishing_jobs` | workspace_id, campaign_id, campaign_content_item_id, target_channel_connection_id | `publishing_job_status_enum` | Create/Update/Cancel | YES | YES |
+| `PublishingStatus` | `publishing_statuses` | workspace_id, publishing_job_id | — (TEXT) | Append-only | NO (IS the trail) | NO |
+| `AnalyticsSnapshot` | `analytics_snapshots` | workspace_id | `analytics_snapshot_status_enum` | Server-created only | YES (on transition) | NO |
+| `AuditEvent` | `audit_events` | workspace_id, actor_user_id | — | Append-only | NO (IS the audit) | NO |
+
+---
+
+## 17. Risks and Gaps
+
+| Risk | Severity | Control |
+|---|---|---|
+| Schema drift from OpenAPI | HIGH | SQL Schema Authoring Gate must be reviewed against `docs/nashir_v1_openapi.yaml` |
+| Premature migrations before planning review | HIGH | No migration files created in this gate; NO-GO until SQL Schema Planning Review Gate merges |
+| Over-normalization of metric data | MEDIUM | `analytics_snapshots.metric_summary JSONB` defers normalization decision to SQL Schema Authoring Gate |
+| JSON overuse for status/lifecycle | MEDIUM | Status fields use typed enums; JSON only for metadata (metric_summary, metadata_summary) |
+| IntegrationCredential raw secret leakage | CRITICAL | `vault_ref TEXT NOT NULL` only; no raw secret column |
+| AuditEvent tampering | HIGH | No UPDATE/DELETE routes; application-enforced; DB trigger backup considered |
+| Cross-workspace leakage | CRITICAL | `workspace_id` required on all workspace-scoped tables; all queries must include workspace predicate |
+| Idempotency gaps | MEDIUM | `idempotency_keys` table planned; lifecycle POSTs require this before backend implementation |
+| Status enum mismatch | MEDIUM | All 4 status enums are now locked by PR #79; SQL Schema Authoring Gate will align exactly |
+| Backend implementation before schema planning review | HIGH | Blocked by this gate and its review gate |
+| URL versioning changes after schema | LOW | Schema is URL-agnostic; table names not affected by versioning prefix |
+| PDPL/GCC compliance gaps | MEDIUM | Data residency and retention policies are future legal/compliance gate requirements |
+
+---
+
+## 18. GO / NO-GO Criteria
+
+### GO criteria
+
+| Criterion | Status |
+|---|---|
+| All OpenAPI entities mapped to planned tables or explicitly deferred | **COMPLETE** |
+| Workspace scoping model defined for all workspace-scoped tables | **COMPLETE** |
+| Status enum persistence planned for all 4 new enums + WorkspaceMember + AnalyticsSnapshot | **COMPLETE** |
+| Credential storage boundary defined (vault reference only) | **COMPLETE** |
+| Audit and analytics lineage planned | **COMPLETE** |
+| Idempotency/concurrency persistence implications identified | **COMPLETE** |
+| Approval lifecycle persistence implications planned | **COMPLETE** |
+| No implementation introduced | **CONFIRMED** |
+| **GO: SQL/Schema planning gate complete** | **GO** |
+| **CONDITIONAL GO: SQL/Schema Planning Review Gate** | After this gate merges |
+| SQL Schema Authoring Gate | **NO-GO until review gate merges** |
+| Backend implementation | **NO-GO** |
 | Migrations | **NO-GO** |
-| Backend routes | **NO-GO** |
-| Auth middleware / RBAC implementation | **NO-GO** |
-| UI API integration | **NO-GO** |
-| Production / Pilot | **NO-GO** |
+| ORM models | **NO-GO** |
+| Generated client | **NO-GO** |
+| Production/pilot readiness | **NO-GO** |
 
-### V1 candidate table groups summary
+### NO-GO conditions that would block this gate
 
-| Status | Tables |
+| Condition | Status |
 |---|---|
-| REUSE (already in marketing-os base) | workspaces, users, roles, permissions, role_permissions, workspace_members, audit_logs |
-| REUSE EVALUATE (may need extension) | prompt_templates |
-| EXISTS (Nashir patches 003 + 004) | nashir_campaigns, nashir_evidence, nashir_evidence_lifecycle_events |
-| NEW (patches 005–011) | nashir_store_profiles, nashir_products, nashir_assets, nashir_campaign_content_items, nashir_campaign_content_assets, nashir_preview_artifacts, nashir_approval_decisions, nashir_publishing_queue_items, nashir_creator_studio_sessions, nashir_creator_content_ideas, nashir_creator_campaign_angles, nashir_creator_audience_segments, nashir_creator_publish_windows, nashir_creator_context_drafts, nashir_creator_transfer_drafts, nashir_creator_readiness_assessments, nashir_prompt_templates, nashir_prompt_governance_versions, nashir_model_routing_rules, nashir_ai_providers, nashir_cost_usage_records |
-| DEFER (Post-V1) | nashir_data_sources, nashir_integration_connections, nashir_workflow_definitions |
+| Missing `workspace_id` strategy | **CLEARED** |
+| Unclear ContentDraft/ContentApproval persistence | **CLEARED** |
+| Credential storage ambiguity | **CLEARED** |
+| Missing audit strategy | **CLEARED** |
+| SQL files/migrations/ORM code added | **CONFIRMED NONE** |
+| Package/runtime changes | **CONFIRMED NONE** |
+| marketing-os extraction | **CONFIRMED NONE** |
 
-### Next gate
+---
 
-**Nashir SQL Schema Review Gate**
+## 19. Recommended Next Gate
 
-That gate must:
-- Review the conceptual column definitions in Section 16 of this document.
-- Resolve B-SQL02 (prompt_templates reuse decision).
-- Resolve B-SQL03 (role seed deduplication — inspect existing marketing-os role seed).
-- Resolve B-SQL04 (approval decisions entity choice).
-- Resolve B-SQL05 (cost tracking entity choice).
-- Confirm W-SQL06 (storeProfileId nullable FK on products/assets).
-- Confirm W-SQL07 (store_profile_id column addition to nashir_campaigns).
-- Confirm W-SQL08 (audit_logs action varchar(160) capacity).
-- Not authorize SQL implementation. Documentation-only review gate.
+**Nashir SQL/Schema Planning Review Gate** — documentation-only review of this planning gate before any SQL DDL, migrations, ORM models, or backend code is written.
 
-**Asset relationship decision:** `linked_product_id` on `nashir_assets` represents a 1:N Product → Assets relationship. Any future true N:M product-asset relationship requires a separate junction table and review gate.
+Until this planning gate and its review gate are both merged:
+- SQL Schema Authoring must not begin
+- Migration files must not be created
+- Backend implementation must not begin
+- Generated client must not be produced
+
+---
+
+## 20. Verification
+
+| Command | Result |
+|---|---|
+| `npm run lint` | **PASSED** |
+| `npm run build` | **PASSED** |
+| `git status --short` | Working tree clean after commit; changes limited to documentation |
+| `git diff --stat` | Changes limited to `docs/nashir_sql_schema_planning_gate.md` |
+| No SQL/migrations/schema files | **CONFIRMED** — `find . -name "*.sql" -o -name "migrations/"` shows no new files |
+| No src/backend/API/runtime/generated/UI/package files changed | **CONFIRMED** |
+| BIDI scan (`docs/nashir_sql_schema_planning_gate.md`) | `BIDI_CONTROL_CHARS: none` |
