@@ -196,7 +196,7 @@ The purpose of this review is to decide whether the Auth/RBAC/Workspace Identity
 | `Campaign` | Workspace-scoped | `campaigns.read` | Workspace | HIGH | ✓ Campaign workspace-scoped (PR #71) | **PASS** |
 | `CampaignBrief` | Workspace-scoped (child of Campaign) | `campaigns.read` | Campaign → Workspace | HIGH | ✓ CampaignBrief belongs to Campaign (PR #71) | **PASS** |
 | `CampaignContentItem` | Workspace-scoped (child of Campaign) | `content.read` | Campaign → Workspace | HIGH | ✓ CampaignContentItem workspace-scoped (PR #71) | **PASS** |
-| `ContentDraft` | Workspace-scoped (child of CampaignContentItem) | `content.read` | CampaignContentItem → Workspace | HIGH | ✓ ContentDraft versioned; active / invited / suspended status (PR #71) | **PASS** |
+| `ContentDraft` | Workspace-scoped (child of CampaignContentItem) | `content.read` | CampaignContentItem → Workspace | HIGH | ✓ ContentDraft is versioned and belongs to CampaignContentItem; lifecycle state naming remains deferred to API/OpenAPI or implementation planning (PR #71) | **PASS** |
 | `ContentApproval` | Workspace-scoped (child of ContentDraft) | `content.approve` to create; `content.read` to view | ContentDraft → Workspace | MEDIUM | ✓ ContentApproval human-in-the-loop (PR #71) | **PASS** |
 | `PublishingJob` | Workspace-scoped (child of Campaign) | `publishing.read` | Campaign → Workspace | HIGH | ✓ PublishingJob includes `simulated` status; no auto-publish (PR #71) | **PASS** |
 | `PublishingStatus` | Workspace-scoped (append-only child of PublishingJob) | `publishing.read` | PublishingJob → Workspace | MEDIUM | ✓ PublishingStatus append-only trail (PR #71) | **PASS** |
@@ -248,7 +248,7 @@ The purpose of this review is to decide whether the Auth/RBAC/Workspace Identity
 
 | Criterion | Status | Evidence |
 |---|---|---|
-| Bidirectional Unicode control characters present | **PASS — NONE FOUND** | `python3` Unicode scan checked all characters in the file against categories `Cf` (format characters, including bidirectional isolates/overrides: U+200B, U+200C, U+200D, U+202A–U+202E, U+2066–U+2069, U+FEFF) and `Cc` (control characters above U+001F); result: no problematic characters found |
+| Bidirectional Unicode control characters present | **PASS — NONE FOUND** | Scanned with: `python3` checking U+202A–U+202E and U+2066–U+2069 (bidirectional isolates and overrides) in `docs/nashir_auth_rbac_workspace_identity_review_gate.md`; output: `BIDI_CONTROL_CHARS: none` |
 | Normal Arabic text preserved | **PASS** | README.md contains Arabic text; the gate document itself contains no Arabic — no Arabic characters were present to preserve or remove |
 | GitHub Unicode warning on PR #73 | **PASS** | The warning was a false positive; scan confirms only standard UTF-8 text and ASCII newlines are present in the file |
 | Review gap | **NONE** | Unicode check was conclusive; no gap to record |
@@ -361,4 +361,4 @@ The purpose of this review is to decide whether the Auth/RBAC/Workspace Identity
 | `git status --short` | Working tree clean after commit; gate changes limited to documentation |
 | `git diff --stat` | Diff limited to `docs/nashir_auth_rbac_workspace_identity_review_gate.md` |
 | Forbidden files check | **PASS** — no `src/`, `package.json`, `README.md`, `docs/screen_map.md`, or marketing-os files modified |
-| Unicode scan | `python3` scan of `docs/nashir_auth_rbac_workspace_identity_gate.md` — no bidirectional or invisible control characters found; only valid UTF-8 text and ASCII newlines present |
+| Unicode scan (`docs/nashir_auth_rbac_workspace_identity_review_gate.md`) | Checked U+202A–U+202E and U+2066–U+2069; output: `BIDI_CONTROL_CHARS: none` — confirmed clean |
