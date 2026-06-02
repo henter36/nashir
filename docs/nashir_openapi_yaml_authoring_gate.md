@@ -100,7 +100,7 @@ All new paths follow `/workspaces/{workspaceId}/...` convention.
 | Route Family | Operations Added | Permission(s) |
 |---|---|---|
 | `/workspaces/{workspaceId}` | GET, PATCH | `nashir.workspace.read` / `nashir.workspace.update` |
-| `/workspaces/{workspaceId}/me` | GET | Any active member |
+| `/workspaces/{workspaceId}/me` | GET | `nashir.workspace.read` (does not require `nashir.members.manage`; returns only caller's own record) |
 | `/workspaces/{workspaceId}/members` | GET, POST | `nashir.workspace.read` / `nashir.members.manage` |
 | `/workspaces/{workspaceId}/members/{memberId}` | GET, PATCH, DELETE | `nashir.workspace.read` (GET self) / `nashir.members.manage` |
 | `/workspaces/{workspaceId}/members/{memberId}/suspend` | POST | `nashir.members.manage` |
@@ -117,6 +117,8 @@ All new paths follow `/workspaces/{workspaceId}/...` convention.
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/brief` | GET, PUT | `nashir.campaigns.read` / `nashir.campaigns.manage` |
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items` | GET, POST | `nashir.content.read` / `nashir.content.manage` |
 | `/workspaces/{workspaceId}/content-items` | GET (flat workspace list) | `nashir.content.read` |
+| `/workspaces/{workspaceId}/content-items/{contentItemId}/drafts` | GET, POST | `nashir.content.read` / `nashir.content.manage` |
+| `/workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}` | GET, PATCH, DELETE | `nashir.content.read` / `nashir.content.manage` |
 | `/workspaces/{workspaceId}/content-drafts` | GET (flat workspace list) | `nashir.content.read` |
 | `/workspaces/{workspaceId}/content-approvals` | GET (workspace list) | `nashir.content.read` |
 | `/workspaces/{workspaceId}/publishing-jobs` | GET, POST | `nashir.publishing.read` / `nashir.publishing.manage` |
@@ -128,7 +130,7 @@ All new paths follow `/workspaces/{workspaceId}/...` convention.
 | `/workspaces/{workspaceId}/analytics-snapshots/{analyticsSnapshotId}` | GET | `nashir.analytics.read` |
 | `/workspaces/{workspaceId}/audit-events` | GET | `nashir.audit_events.read` |
 
-**Total operations added: 53 new operations across 28 new path entries.**
+**Total operations added: 58 new operations across 30 new path entries.**
 
 ---
 
@@ -222,6 +224,8 @@ New reusable path parameters added to `components.parameters`:
 | `CampaignIdPath` | `/campaigns/{campaignId}` paths |
 | `PublishingJobIdPath` | `/publishing-jobs/{publishingJobId}` paths |
 | `AnalyticsSnapshotIdPath` | `/analytics-snapshots/{analyticsSnapshotId}` paths |
+| `ContentItemIdPath` | `/content-items/{contentItemId}/drafts` paths |
+| `ContentDraftIdPath` | `/content-items/{contentItemId}/drafts/{contentDraftId}` paths |
 
 ---
 
@@ -264,7 +268,7 @@ New reusable path parameters added to `components.parameters`:
 | `npm run build` | **PASSED** |
 | `git status --short` | Only `docs/nashir_v1_openapi.yaml` and `docs/nashir_openapi_yaml_authoring_gate.md` modified |
 | `git diff --stat` | Changes limited to documentation and OpenAPI contract files |
-| YAML parse | `node -e "require('js-yaml').load(...)"` — **OK** — 56 paths, 152 schemas, 30 parameters |
+| YAML parse | `node -e "require('js-yaml').load(...)"` — **OK** — 58 paths, 152 schemas, 32 parameters |
 | No src/ changes | **CONFIRMED** |
 | No SQL/migrations | **CONFIRMED** |
 | No generated client | **CONFIRMED** |

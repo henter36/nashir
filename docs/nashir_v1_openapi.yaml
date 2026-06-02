@@ -1832,10 +1832,11 @@ paths:
         - authGuard
         - workspaceContextGuard
         - membershipCheck
+        - permissionGuard
       tags:
         - Members
       summary: Get own membership.
-      description: Returns the authenticated user's own WorkspaceMember record and role for this workspace. Any active member may call this endpoint without requiring members.manage permission.
+      description: Returns the authenticated user's own WorkspaceMember record and role for this workspace. Requires nashir.workspace.read permission. Does not require nashir.members.manage; returns only the caller's own WorkspaceMember record.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/RequestIdHeader"
@@ -2933,6 +2934,189 @@ paths:
                 $ref: "#/components/schemas/CampaignContentItemListResponse"
         default:
           $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts:
+    get:
+      operationId: listContentItemDrafts
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: List content drafts for a content item.
+      description: Lists ContentDraft records for a specific CampaignContentItem. ContentDraft lifecycle status naming is deferred to the OpenAPI YAML review gate. Requires nashir.content.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Content draft list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: createContentDraft
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - ContentDrafts
+      summary: Create content draft.
+      description: Creates a ContentDraft for a CampaignContentItem. Requires nashir.content.manage permission. ContentDraft lifecycle status naming is deferred to the OpenAPI YAML review gate. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentDraftCreateRequest"
+      responses:
+        "201":
+          description: Content draft created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}:
+    get:
+      operationId: getContentDraft
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: Get content draft.
+      description: Returns a ContentDraft record. Requires nashir.content.read permission. Returns 404 if not found in workspace.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Content draft response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updateContentDraft
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - ContentDrafts
+      summary: Update content draft.
+      description: Updates a ContentDraft body or language. Requires nashir.content.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentDraftUpdateRequest"
+      responses:
+        "200":
+          description: Content draft updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    delete:
+      operationId: archiveContentDraft
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: Archive content draft.
+      description: Archives a ContentDraft. Soft-delete; draft data is preserved. Requires nashir.content.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "204":
+          description: Content draft archived.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
   /workspaces/{workspaceId}/content-drafts:
     get:
       operationId: listWorkspaceContentDrafts
@@ -3567,6 +3751,22 @@ components:
       in: path
       required: true
       description: Stable opaque analytics snapshot identifier.
+      schema:
+        type: string
+        minLength: 1
+    ContentItemIdPath:
+      name: contentItemId
+      in: path
+      required: true
+      description: Stable opaque campaign content item identifier.
+      schema:
+        type: string
+        minLength: 1
+    ContentDraftIdPath:
+      name: contentDraftId
+      in: path
+      required: true
+      description: Stable opaque content draft identifier.
       schema:
         type: string
         minLength: 1
