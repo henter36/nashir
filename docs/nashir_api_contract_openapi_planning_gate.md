@@ -231,7 +231,8 @@ Route patterns only — no OpenAPI YAML. All paths are planning candidates.
 |---|---|---|---|---|---|---|
 | `/workspaces/{workspaceId}` | GET, PATCH | Read or update workspace metadata | Workspace | `workspace.read` / `workspace.update` | 401/403/404 | **V1 Required** |
 | `/workspaces/{workspaceId}/members` | GET, POST | List members; invite new member | WorkspaceMember | `workspace.read` (list) / `members.manage` (create) | 401/403/404 | **V1 Required** |
-| `/workspaces/{workspaceId}/members/{memberId}` | GET, PATCH, DELETE | Read / update role / remove member | WorkspaceMember | `members.manage` | 401/403/404 | **V1 Required** |
+| `/workspaces/{workspaceId}/members/{memberId}` | GET, PATCH, DELETE | Read / update role / remove member | WorkspaceMember | `members.manage` (PATCH, DELETE) / self-read: any active member may GET their own record | 401/403/404 | **V1 Required** |
+| `/workspaces/{workspaceId}/me` | GET | Read current user's own workspace membership and role | WorkspaceMember | Any active member (authenticated self) | 401/403/404 | **V1 Required** |
 | `/workspaces/{workspaceId}/members/{memberId}/suspend` | POST | Suspend a member | WorkspaceMember | `members.manage` | 401/403/404/409 | **V1 Required** |
 | `/workspaces/{workspaceId}/members/{memberId}/activate` | POST | Reactivate a suspended member | WorkspaceMember | `members.manage` | 401/403/404/409 | **V1 Required** |
 
@@ -288,13 +289,15 @@ Route patterns only — no OpenAPI YAML. All paths are planning candidates.
 
 | Route Pattern | Methods | Purpose | Entity | Min Permission | Error Notes | V1 Status |
 |---|---|---|---|---|---|---|
-| `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items` | GET, POST | List / create content items | CampaignContentItem | `content.read` / `content.manage` | 401/403/404/422 | **V1 Required** |
+| `/workspaces/{workspaceId}/content-items` | GET | List all content items across the workspace (for studio/dashboard views) | CampaignContentItem | `content.read` | 401/403/404 | **V1 Required** |
+| `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items` | GET, POST | List / create content items under a campaign | CampaignContentItem | `content.read` / `content.manage` | 401/403/404/422 | **V1 Required** |
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}` | GET, PATCH | Read / update content item | CampaignContentItem | `content.read` / `content.manage` | 401/403/404/409/422 | **V1 Required** |
 
 ### Content Drafts
 
 | Route Pattern | Methods | Purpose | Entity | Min Permission | Error Notes | V1 Status |
 |---|---|---|---|---|---|---|
+| `/workspaces/{workspaceId}/content-drafts` | GET | List all drafts across the workspace (supports pending-review views and workspace-wide Content Studio) | ContentDraft | `content.read` | 401/403/404 | **V1 Required** |
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts` | GET, POST | List / create drafts for a content item | ContentDraft | `content.read` / `content.manage` | 401/403/404/422 | **V1 Required** |
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}` | GET, PATCH | Read / update draft | ContentDraft | `content.read` / `content.manage` | 401/403/404/409/422 | **V1 Required** |
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/submit-review` | POST | Submit draft for review | ContentDraft | `content.manage` | 401/403/404/409 | **V1 Required** |
@@ -304,7 +307,7 @@ Route patterns only — no OpenAPI YAML. All paths are planning candidates.
 | Route Pattern | Methods | Purpose | Entity | Min Permission | Error Notes | V1 Status |
 |---|---|---|---|---|---|---|
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/approve` | POST | Approve a draft | ContentApproval | `content.approve` | 401/403/404/409 (self-approval = 409) | **V1 Required** |
-| `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/reject` | POST | Reject a draft | ContentApproval | `content.approve` | 401/403/404/409 | **V1 Required** |
+| `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/reject` | POST | Reject a draft (reviewer/admin/owner) or withdraw by creator | ContentApproval | `content.approve` (reviewer/admin/owner) / `content.manage` (creator self-withdrawal) | 401/403/404/409 | **V1 Required** |
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/approvals` | GET | Read approval history for a draft | ContentApproval | `content.read` | 401/403/404 | **V1 Required** |
 
 ### Publishing
@@ -428,10 +431,10 @@ Route patterns only — no OpenAPI YAML. All paths are planning candidates.
 
 ### ContentApproval
 
-| Decision | Trigger | Required Permission | Self-approval | Audit |
+| Decision | Trigger | Required Permission | Self-action rule | Audit |
 |---|---|---|---|---|
-| Approve | reviewer/admin/owner | `content.approve` | **FORBIDDEN** (409 if attempted) | YES |
-| Reject | reviewer/admin/owner | `content.approve` | **FORBIDDEN** (409 if attempted) | YES |
+| Approve | reviewer/admin/owner | `content.approve` | **Self-approval FORBIDDEN** — approver must not be the draft creator (409 if attempted) | YES |
+| Reject | reviewer/admin/owner OR draft creator (withdrawal) | `content.approve` (reviewer/admin/owner) / `content.manage` (creator self-withdrawal) | **Self-rejection/withdrawal ALLOWED** — creator may withdraw their own draft; a separate reviewer/admin/owner may reject on governance grounds | YES |
 
 ### PublishingJob
 
