@@ -67,7 +67,7 @@ This gate does not authorize any runtime implementation. It authorizes planning 
 | `docs/nashir_productization_roadmap_review_gate.md` (PR #68) | All 28 criteria PASS |
 | `docs/nashir_backend_api_strategy_gate.md` (PR #69) | Nashir-first backend direction; Node.js, PostgreSQL-compatible, REST/OpenAPI; Auth/RBAC must precede API Contract; PDPL/GCC compliance is future assessment |
 | `docs/nashir_backend_api_strategy_review_gate.md` (PR #70) | All 42 criteria PASS; ERD Gate and Auth/RBAC Gate authorized |
-| `docs/nashir_erd_data_model_gate.md` (PR #71) | 17 V1 Core logical entities defined; Workspace is root scope; WorkspaceMember links User to Workspace; all merchant-owned data workspace-scoped; ChannelConnection has optional dataSourceId; credentials separate from ChannelConnection; AuditEvent is cross-cutting and append-only |
+| `docs/nashir_erd_data_model_gate.md` (PR #71) | 17 approved V1 Core logical entities defined, plus IntegrationCredential as an ERD-approved credential-separation entity; Workspace is root scope; WorkspaceMember links User to Workspace; all merchant-owned data workspace-scoped; ChannelConnection has optional dataSourceId; credentials separate from ChannelConnection; AuditEvent is cross-cutting and append-only |
 | `docs/nashir_erd_data_model_review_gate.md` (PR #72) | All 71 criteria PASS; field-level model correct; Auth/RBAC Gate authorized as first priority |
 | `src/App.jsx` | 23 active screens confirmed; all `enabled: true`; V1 Core journey: Dashboard → StoreSetup → ProductCatalog → DataSourcesHub → AssetLibrary → Campaigns → CampaignsList → Content → PublishingQueue → Analytics |
 | `src/pages/` | 23 page components confirmed |
@@ -111,7 +111,7 @@ This gate does not authorize any runtime implementation. It authorizes planning 
 | User is global identity | Users are not workspace-scoped; access to workspace resources goes through WorkspaceMember |
 | WorkspaceMember is the authorization binding | Active WorkspaceMember is required for any workspace resource access |
 | All V1 Core resource paths carry workspaceId | `/workspaces/{workspaceId}/...` pattern for all workspace-scoped resources |
-| workspaceId must never be trusted from request body | Path-derived only; body workspaceId must be rejected or ignored |
+| workspaceId must never be trusted from request body | Path-derived only; any request body containing workspaceId or workspace_id must be rejected with a validation error |
 | Cross-workspace access is forbidden | No route or repository method may return data across workspace boundaries |
 | Deny-by-default | No permission is assumed; every protected operation requires explicit role assignment |
 | Active membership required | Invited and suspended members are denied access |
@@ -172,7 +172,7 @@ This gate does not authorize any runtime implementation. It authorizes planning 
 | All V1 merchant-owned data must be scoped by workspaceId | Every persisted business entity (StoreProfile, Product, DataSource, ChannelConnection, Asset, Campaign, etc.) must carry workspaceId |
 | Active WorkspaceMember required | Accessing any workspace-scoped resource requires an active (not invited, not suspended) WorkspaceMember record for the target workspace |
 | Route-level workspaceId must match stored workspaceId | The workspaceId extracted from the URL path must match the resource's stored workspaceId; mismatch must produce 404 |
-| workspaceId must never be trusted from request body | workspaceId is path-derived only; any body field named workspaceId or workspace_id must be rejected or overridden |
+| workspaceId must never be trusted from request body | workspaceId is path-derived only; any request body containing workspaceId or workspace_id must be rejected with a validation error |
 | Cross-workspace reads are forbidden | No list or get operation may return records from a different workspace |
 | Cross-workspace writes are forbidden | No create or update operation may write records to a different workspace |
 | Analytics must not leak across workspaces | AnalyticsSnapshot subjects (Campaign, Product, ChannelConnection) must be verified within the request workspace |
@@ -239,9 +239,9 @@ Permission groups define logical authorization boundaries. Implementation uses d
 | `content.approve` | Approve or reject content drafts | Approve or reject a content draft; self-approval is forbidden at service layer | reviewer, admin, owner | **V1** |
 | `publishing.read` | Read publishing queue and job status | View publishing jobs and status history | viewer, analyst, editor, reviewer, publisher | **V1** |
 | `publishing.manage` | Execute publishing actions | Confirm, schedule, or cancel publishing jobs | publisher, admin, owner | **V1** |
-| `analytics.read` | Read analytics snapshots | View analytics data; sourceSummary must distinguish real vs mock | analyst, editor, reviewer, publisher, admin, owner | **V1** |
+| `analytics.read` | Read analytics snapshots | View analytics data; sourceSummary must distinguish real vs mock | viewer, analyst, editor, reviewer, publisher, admin, owner | **V1** |
 | `audit_events.read` | Read audit event trail | View audit log records | admin, owner | **V1** |
-| `admin_settings.manage` | System-level admin actions | Platform configuration, workspace suspension | admin, owner | **V1** |
+| `admin_settings.manage` | Workspace-level settings management | Update workspace-level configuration (display preferences, notification settings, workspace defaults); platform-level administration (workspace suspension, platform-wide config) is not part of the V1 merchant role model and is deferred to a platform-admin gate | admin, owner | **V1 (workspace scope only)** |
 
 **Note on deferred permission groups:**
 - `integration_credentials.manage` is V1 in concept but deferred until IntegrationCredential entity is implemented.
@@ -310,7 +310,7 @@ The following decisions define what the future API Contract/OpenAPI Gate must re
 | No auto-approval | Content approval is always human-initiated; no service, schedule, or AI suggestion may create a ContentApproval record without explicit human action |
 | No auto-publish | Publishing actions are always human-confirmed; no service or schedule may execute a publishing job without explicit human action |
 | No production compliance claim | PDPL/GCC data residency and local regulatory compliance requirements remain a future legal and compliance assessment; this gate does not claim compliance |
-| workspaceId body rejection | Any inbound request body containing `workspaceId` or `workspace_id` must be rejected or overridden with the path-derived workspaceId |
+| workspaceId body rejection | Any request body containing `workspaceId` or `workspace_id` must be rejected with a validation error; workspaceId is always path-derived and trusted only after auth and active membership validation |
 | Cross-workspace prevention at repository layer | Every repository method must receive workspaceId as an explicit, trusted parameter derived from the authenticated request path — never from body or caller assertion |
 
 ---
@@ -323,7 +323,7 @@ The following decisions define what the future API Contract/OpenAPI Gate must re
 - Active membership enforcement
 - 7-role model
 - 24 permission groups
-- Workspace scoping for all 17 V1 Core entities
+- Workspace scoping for all 17 approved V1 Core entities plus IntegrationCredential as credential-separation entity
 - Deny-by-default
 - Credential vault-reference rule
 - AuditEvent append-only concept
@@ -405,7 +405,7 @@ The following decisions define what the future API Contract/OpenAPI Gate must re
 |---|---|
 | Identity model approved: User (global), Workspace (tenant root), WorkspaceMember (auth binding) | **APPROVED** |
 | Membership status behavior defined: active / invited / suspended | **APPROVED** |
-| Workspace scoping rules defined for all 17 V1 Core entities | **APPROVED** |
+| Workspace scoping rules defined for all 17 approved V1 Core entities plus IntegrationCredential | **APPROVED** |
 | 7-role V1 model defined | **APPROVED** |
 | 24 permission groups defined | **APPROVED** |
 | Role-to-permission mapping defined | **APPROVED** |
