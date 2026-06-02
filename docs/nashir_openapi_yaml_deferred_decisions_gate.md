@@ -59,7 +59,7 @@ This gate locks the contract decisions so downstream gates have stable inputs.
 | Input | Finding |
 |---|---|
 | `docs/nashir_openapi_yaml_authoring_review_gate.md` (PR #78) | Source of the 10 deferred decisions; all 15 review criteria PASS |
-| `docs/nashir_v1_openapi.yaml` | Current state: 58 paths, 152 schemas, 32 parameters, 86 operations; 4 entity status fields are nullable string placeholders; no approve/reject/withdraw sub-resources; no per-endpoint filter specs |
+| `docs/nashir_v1_openapi.yaml` | Pre-gate baseline: 58 paths, 152 schemas, 32 parameters, 86 operations; 4 entity status fields were nullable string placeholders; no approve/reject/withdraw sub-resources; no per-endpoint filter specs |
 | `docs/nashir_openapi_yaml_authoring_gate.md` (PR #77) | Lists 10 deferred decisions; Section 8 confirms count |
 | `docs/nashir_api_contract_openapi_planning_gate.md` (PR #75) | State transition plan; status candidates from PR #71 |
 | `docs/nashir_auth_rbac_workspace_identity_gate.md` (PR #73) | 7 roles; 24 permission groups; `content.approve` for reviewer; `content.manage` for editor |
@@ -205,7 +205,7 @@ Rationale: self-approval is forbidden, but self-withdrawal is allowed (PR #73/74
 - Mutation response (204): no body
 - Error response: `ErrorModel` via reusable response components
 
-This pattern is already uniform across all 152 schemas in the current YAML. No YAML change required. This decision formally approves and locks the pattern.
+This pattern is already uniform across all schemas in the YAML (152 in the pre-gate baseline). No YAML change required. This decision formally approves and locks the pattern.
 
 **YAML change:** None. Pattern already consistent.
 
@@ -223,7 +223,7 @@ This pattern is already uniform across all 152 schemas in the current YAML. No Y
 
 All others (members, products, data sources, channel connections, assets, publishing jobs, publishing status, audit events) retain only the existing generic `LimitQuery`, `CursorQuery`, `StatusQuery` (where already present) parameters. Advanced compound filtering is Post-V1.
 
-**YAML change:** Add `StatusQuery` and `UpdatedAfterQuery` to campaigns list; `StatusQuery` to content items (campaign-nested and flat) and content drafts (flat); add new `SubjectTypeQuery` parameter and apply to analytics snapshots list.
+**YAML change:** Add resource-specific enum-bound query parameters: `CampaignStatusQuery` (references `CampaignStatus`), `ContentDraftStatusQuery` (references `ContentDraftStatus`), `CampaignContentItemStatusQuery` (references `CampaignContentItemStatus`), `PublishingJobStatusQuery` (references `PublishingJobStatus`); add `SubjectTypeQuery` for analytics snapshots. Apply these to campaign list, campaign content item list (nested + flat), content draft list (nested + flat), publishing jobs list, and analytics snapshots list. Generic `StatusQuery` is retained only on pre-existing routes (products, assets, legacy campaign-contents) where it was already present.
 
 ---
 
@@ -235,7 +235,7 @@ All others (members, products, data sources, channel connections, assets, publis
 
 **Rationale:** URL versioning changes every path in the contract and affects client base URLs. Introducing it before the first backend route is implemented creates zero migration cost. Adding it after clients are adopted creates breaking changes. The correct moment to decide is at Backend Slice 1 Planning, when the server router is being wired. The current `/workspaces/...` path structure is not broken — versioning is a deployment concern, not a contract semantic concern.
 
-**Blocking status:** Does not block SQL/schema. Does not block Backend Slice 1 Planning Gate (the planning gate will make this decision). Does block final generated client if introduced after client adoption.
+**Blocking status:** Does not block SQL/schema. URL versioning does not block starting Backend Slice 1 Planning, but it is required for Backend Slice 1 Planning Gate exit before backend routes or generated clients are finalized. Does block final generated client if introduced after client adoption.
 
 **Note to Backend Slice 1 Planning:** The planning gate must decide between `/v1/workspaces/...`, a version header, or no version. The recommendation from this gate is URL versioning (`/v1/`) for clarity — but the decision is explicitly delegated.
 
@@ -262,15 +262,16 @@ All others (members, products, data sources, channel connections, assets, publis
 | Add `PublishingJobStatus` enum schema | 5D | Schema addition | Replaces nullable string placeholder |
 | Update `PublishingJob.status` to `$ref: PublishingJobStatus` | 5D | Schema update | Contract consistency |
 | Add `SubjectTypeQuery` parameter | 5H | Parameter addition | Analytics filter |
-| Add `StatusQuery` and `UpdatedAfterQuery` to campaigns list | 5H | Path update | V1 Campaigns screen requires status filter |
-| Add `StatusQuery` to campaign-nested content items list | 5H | Path update | Content Studio requires item status filter |
+| Add `CampaignStatusQuery`, `ContentDraftStatusQuery`, `CampaignContentItemStatusQuery`, `PublishingJobStatusQuery` parameters | 5H | Parameter addition | Resource-specific enum-bound status filters |
+| Apply resource-specific status params to campaign, content item, content draft, and publishing job list endpoints | 5H | Path update | Replaces generic StatusQuery with enum-bound params on new routes |
 | Add `StatusQuery` to flat content items list | 5H | Path update | Studio workspace view |
 | Add `StatusQuery` to flat content drafts list | 5H | Path update | Pending-review dashboard |
 | Add `SubjectTypeQuery` to analytics snapshots list | 5H | Path update | Analytics screen requires subject type filter |
-| Add `POST .../submit-review` operation | 5F | Path addition | V1 Content Studio requires this operation |
-| Add `POST .../approve` operation | 5F | Path addition | V1 Content Studio requires this operation |
-| Add `POST .../reject` operation | 5E/5F | Path addition | Reviewer rejection; distinct from withdrawal |
-| Add `POST .../withdraw` operation | 5E/5F | Path addition | Creator self-withdrawal; distinct from rejection |
+| Add `POST .../submit-review` operation with idempotency and optimistic concurrency headers | 5F | Path addition | V1 Content Studio requires this operation; headers protect retries and stale-draft submissions |
+| Add `POST .../approve` operation with idempotency and optimistic concurrency headers | 5F | Path addition | Decision server-derived from path; `ContentApprovalApproveRequest` (additionalProperties:false, no decision field) |
+| Add `POST .../reject` operation with idempotency and optimistic concurrency headers | 5E/5F | Path addition | Decision server-derived from path; `ContentApprovalRejectRequest` (additionalProperties:false, no decision field, accepts rejectionReason and requiredChanges) |
+| Add `POST .../withdraw` operation with idempotency and optimistic concurrency headers | 5E/5F | Path addition | Creator self-withdrawal; semantically distinct from reviewer rejection; headers protect stale-state withdrawals |
+| Add `rejectionReason` and `requiredChanges` to `ContentApproval` entity | 5F/5E | Schema update | Round-trips rejection metadata from `ContentApprovalRejectRequest` to the ContentApproval response record |
 
 ---
 
@@ -349,7 +350,7 @@ All others (members, products, data sources, channel connections, assets, publis
 |---|---|
 | `npm run lint` | **PASSED** |
 | `npm run build` | **PASSED** |
-| YAML parse | **OK** — 62 paths, 156 schemas, 33 parameters, 90 operations |
+| YAML parse | **OK** — 62 paths, 157 schemas, 37 parameters, 90 operations |
 | OperationId uniqueness | **PASS** — all new operationIds unique and lowerCamelCase |
 | No stale error model | **PASS** — 0 occurrences of `userAction` or `correlationId` |
 | No PascalCase operationIds | **PASS** |

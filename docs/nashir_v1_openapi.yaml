@@ -2600,7 +2600,7 @@ paths:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
-        - $ref: "#/components/parameters/StatusQuery"
+        - $ref: "#/components/parameters/CampaignStatusQuery"
         - $ref: "#/components/parameters/UpdatedAfterQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
@@ -2850,7 +2850,7 @@ paths:
         - $ref: "#/components/parameters/CampaignIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
-        - $ref: "#/components/parameters/StatusQuery"
+        - $ref: "#/components/parameters/CampaignContentItemStatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -2927,7 +2927,7 @@ paths:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
-        - $ref: "#/components/parameters/StatusQuery"
+        - $ref: "#/components/parameters/CampaignContentItemStatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -2954,12 +2954,13 @@ paths:
       tags:
         - ContentDrafts
       summary: List content drafts for a content item.
-      description: Lists ContentDraft records for a specific CampaignContentItem. ContentDraft lifecycle status naming is deferred to the OpenAPI YAML review gate. Requires nashir.content.read permission.
+      description: Lists ContentDraft records for a specific CampaignContentItem. Requires nashir.content.read permission.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/ContentItemIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/ContentDraftStatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3137,11 +3138,14 @@ paths:
       tags:
         - ContentDrafts
       summary: Submit content draft for review.
-      description: Submits a ContentDraft for human review. Transitions status to ready_for_review. Requires nashir.content.manage permission. Returns 409 if draft is already submitted or approved. Emits audit event.
+      description: Submits a ContentDraft for human review. Transitions status to ready_for_review. Requires nashir.content.manage permission. Returns 409 if draft is already submitted or approved. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-draft submission. Emits audit event.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/ContentItemIdPath"
         - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/IfMatchHeader"
+        - $ref: "#/components/parameters/ResourceVersionHeader"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3172,11 +3176,14 @@ paths:
       tags:
         - ContentApprovals
       summary: Approve content draft.
-      description: Approves a ContentDraft. The decision (approved) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). Self-approval is forbidden at the service layer — the approver must not be the content creator (409 if attempted). Returns 409 if already decided. Emits audit event. Creates a ContentApproval record.
+      description: Approves a ContentDraft. The decision (approved) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). Self-approval is forbidden at the service layer — the approver must not be the content creator (409 if attempted). Returns 409 if already decided. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-review decisions. Emits audit event. Creates a ContentApproval record.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/ContentItemIdPath"
         - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/IfMatchHeader"
+        - $ref: "#/components/parameters/ResourceVersionHeader"
         - $ref: "#/components/parameters/RequestIdHeader"
       requestBody:
         required: false
@@ -3213,11 +3220,14 @@ paths:
       tags:
         - ContentApprovals
       summary: Reject content draft.
-      description: Rejects a ContentDraft on governance grounds. The decision (rejected) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). This operation is for reviewer/admin/owner rejection only; creator self-withdrawal uses the /withdraw endpoint. Returns 409 if already decided. Emits audit event with action content_draft.rejected_by_reviewer. Creates a ContentApproval record.
+      description: Rejects a ContentDraft on governance grounds. The decision (rejected) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). This operation is for reviewer/admin/owner rejection only; creator self-withdrawal uses the /withdraw endpoint. Returns 409 if already decided. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-review decisions. Emits audit event with action content_draft.rejected_by_reviewer. Creates a ContentApproval record.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/ContentItemIdPath"
         - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/IfMatchHeader"
+        - $ref: "#/components/parameters/ResourceVersionHeader"
         - $ref: "#/components/parameters/RequestIdHeader"
       requestBody:
         required: false
@@ -3254,11 +3264,14 @@ paths:
       tags:
         - ContentDrafts
       summary: Withdraw content draft.
-      description: Withdraws a ContentDraft submitted for review. Creator self-withdrawal only — the caller must be the draft's createdByUserId. Requires nashir.content.manage permission. This operation is semantically distinct from reviewer rejection; see /reject for governance rejection. Emits audit event with action content_draft.withdrawn_by_creator. Returns 409 if draft is not in ready_for_review status.
+      description: Withdraws a ContentDraft submitted for review. Creator self-withdrawal only — the caller must be the draft's createdByUserId. Requires nashir.content.manage permission. This operation is semantically distinct from reviewer rejection; see /reject for governance rejection. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-state withdrawals. Emits audit event with action content_draft.withdrawn_by_creator. Returns 409 if draft is not in ready_for_review status.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/ContentItemIdPath"
         - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/IfMatchHeader"
+        - $ref: "#/components/parameters/ResourceVersionHeader"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3294,7 +3307,7 @@ paths:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
-        - $ref: "#/components/parameters/StatusQuery"
+        - $ref: "#/components/parameters/ContentDraftStatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3357,6 +3370,7 @@ paths:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/PublishingJobStatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3923,6 +3937,34 @@ components:
           - campaign
           - product
           - channel_connection
+    CampaignStatusQuery:
+      name: status
+      in: query
+      required: false
+      description: Filter campaigns by status.
+      schema:
+        $ref: "#/components/schemas/CampaignStatus"
+    ContentDraftStatusQuery:
+      name: status
+      in: query
+      required: false
+      description: Filter content drafts by status.
+      schema:
+        $ref: "#/components/schemas/ContentDraftStatus"
+    CampaignContentItemStatusQuery:
+      name: status
+      in: query
+      required: false
+      description: Filter campaign content items by status.
+      schema:
+        $ref: "#/components/schemas/CampaignContentItemStatus"
+    PublishingJobStatusQuery:
+      name: status
+      in: query
+      required: false
+      description: Filter publishing jobs by status.
+      schema:
+        $ref: "#/components/schemas/PublishingJobStatus"
     ContentItemIdPath:
       name: contentItemId
       in: path
@@ -6890,6 +6932,18 @@ components:
           type:
             - string
             - "null"
+        rejectionReason:
+          type:
+            - string
+            - "null"
+          description: Structured reason for rejection, if provided by the reviewer. Present only on rejected decisions.
+        requiredChanges:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+          description: Specific changes required before resubmission, if provided by the reviewer. Present only on rejected decisions.
         decidedAt:
           type:
             - string
@@ -6901,6 +6955,7 @@ components:
       description: Immutable after creation. Self-approval is forbidden; approver must not be the content creator.
     ContentApprovalApproveRequest:
       type: object
+      additionalProperties: false
       description: >
         Request body for approving a ContentDraft. The decision (approved) is server-derived from the /approve
         endpoint path. Clients must not supply a decision field.
@@ -6912,6 +6967,7 @@ components:
           description: Optional reviewer note for the approval record.
     ContentApprovalRejectRequest:
       type: object
+      additionalProperties: false
       description: Request body for rejecting a ContentDraft. The decision (rejected) is server-derived from the /reject endpoint path; do not supply a decision field.
       properties:
         note:
