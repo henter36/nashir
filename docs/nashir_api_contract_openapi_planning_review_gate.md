@@ -388,7 +388,7 @@ The purpose of this review is to decide whether the API Contract / OpenAPI Plann
 | No blocking corrections required | **CONFIRMED** |
 | **GO: API Contract / OpenAPI Planning review gate complete** | **GO** |
 | **CONDITIONAL GO: Nashir OpenAPI YAML Authoring Gate** | After this review gate merges |
-| **CONDITIONAL GO: Nashir SQL/Schema Planning Gate** | Can proceed in parallel with OpenAPI authoring; Auth/RBAC inputs are sufficient |
+| SQL/Schema Planning Gate | SQL/Schema Planning remains deferred unless explicitly opened as a separate documentation-only gate after OpenAPI YAML authoring scope is approved |
 | **CONDITIONAL GO: Nashir Test Strategy Gate** | Can proceed after OpenAPI direction is established |
 | Backend/API implementation | **NO-GO** |
 | SQL schema or migrations | **NO-GO** |
@@ -413,3 +413,4 @@ The purpose of this review is to decide whether the API Contract / OpenAPI Plann
 | Forbidden files check | **PASS** — no `src/`, `package.json`, `README.md`, `docs/screen_map.md`, or marketing-os files modified |
 | No OpenAPI YAML/JSON changed | **CONFIRMED** — `docs/nashir_v1_openapi.yaml` is unchanged; no new YAML or JSON created |
 | Unicode scan (`docs/nashir_api_contract_openapi_planning_gate.md`) | Checked U+202A–U+202E and U+2066–U+2069; output: `BIDI_CONTROL_CHARS: none` — confirmed clean |
+| Unicode scan (`docs/nashir_api_contract_openapi_planning_review_gate.md`) | Checked U+202A–U+202E and U+2066–U+2069; output: `BIDI_CONTROL_CHARS: none` — confirmed clean |
