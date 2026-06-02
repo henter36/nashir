@@ -36,7 +36,7 @@ This gate reviews roadmap sufficiency only.
 
 | Input | Finding |
 |---|---|
-| `docs/nashir_productization_roadmap_gate.md` | Primary review input — 18 sections; 6 phases; 11-gate prerequisite list; sequencing table; conversion rules; marketing-os boundary; Extended V1 treatment; admin/governance treatment; risk register |
+| `docs/nashir_productization_roadmap_gate.md` | Primary review input — 18 sections; 7 phases; 11-gate prerequisite list; sequencing table; conversion rules; marketing-os boundary; Extended V1 treatment; admin/governance treatment; risk register |
 | `README.md` | 23 screens in 4 classified sections (V1 Core/Support/Admin/Extended V1); V1 Core journey documented |
 | `docs/screen_map.md` | 23 screens with V1 Classification column; 3 undocumented screens now documented; navigation groups updated |
 | V1 Scope Decision Gate (PR #64) | 10 V1 Core, 2 V1 Support, 8 V1 Admin/Governance, 3 Extended V1 approved |
