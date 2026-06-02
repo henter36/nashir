@@ -231,6 +231,8 @@ New reusable path parameters added to `components.parameters`:
 
 ## 8. Known Deferred Decisions
 
+This section tracks 10 deferred decisions for later gates.
+
 | Decision | Gate |
 |---|---|
 | Campaign lifecycle status enum names | OpenAPI YAML Review Gate |
