@@ -236,19 +236,19 @@ Future SQL authoring must specify the following items for every planned table.
 | Table | Future authoring must specify |
 |---|---|
 | `workspaces` | UUID primary key; root tenant boundary; required display fields; SQL planning proposal status; server-owned timestamps; no hard delete; workspace status checks; indexes; OpenAPI mapping; verification |
-| `users` | UUID primary key; global identity boundary; email/display fields; PII ownership; SQL planning proposal status; server-owned timestamps; auth-provider deferrals; indexes; OpenAPI mapping; verification |
+| `users` | UUID primary key; global identity boundary; email/display fields; PII ownership; global unique email constraint candidate; exact email normalization/case-folding strategy deferred; SQL planning proposal status; server-owned timestamps; auth-provider deferrals; indexes; OpenAPI mapping; verification |
 | `workspace_members` | UUID primary key; `workspace_id`; `user_id`; role code; OpenAPI-approved status; joined/archive fields; timestamps; unique `workspace_id` plus `user_id`; FK behavior; indexes; OpenAPI/RBAC mapping; verification |
 | `store_profiles` | UUID primary key; one `workspace_id`; required and optional store fields; SQL planning proposal status; timestamps; unique workspace constraint; indexes; OpenAPI mapping; verification |
 | `products` | UUID primary key; `workspace_id`; product display/business fields; SQL planning proposal status; archive field; timestamps; status filters; FK behavior; OpenAPI mapping; verification |
 | `data_sources` | UUID primary key; `workspace_id`; type/provider/display fields; SQL planning proposal connection status; sync status; timestamps; indexes; delete/nullify expectations; OpenAPI mapping; verification |
 | `channel_connections` | UUID primary key; `workspace_id`; optional `data_source_id`; provider/channel/display fields; SQL planning proposal connection status; capability metadata; timestamps; provider/account uniqueness decision; no credential fields; OpenAPI mapping; verification |
-| `integration_credentials` | UUID primary key; `workspace_id`; optional channel connection FK; credential type; vault/reference field; no plaintext secret columns; archive/revoke field; audit requirement; indexes; OpenAPI mapping; verification |
+| `integration_credentials` | UUID primary key; `workspace_id`; optional `channel_connection_id`; optional `data_source_id`; future authoring must decide target exclusivity or documented credential-scope model; credential type; credential_ref/vault_ref boundary; no plaintext secret columns; archive/revoke field; audit requirement; indexes; final FK/check constraints deferred; OpenAPI mapping; verification |
 | `assets` | UUID primary key; `workspace_id`; optional product/content item FKs; title/type/source; storage reference; SQL planning proposal status; archive field; timestamps; indexes; OpenAPI mapping; verification |
 | `campaigns` | UUID primary key; `workspace_id`; optional primary product FK; display fields; OpenAPI-approved CampaignStatus; version field; archive field; timestamps; indexes; OpenAPI mapping; verification |
 | `campaign_briefs` | UUID primary key; `workspace_id`; unique campaign FK; brief fields; timestamps; archive-with-campaign expectations; OpenAPI mapping; verification |
 | `campaign_content_items` | UUID primary key; `workspace_id`; campaign FK; optional current draft FK; content type/channel; OpenAPI-approved CampaignContentItemStatus; version; archive field; timestamps; circular FK strategy; indexes; OpenAPI mapping; verification |
 | `content_drafts` | UUID primary key; `workspace_id`; content item FK; creator user FK; body/language fields; version number; OpenAPI-approved ContentDraftStatus; resource version; archive field; timestamps; lifecycle indexes; OpenAPI mapping; verification |
-| `content_approvals` | UUID primary key; `workspace_id`; content draft FK; reviewer user FK; OpenAPI-approved ContentApprovalDecision; note/rejection reason/required changes fields; decided timestamp; created-only audit field; immutability requirement; self-approval support; OpenAPI mapping; verification |
+| `content_approvals` | UUID primary key; `workspace_id`; content draft FK; reviewer user FK; OpenAPI-approved ContentApprovalDecision; note/rejection reason/required changes fields; decided timestamp; created-only audit field; immutability requirement; self-approval prevention support; OpenAPI mapping; verification |
 | `publishing_jobs` | UUID primary key; `workspace_id`; campaign/content/channel FKs; scheduled timestamp; OpenAPI-approved PublishingJobStatus; version field; cancel field; timestamps; queue indexes; OpenAPI mapping; verification |
 | `publishing_statuses` | UUID primary key; `workspace_id`; publishing job FK; SQL planning proposal status trail field; status message; occurred timestamp; created-only audit field; append-only requirement; indexes; OpenAPI mapping; verification |
 | `analytics_snapshots` | UUID primary key; `workspace_id`; OpenAPI-approved AnalyticsSnapshotStatus; subject type/id; metric JSON; source summary; snapshot time/period decision; created-only audit field; indexes; OpenAPI mapping; verification |
@@ -335,6 +335,7 @@ Future SQL authoring must follow these DDL decision rules.
 | Composite constraints | Required where simple FKs cannot guarantee same-workspace relationships |
 | StoreProfile one-per-workspace | Unique workspace constraint must be planned |
 | WorkspaceMember uniqueness | Unique user/workspace membership constraint must be planned |
+| User email uniqueness | Global unique email constraint candidate must be planned; exact lowercased email, CITEXT, or functional unique index strategy is deferred to SQL Schema Authoring Gate |
 | List queries | Must be indexable by `workspace_id` |
 | Path scoping | `workspace_id` must be server/path-derived, never trusted from request body |
 | Authorization binding | Workspace access must remain tied to active `workspace_members` rows |
@@ -377,6 +378,8 @@ No backend auth provider implementation is introduced or authorized here.
 |---|---|
 | ChannelConnection credentials | Must not store raw credentials |
 | IntegrationCredential boundary | Separates credential reference metadata from channel connection metadata |
+| Credential targets | `integration_credentials` may plan optional `channel_connection_id` and optional `data_source_id`; final FK/check constraints are deferred to SQL Schema Authoring Gate |
+| Target exclusivity | Future SQL authoring must decide either exactly one of `channel_connection_id` or `data_source_id`, or a documented credential-scope model if workspace-level credentials are allowed |
 | Reference field | Use a `credential_ref` / `vault_ref` style opaque reference field |
 | Plaintext secrets | Forbidden in SQL |
 | Encryption/vault provider | Deferred to Security Gate / implementation |
@@ -399,7 +402,7 @@ No backend auth provider implementation is introduced or authorized here.
 | ContentApproval records | Immutable create-only records |
 | Decision source | Server-derived from path/operation, not trusted from arbitrary client body |
 | Rejection metadata | Must support `rejectionReason` / `requiredChanges` round-trip |
-| Self-approval prevention | DDL should support identifying creator and reviewer; enforcement may be application-level |
+| Self-approval prevention | SQL authoring must preserve enough fields and references to allow service-layer self-approval prevention; SQL alone is not assumed to enforce all self-approval business rules unless explicitly planned later |
 | Creator self-withdrawal | DDL should support identifying creator; enforcement may be application-level |
 | Resource version | Mutable lifecycle resources require version fields |
 | Idempotency keys | Lifecycle POSTs require idempotency support before backend implementation |
@@ -472,7 +475,8 @@ No lifecycle backend implementation is introduced or authorized here.
 | Publishing queue | Index by workspace/status/campaign/scheduled time as needed |
 | Analytics period | Index by workspace/subject/snapshot time or period |
 | Audit queries | Index by workspace/resource/action/time |
-| Uniqueness constraints | WorkspaceMember user/workspace, StoreProfile workspace, CampaignBrief campaign, idempotency key scope |
+| Uniqueness constraints | Users global email candidate, WorkspaceMember user/workspace, StoreProfile workspace, CampaignBrief campaign, idempotency key scope |
+| Email uniqueness strategy | Future authoring must decide lowercased email, CITEXT, or functional unique index; final strategy deferred to SQL Schema Authoring Gate |
 | Idempotency uniqueness | Unique workspace plus operation family plus actor/member plus idempotency key |
 | Soft archive filters | Evaluate partial indexes or query filters for `archived_at IS NULL` where supported |
 | Cross-workspace constraints | Add composite constraints where needed to prevent workspace leakage |
