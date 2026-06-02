@@ -41,11 +41,11 @@ The sidebar currently groups screens as follows:
 
 3. **التحليلات والقنوات**
    - Analytics Unified
-   - Template Engine
    - Multi-Platform
    - Team Collaboration
 
 4. **الإدارة والحوكمة**
+   - Template Engine *(V1 Admin/Governance)*
    - Workflow Runs
    - System Admin
    - Secrets and Keys
@@ -69,7 +69,7 @@ V1 scope approved by PR #64 (Nashir V1 Scope Decision Gate) and reviewed by PR #
 | `campaigns` | معالج الحملات | `src/pages/CampaignWizardPage.jsx` | **V1 Core** | Main campaign creation flow | Business user | Active Mock | This is the current official campaign creation screen. |
 | `campaignsList` | الحملات | `src/pages/CampaignsUnifiedPage.jsx` | **V1 Core** | Unified campaign list and campaign-detail surface | Business user | Active Mock | Replaces standalone list/detail separation for now. |
 | `creatorStudio` | استوديو صانع المحتوى | `src/pages/CreatorStudioPage.jsx` | **Extended V1** | AI-assisted content creation studio | Business user | Active Mock | Active screen with dedicated fixture, generated types, and package script; not deprecated; re-evaluate for acceleration. |
-| `content` | المحتوى | `src/pages/ContentStudioPage.jsx` | **V1 Core** | Content generation, editing, review, and approval surface | Business/Reviewer | Active Mock | Core content production surface. |
+| `content` | المحتوى | `src/pages/ContentStudioPage.jsx` | **V1 Core** | Content generation and editing surface | Business/Reviewer | Active Mock | Core content production surface. Review/preview is handled by `contentReview` (Extended V1). |
 | `contentReview` | المراجعة والمعاينة | `src/pages/ContentReviewPreviewUnifiedPage.jsx` | **Extended V1** | Separate content review and preview surface | Business/Reviewer | Active Mock | Active screen separate from ContentStudio despite earlier docs implying absorption; explicit merge vs. standalone decision needed before backend. |
 | `publishingQueue` | جدولة النشر | `src/pages/PublishingQueuePage.jsx` | **V1 Core** | Simulated scheduling and publishing queue | Business/Reviewer | Active Mock | Must not imply real publishing. |
 | `analytics` | التحليلات | `src/pages/AnalyticsUnifiedPage.jsx` | **V1 Core** | Unified analytics and smart analytics surface | Business/Admin | Active Mock | Replaces standalone smart analytics. |
