@@ -19,6 +19,34 @@ tags:
     description: Read-only readiness snapshot endpoints for AI operations. All results are advisory only and do not authorize or gate workflow execution. Slice 3 does not execute AI, trigger workflows, probe providers, create artifacts, or write audit records.
   - name: Creator Studio
     description: Creator Studio session, context draft, readiness assessment, and transfer draft endpoints. All transfer drafts are draft-only; no AI execution, scraping, publishing, or real destination record creation occurs. Transfer endpoints require CreatorContextDraft status ready_for_transfer and create pending_review drafts only.
+  - name: Workspace
+    description: Workspace identity and settings. All merchant-owned resources are scoped to a workspace. workspaceId is path-derived and must never be supplied in a request body.
+  - name: Members
+    description: Workspace membership management. Active membership is required for all workspace-scoped operations. Invited and suspended members are denied access.
+  - name: StoreProfile
+    description: Store profile for the workspace. One StoreProfile per workspace in V1.
+  - name: DataSources
+    description: Data source connection records. Connection status and metadata only; credentials are managed separately via IntegrationCredentials.
+  - name: ChannelConnections
+    description: Channel and platform connection records. No raw credentials on ChannelConnection; optional dataSourceId link.
+  - name: IntegrationCredentials
+    description: Vault-backed credential references for workspace integrations. Raw secret values are never returned. Write-only where applicable.
+  - name: Campaigns
+    description: Campaign records and lifecycle. Campaign and CampaignBrief manage the campaign context. Content items and publishing are managed separately.
+  - name: CampaignContentItems
+    description: Campaign content item records. Nested under a Campaign; also queryable workspace-wide for studio views.
+  - name: ContentDrafts
+    description: Content draft records. Versioned draft body for a CampaignContentItem. Lifecycle state naming is deferred to the OpenAPI YAML review gate.
+  - name: ContentApprovals
+    description: Content approval and rejection records. Human-initiated only. Self-approval is forbidden at the service layer.
+  - name: PublishingJobs
+    description: Publishing job records and lifecycle. Manual confirmation required. Published status is simulated in V1; no real external publishing occurs.
+  - name: PublishingStatus
+    description: Append-only status trail for a PublishingJob. Server-written only; no client writes.
+  - name: AnalyticsSnapshots
+    description: Analytics snapshot records. sourceSummary is required on every snapshot. Status enum is approved as available/partial/stale/unavailable.
+  - name: AuditEvents
+    description: Append-only audit event trail. Admin and owner access only. No client writes.
 security:
   - bearerAuth: []
 paths:
@@ -1724,6 +1752,1771 @@ paths:
           $ref: "#/components/responses/InternalServerError"
         default:
           $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}:
+    get:
+      operationId: getWorkspace
+      x-permission: nashir.workspace.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Workspace
+      summary: Get workspace.
+      description: Returns workspace metadata for the authenticated member. Requires workspace.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Workspace response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updateWorkspace
+      x-permission: nashir.workspace.update
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - Workspace
+      summary: Update workspace settings.
+      description: Updates workspace-level settings. Requires workspace.update permission (admin or owner). workspaceId must not be supplied in the request body.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceUpdateRequest"
+      responses:
+        "200":
+          description: Workspace updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/me:
+    get:
+      operationId: getMyMembership
+      x-permission: nashir.workspace.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Members
+      summary: Get own membership.
+      description: Returns the authenticated user's own WorkspaceMember record and role for this workspace. Requires nashir.workspace.read permission. Does not require nashir.members.manage; returns only the caller's own WorkspaceMember record.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Current user membership response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMemberResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/members:
+    get:
+      operationId: listMembers
+      x-permission: nashir.workspace.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Members
+      summary: List workspace members.
+      description: Lists all WorkspaceMember records for the workspace. Requires workspace.read permission. Member list is not visible to non-members.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Member list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMemberListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: inviteMember
+      x-permission: nashir.members.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - Members
+      summary: Invite member.
+      description: Invites a new member to the workspace. Requires members.manage permission (admin or owner). Creates a WorkspaceMember with status invited. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceMemberInviteRequest"
+      responses:
+        "201":
+          description: Member invited.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMemberResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/members/{memberId}:
+    get:
+      operationId: getMember
+      x-permission: nashir.workspace.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Members
+      summary: Get member.
+      description: Returns a WorkspaceMember record. Requires workspace.read permission. Any active member may read their own record; members.manage is required to read other members' records.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/MemberIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Member response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMemberResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updateMemberRole
+      x-permission: nashir.members.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - Members
+      summary: Update member role.
+      description: Updates the role of a WorkspaceMember. Requires members.manage permission (admin or owner). Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/MemberIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceMemberUpdateRequest"
+      responses:
+        "200":
+          description: Member updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMemberResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    delete:
+      operationId: removeMember
+      x-permission: nashir.members.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Members
+      summary: Remove member.
+      description: Removes a WorkspaceMember from the workspace. Requires members.manage permission (admin or owner). Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/MemberIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "204":
+          description: Member removed.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/members/{memberId}/suspend:
+    post:
+      operationId: suspendMember
+      x-permission: nashir.members.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Members
+      summary: Suspend member.
+      description: Suspends a WorkspaceMember. Status transitions from active to suspended. Requires members.manage permission. Returns 409 if member is already suspended. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/MemberIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Member suspended.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMemberResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/members/{memberId}/activate:
+    post:
+      operationId: activateMember
+      x-permission: nashir.members.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Members
+      summary: Activate member.
+      description: Activates a suspended or invited WorkspaceMember. Status transitions to active. Requires members.manage permission. Returns 409 if member is already active. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/MemberIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Member activated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMemberResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/store-profile:
+    get:
+      operationId: getStoreProfile
+      x-permission: nashir.store.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - StoreProfile
+      summary: Get store profile.
+      description: Returns the workspace's StoreProfile. One StoreProfile per workspace in V1. Requires store_profile.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Store profile response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreProfileResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    put:
+      operationId: upsertStoreProfile
+      x-permission: nashir.store.update
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - StoreProfile
+      summary: Upsert store profile.
+      description: Creates or updates the workspace's StoreProfile. Requires store_profile.update permission (admin or owner). workspaceId must not be supplied in the request body. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StoreProfileUpsertRequest"
+      responses:
+        "200":
+          description: Store profile upserted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreProfileResponse"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/data-sources:
+    get:
+      operationId: listDataSources
+      x-permission: nashir.data_sources.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - DataSources
+      summary: List data sources.
+      description: Lists DataSource records for the workspace. Requires data_sources.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Data source list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: createDataSource
+      x-permission: nashir.data_sources.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - DataSources
+      summary: Create data source.
+      description: Creates a DataSource record for the workspace. Requires data_sources.manage permission. No credentials are stored on this entity. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataSourceCreateRequest"
+      responses:
+        "201":
+          description: Data source created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/data-sources/{dataSourceId}:
+    get:
+      operationId: getDataSource
+      x-permission: nashir.data_sources.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - DataSources
+      summary: Get data source.
+      description: Returns a DataSource record. Requires data_sources.read permission. Returns 404 if not found in workspace.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/DataSourceIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Data source response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updateDataSource
+      x-permission: nashir.data_sources.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - DataSources
+      summary: Update data source.
+      description: Updates a DataSource record. Requires data_sources.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/DataSourceIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataSourceUpdateRequest"
+      responses:
+        "200":
+          description: Data source updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    delete:
+      operationId: removeDataSource
+      x-permission: nashir.data_sources.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - DataSources
+      summary: Remove data source.
+      description: Removes a DataSource record. Requires data_sources.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/DataSourceIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "204":
+          description: Data source removed.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/channel-connections:
+    get:
+      operationId: listChannelConnections
+      x-permission: nashir.channel_connections.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ChannelConnections
+      summary: List channel connections.
+      description: Lists ChannelConnection records for the workspace. No raw credentials are returned. Requires channel_connections.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Channel connection list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelConnectionListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: createChannelConnection
+      x-permission: nashir.channel_connections.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: true
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - ChannelConnections
+      summary: Create channel connection.
+      description: Creates a ChannelConnection record. Requires channel_connections.manage permission (admin or owner). Raw credentials must not be supplied; use IntegrationCredentials for credential references. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChannelConnectionCreateRequest"
+      responses:
+        "201":
+          description: Channel connection created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelConnectionResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/channel-connections/{channelConnectionId}:
+    get:
+      operationId: getChannelConnection
+      x-permission: nashir.channel_connections.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ChannelConnections
+      summary: Get channel connection.
+      description: Returns a ChannelConnection record. No raw credentials are returned. Requires channel_connections.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ChannelConnectionIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Channel connection response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelConnectionResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updateChannelConnection
+      x-permission: nashir.channel_connections.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: true
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - ChannelConnections
+      summary: Update channel connection.
+      description: Updates a ChannelConnection record. Requires channel_connections.manage permission (admin or owner). Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ChannelConnectionIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChannelConnectionUpdateRequest"
+      responses:
+        "200":
+          description: Channel connection updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelConnectionResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    delete:
+      operationId: removeChannelConnection
+      x-permission: nashir.channel_connections.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: true
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ChannelConnections
+      summary: Remove channel connection.
+      description: Removes a ChannelConnection record. Requires channel_connections.manage permission (admin or owner). Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ChannelConnectionIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "204":
+          description: Channel connection removed.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/integration-credentials:
+    post:
+      operationId: createIntegrationCredential
+      x-permission: nashir.integration_credentials.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: true
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - IntegrationCredentials
+      summary: Create integration credential reference.
+      description: Creates a vault-backed credential reference for a workspace integration. Requires integration_credentials.manage permission (admin or owner). Raw secret values must not be supplied or returned; only an opaque vault reference identifier is stored and returned. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntegrationCredentialCreateRequest"
+      responses:
+        "201":
+          description: Integration credential reference created. Response contains only safe metadata; no raw secret is returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntegrationCredentialResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/integration-credentials/{integrationCredentialId}:
+    delete:
+      operationId: revokeIntegrationCredential
+      x-permission: nashir.integration_credentials.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: true
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - IntegrationCredentials
+      summary: Revoke integration credential reference.
+      description: Revokes and removes a vault-backed credential reference. Requires integration_credentials.manage permission (admin or owner). Emits audit event. Does not return the credential value.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IntegrationCredentialIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "204":
+          description: Integration credential reference revoked.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/campaigns:
+    get:
+      operationId: listCampaigns
+      x-permission: nashir.campaigns.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Campaigns
+      summary: List campaigns.
+      description: Lists Campaign records for the workspace. Requires campaigns.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Campaign list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: createCampaign
+      x-permission: nashir.campaigns.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - Campaigns
+      summary: Create campaign.
+      description: Creates a Campaign record for the workspace. Requires campaigns.manage permission. Campaign lifecycle status naming is deferred to the OpenAPI YAML review gate. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignCreateRequest"
+      responses:
+        "201":
+          description: Campaign created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/campaigns/{campaignId}:
+    get:
+      operationId: getCampaign
+      x-permission: nashir.campaigns.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Campaigns
+      summary: Get campaign.
+      description: Returns a Campaign record. Requires campaigns.read permission. Returns 404 if not found in workspace.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/CampaignIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Campaign response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updateCampaign
+      x-permission: nashir.campaigns.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - Campaigns
+      summary: Update campaign.
+      description: Updates a Campaign record. Requires campaigns.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/CampaignIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignUpdateRequest"
+      responses:
+        "200":
+          description: Campaign updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    delete:
+      operationId: archiveCampaign
+      x-permission: nashir.campaigns.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - Campaigns
+      summary: Archive campaign.
+      description: Archives a Campaign record. Soft-delete; campaign data is preserved but hidden from active views. Requires campaigns.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/CampaignIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "204":
+          description: Campaign archived.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/campaigns/{campaignId}/brief:
+    get:
+      operationId: getCampaignBrief
+      x-permission: nashir.campaigns.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - CampaignBriefs
+      summary: Get campaign brief.
+      description: Returns the CampaignBrief for a campaign. One brief per campaign. Requires campaigns.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/CampaignIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Campaign brief response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignBriefResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    put:
+      operationId: upsertCampaignBrief
+      x-permission: nashir.campaigns.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - CampaignBriefs
+      summary: Upsert campaign brief.
+      description: Creates or updates the CampaignBrief for a campaign. Requires campaigns.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/CampaignIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignBriefUpsertRequest"
+      responses:
+        "200":
+          description: Campaign brief upserted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignBriefResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/campaigns/{campaignId}/content-items:
+    get:
+      operationId: listCampaignContentItems
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - CampaignContentItems
+      summary: List campaign content items.
+      description: Lists CampaignContentItem records for a specific campaign. Requires content.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/CampaignIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Campaign content item list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignContentItemListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: createCampaignContentItem
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - CampaignContentItems
+      summary: Create campaign content item.
+      description: Creates a CampaignContentItem for a campaign. Requires content.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/CampaignIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignContentItemCreateRequest"
+      responses:
+        "201":
+          description: Campaign content item created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignContentItemResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items:
+    get:
+      operationId: listWorkspaceContentItems
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - CampaignContentItems
+      summary: List workspace content items.
+      description: Lists all CampaignContentItem records across the workspace. Supports Content Studio workspace-wide views without requiring a campaignId. Requires content.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Workspace content item list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignContentItemListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts:
+    get:
+      operationId: listContentItemDrafts
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: List content drafts for a content item.
+      description: Lists ContentDraft records for a specific CampaignContentItem. ContentDraft lifecycle status naming is deferred to the OpenAPI YAML review gate. Requires nashir.content.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Content draft list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: createContentDraft
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - ContentDrafts
+      summary: Create content draft.
+      description: Creates a ContentDraft for a CampaignContentItem. Requires nashir.content.manage permission. ContentDraft lifecycle status naming is deferred to the OpenAPI YAML review gate. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentDraftCreateRequest"
+      responses:
+        "201":
+          description: Content draft created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}:
+    get:
+      operationId: getContentDraft
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: Get content draft.
+      description: Returns a ContentDraft record. Requires nashir.content.read permission. Returns 404 if not found in workspace.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Content draft response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updateContentDraft
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - ContentDrafts
+      summary: Update content draft.
+      description: Updates a ContentDraft body or language. Requires nashir.content.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentDraftUpdateRequest"
+      responses:
+        "200":
+          description: Content draft updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    delete:
+      operationId: archiveContentDraft
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: Archive content draft.
+      description: Archives a ContentDraft. Soft-delete; draft data is preserved. Requires nashir.content.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "204":
+          description: Content draft archived.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-drafts:
+    get:
+      operationId: listWorkspaceContentDrafts
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: List workspace content drafts.
+      description: Lists all ContentDraft records across the workspace. Supports pending-review dashboards and workspace-wide Content Studio views. ContentDraft lifecycle state naming is deferred to the OpenAPI YAML review gate. Requires content.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Workspace content draft list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-approvals:
+    get:
+      operationId: listWorkspaceContentApprovals
+      x-permission: nashir.content.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentApprovals
+      summary: List workspace content approvals.
+      description: Lists all ContentApproval records across the workspace. Supports approval history and governance views. Requires content.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Workspace content approval list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentApprovalListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/publishing-jobs:
+    get:
+      operationId: listPublishingJobs
+      x-permission: nashir.publishing.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - PublishingJobs
+      summary: List publishing jobs.
+      description: Lists PublishingJob records for the workspace. Requires publishing.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Publishing job list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishingJobListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    post:
+      operationId: createPublishingJob
+      x-permission: nashir.publishing.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - PublishingJobs
+      summary: Create publishing job.
+      description: Creates a PublishingJob record. Requires publishing.manage permission (publisher, admin, or owner). No real external publishing occurs in V1; simulated status is distinct from any future real publishing status. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishingJobCreateRequest"
+      responses:
+        "201":
+          description: Publishing job created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishingJobResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/publishing-jobs/{publishingJobId}:
+    get:
+      operationId: getPublishingJob
+      x-permission: nashir.publishing.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - PublishingJobs
+      summary: Get publishing job.
+      description: Returns a PublishingJob record. Requires publishing.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/PublishingJobIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Publishing job response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishingJobResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+    patch:
+      operationId: updatePublishingJob
+      x-permission: nashir.publishing.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+        - rejectBodyWorkspaceId
+      tags:
+        - PublishingJobs
+      summary: Update publishing job.
+      description: Updates a PublishingJob record before confirmation. Requires publishing.manage permission. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/PublishingJobIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishingJobUpdateRequest"
+      responses:
+        "200":
+          description: Publishing job updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishingJobResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/publishing-jobs/{publishingJobId}/confirm:
+    post:
+      operationId: confirmPublishingJob
+      x-permission: nashir.publishing.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - PublishingJobs
+      summary: Confirm publishing job.
+      description: Confirms a scheduled PublishingJob. Human confirmation required. Requires publishing.manage permission (publisher, admin, or owner). Returns 409 if already confirmed or cancelled. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/PublishingJobIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Publishing job confirmed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishingJobResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/publishing-jobs/{publishingJobId}/cancel:
+    post:
+      operationId: cancelPublishingJob
+      x-permission: nashir.publishing.manage
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - PublishingJobs
+      summary: Cancel publishing job.
+      description: Cancels a PublishingJob. Requires publishing.manage permission. Returns 409 if already cancelled or completed. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/PublishingJobIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Publishing job cancelled.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishingJobResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/publishing-status:
+    get:
+      operationId: listPublishingStatus
+      x-permission: nashir.publishing.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - PublishingStatus
+      summary: List publishing status records.
+      description: Lists PublishingStatus records across all publishing jobs in the workspace. Append-only source; no client writes. Requires publishing.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Publishing status list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishingStatusListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/analytics-snapshots:
+    get:
+      operationId: listAnalyticsSnapshots
+      x-permission: nashir.analytics.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - AnalyticsSnapshots
+      summary: List analytics snapshots.
+      description: Lists AnalyticsSnapshot records for the workspace. sourceSummary is required on every snapshot to distinguish real from mock or partial data. Requires analytics.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Analytics snapshot list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSnapshotListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/analytics-snapshots/{analyticsSnapshotId}:
+    get:
+      operationId: getAnalyticsSnapshot
+      x-permission: nashir.analytics.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - AnalyticsSnapshots
+      summary: Get analytics snapshot.
+      description: Returns a single AnalyticsSnapshot record. sourceSummary field is required; status must be one of the approved enum values. Requires analytics.read permission.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/AnalyticsSnapshotIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Analytics snapshot response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSnapshotResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/audit-events:
+    get:
+      operationId: listAuditEvents
+      x-permission: nashir.audit_events.read
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: false
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - AuditEvents
+      summary: List audit events.
+      description: Lists AuditEvent records for the workspace. Append-only source; no client writes or deletes. Requires audit_events.read permission (admin or owner only).
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/LimitQuery"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Audit event list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEventListResponse"
+        default:
+          $ref: "#/components/responses/DefaultError"
 components:
   parameters:
     WorkspaceIdPath:
@@ -1905,6 +3698,78 @@ components:
       schema:
         type: string
         minLength: 1
+    MemberIdPath:
+      name: memberId
+      in: path
+      required: true
+      description: Stable opaque workspace member identifier.
+      schema:
+        type: string
+        minLength: 1
+    DataSourceIdPath:
+      name: dataSourceId
+      in: path
+      required: true
+      description: Stable opaque data source identifier.
+      schema:
+        type: string
+        minLength: 1
+    ChannelConnectionIdPath:
+      name: channelConnectionId
+      in: path
+      required: true
+      description: Stable opaque channel connection identifier.
+      schema:
+        type: string
+        minLength: 1
+    IntegrationCredentialIdPath:
+      name: integrationCredentialId
+      in: path
+      required: true
+      description: Stable opaque integration credential reference identifier. Does not contain or imply a raw secret value.
+      schema:
+        type: string
+        minLength: 1
+    CampaignIdPath:
+      name: campaignId
+      in: path
+      required: true
+      description: Stable opaque campaign identifier.
+      schema:
+        type: string
+        minLength: 1
+    PublishingJobIdPath:
+      name: publishingJobId
+      in: path
+      required: true
+      description: Stable opaque publishing job identifier.
+      schema:
+        type: string
+        minLength: 1
+    AnalyticsSnapshotIdPath:
+      name: analyticsSnapshotId
+      in: path
+      required: true
+      description: Stable opaque analytics snapshot identifier.
+      schema:
+        type: string
+        minLength: 1
+    ContentItemIdPath:
+      name: contentItemId
+      in: path
+      required: true
+      description: Stable opaque campaign content item identifier.
+      schema:
+        type: string
+        minLength: 1
+    ContentDraftIdPath:
+      name: contentDraftId
+      in: path
+      required: true
+      description: Stable opaque content draft identifier.
+      schema:
+        type: string
+        minLength: 1
   responses:
     BadRequest:
       description: Bad request.
@@ -2021,6 +3886,25 @@ components:
         - creator_studio.platform.not_connected
         - creator_studio.scheduling.duplicate_not_supported
         - creator_studio.override.invalid
+        - workspace.member.not_found
+        - workspace.member.already_active
+        - workspace.member.already_suspended
+        - workspace.member.self_action_forbidden
+        - store_profile.not_found
+        - data_source.not_found
+        - channel_connection.not_found
+        - integration_credential.not_found
+        - campaign.not_found
+        - campaign.archived
+        - content_item.not_found
+        - content_draft.not_found
+        - content_approval.self_approval_forbidden
+        - content_approval.already_decided
+        - publishing_job.not_found
+        - publishing_job.already_confirmed
+        - publishing_job.already_cancelled
+        - analytics_snapshot.not_found
+        - audit_event.not_found
     ErrorModel:
       type: object
       required:
@@ -4029,6 +5913,1080 @@ components:
           type:
             - string
             - "null"
+    WorkspaceStatus:
+      type: string
+      enum:
+        - active
+        - inactive
+        - suspended
+    Workspace:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          $ref: "#/components/schemas/WorkspaceStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    WorkspaceUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+    WorkspaceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/Workspace"
+    WorkspaceMemberStatus:
+      type: string
+      enum:
+        - active
+        - invited
+        - suspended
+      description: Approved WorkspaceMember status values. active = access allowed; invited = access denied until activated; suspended = access denied.
+    WorkspaceMemberRole:
+      type: string
+      enum:
+        - owner
+        - admin
+        - editor
+        - reviewer
+        - publisher
+        - analyst
+        - viewer
+    WorkspaceMember:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - userId
+        - role
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        userId:
+          type: string
+        role:
+          $ref: "#/components/schemas/WorkspaceMemberRole"
+        status:
+          $ref: "#/components/schemas/WorkspaceMemberStatus"
+        joinedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    WorkspaceMemberInviteRequest:
+      type: object
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          $ref: "#/components/schemas/WorkspaceMemberRole"
+    WorkspaceMemberUpdateRequest:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          $ref: "#/components/schemas/WorkspaceMemberRole"
+    WorkspaceMemberResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/WorkspaceMember"
+    WorkspaceMemberListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkspaceMember"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    StoreProfile:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - storeName
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        storeName:
+          type: string
+        storeUrl:
+          type:
+            - string
+            - "null"
+        brandSummary:
+          type:
+            - string
+            - "null"
+        targetMarketSummary:
+          type:
+            - string
+            - "null"
+        defaultLanguage:
+          type:
+            - string
+            - "null"
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    StoreProfileUpsertRequest:
+      type: object
+      required:
+        - storeName
+      properties:
+        storeName:
+          type: string
+          minLength: 1
+        storeUrl:
+          type:
+            - string
+            - "null"
+        brandSummary:
+          type:
+            - string
+            - "null"
+        targetMarketSummary:
+          type:
+            - string
+            - "null"
+        defaultLanguage:
+          type:
+            - string
+            - "null"
+    StoreProfileResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/StoreProfile"
+    DataSourceStatus:
+      type: string
+      enum:
+        - not_connected
+        - connected
+        - error
+        - expired
+    DataSource:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - type
+        - provider
+        - displayName
+        - connectionStatus
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        type:
+          type: string
+        provider:
+          type: string
+        displayName:
+          type: string
+        connectionStatus:
+          $ref: "#/components/schemas/DataSourceStatus"
+        lastSyncStatus:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DataSourceCreateRequest:
+      type: object
+      required:
+        - type
+        - provider
+        - displayName
+      properties:
+        type:
+          type: string
+          minLength: 1
+        provider:
+          type: string
+          minLength: 1
+        displayName:
+          type: string
+          minLength: 1
+    DataSourceUpdateRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+        connectionStatus:
+          $ref: "#/components/schemas/DataSourceStatus"
+    DataSourceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/DataSource"
+    DataSourceListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataSource"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    ChannelConnectionStatus:
+      type: string
+      enum:
+        - not_connected
+        - connected
+        - error
+        - expired
+    ChannelConnection:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - provider
+        - channelType
+        - displayName
+        - connectionStatus
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        dataSourceId:
+          type:
+            - string
+            - "null"
+          description: Optional reference to a DataSource. No raw credentials on this entity.
+        provider:
+          type: string
+        channelType:
+          type: string
+        displayName:
+          type: string
+        connectionStatus:
+          $ref: "#/components/schemas/ChannelConnectionStatus"
+        capabilitySummary:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ChannelConnectionCreateRequest:
+      type: object
+      required:
+        - provider
+        - channelType
+        - displayName
+      properties:
+        dataSourceId:
+          type:
+            - string
+            - "null"
+        provider:
+          type: string
+          minLength: 1
+        channelType:
+          type: string
+          minLength: 1
+        displayName:
+          type: string
+          minLength: 1
+    ChannelConnectionUpdateRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+        connectionStatus:
+          $ref: "#/components/schemas/ChannelConnectionStatus"
+        capabilitySummary:
+          type:
+            - string
+            - "null"
+    ChannelConnectionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ChannelConnection"
+    ChannelConnectionListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChannelConnection"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    IntegrationCredential:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - credentialType
+        - vaultRef
+        - createdAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        credentialType:
+          type: string
+          description: Type of credential (e.g., api_key, oauth_token_ref).
+        vaultRef:
+          type: string
+          description: Opaque vault reference identifier. Not a raw secret value.
+        channelConnectionId:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+      description: Vault-backed credential reference. Raw secret values are never stored or returned.
+    IntegrationCredentialCreateRequest:
+      type: object
+      required:
+        - credentialType
+        - vaultRef
+      properties:
+        credentialType:
+          type: string
+          minLength: 1
+        vaultRef:
+          type: string
+          minLength: 1
+          description: Opaque vault reference identifier provided by the caller. Never a raw secret value.
+        channelConnectionId:
+          type:
+            - string
+            - "null"
+    IntegrationCredentialResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/IntegrationCredential"
+      description: Response contains only safe metadata. No raw secret value is returned.
+    Campaign:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        name:
+          type: string
+        objective:
+          type:
+            - string
+            - "null"
+        primaryProductId:
+          type:
+            - string
+            - "null"
+        status:
+          type:
+            - string
+            - "null"
+          description: Campaign lifecycle status. Naming is deferred to the OpenAPI YAML review gate; do not assume approved enum values.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CampaignCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+        objective:
+          type:
+            - string
+            - "null"
+        primaryProductId:
+          type:
+            - string
+            - "null"
+    CampaignUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        objective:
+          type:
+            - string
+            - "null"
+        primaryProductId:
+          type:
+            - string
+            - "null"
+    CampaignResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/Campaign"
+    CampaignListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Campaign"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    CampaignBrief:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - campaignId
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        campaignId:
+          type: string
+        objective:
+          type:
+            - string
+            - "null"
+        audienceSummary:
+          type:
+            - string
+            - "null"
+        channelSummary:
+          type:
+            - string
+            - "null"
+        tone:
+          type:
+            - string
+            - "null"
+        constraints:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CampaignBriefUpsertRequest:
+      type: object
+      properties:
+        objective:
+          type:
+            - string
+            - "null"
+        audienceSummary:
+          type:
+            - string
+            - "null"
+        channelSummary:
+          type:
+            - string
+            - "null"
+        tone:
+          type:
+            - string
+            - "null"
+        constraints:
+          type:
+            - string
+            - "null"
+    CampaignBriefResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CampaignBrief"
+    CampaignContentItem:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - campaignId
+        - contentType
+        - channel
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        campaignId:
+          type: string
+        contentType:
+          type: string
+        channel:
+          type: string
+        status:
+          type:
+            - string
+            - "null"
+          description: CampaignContentItem status. Lifecycle naming deferred to OpenAPI YAML review gate.
+        currentDraftId:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CampaignContentItemCreateRequest:
+      type: object
+      required:
+        - contentType
+        - channel
+      properties:
+        contentType:
+          type: string
+          minLength: 1
+        channel:
+          type: string
+          minLength: 1
+    CampaignContentItemUpdateRequest:
+      type: object
+      properties:
+        contentType:
+          type: string
+          minLength: 1
+        channel:
+          type: string
+          minLength: 1
+    CampaignContentItemResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CampaignContentItem"
+    CampaignContentItemListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CampaignContentItem"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    ContentDraft:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - campaignContentItemId
+        - version
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        campaignContentItemId:
+          type: string
+        body:
+          type:
+            - string
+            - "null"
+        language:
+          type:
+            - string
+            - "null"
+        version:
+          type: integer
+          minimum: 1
+        status:
+          type:
+            - string
+            - "null"
+          description: ContentDraft lifecycle status. Naming deferred to OpenAPI YAML review gate. Do not assume approved enum values.
+        createdByUserId:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ContentDraftCreateRequest:
+      type: object
+      properties:
+        body:
+          type:
+            - string
+            - "null"
+        language:
+          type:
+            - string
+            - "null"
+    ContentDraftUpdateRequest:
+      type: object
+      properties:
+        body:
+          type:
+            - string
+            - "null"
+        language:
+          type:
+            - string
+            - "null"
+    ContentDraftResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ContentDraft"
+    ContentDraftListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContentDraft"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    ContentApprovalDecision:
+      type: string
+      enum:
+        - approved
+        - rejected
+    ContentApproval:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - contentDraftId
+        - reviewerUserId
+        - decision
+        - createdAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        contentDraftId:
+          type: string
+        reviewerUserId:
+          type: string
+          description: The user who made the approval decision. Self-approval is forbidden at the service layer.
+        decision:
+          $ref: "#/components/schemas/ContentApprovalDecision"
+        note:
+          type:
+            - string
+            - "null"
+        decidedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      description: Immutable after creation. Self-approval is forbidden; approver must not be the content creator.
+    ContentApprovalDecisionRequest:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          $ref: "#/components/schemas/ContentApprovalDecision"
+        note:
+          type:
+            - string
+            - "null"
+    ContentApprovalResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ContentApproval"
+    ContentApprovalListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContentApproval"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    PublishingJob:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - campaignId
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        campaignId:
+          type: string
+        campaignContentItemId:
+          type:
+            - string
+            - "null"
+        scheduledAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        status:
+          type:
+            - string
+            - "null"
+          description: >
+            PublishingJob lifecycle status. Planning candidates: draft, scheduled, confirmed, simulated, failed, cancelled.
+            simulated must remain distinct from any future real publishing status.
+            Final enum is deferred to the OpenAPI YAML review gate.
+        targetChannelConnectionId:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PublishingJobCreateRequest:
+      type: object
+      required:
+        - campaignId
+      properties:
+        campaignId:
+          type: string
+          minLength: 1
+        campaignContentItemId:
+          type:
+            - string
+            - "null"
+        scheduledAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        targetChannelConnectionId:
+          type:
+            - string
+            - "null"
+    PublishingJobUpdateRequest:
+      type: object
+      properties:
+        scheduledAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        targetChannelConnectionId:
+          type:
+            - string
+            - "null"
+    PublishingJobResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/PublishingJob"
+    PublishingJobListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublishingJob"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    PublishingStatusRecord:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - publishingJobId
+        - status
+        - occurredAt
+        - createdAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        publishingJobId:
+          type: string
+        status:
+          type: string
+          description: Status value at the time of this record. Append-only; no client writes.
+        statusMessage:
+          type:
+            - string
+            - "null"
+        occurredAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    PublishingStatusListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublishingStatusRecord"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    AnalyticsSnapshotStatus:
+      type: string
+      enum:
+        - available
+        - partial
+        - stale
+        - unavailable
+      description: Approved AnalyticsSnapshot status values (PR #71/72). available = real data with valid source; partial = some data, incomplete sources; stale = data exists but source freshness expired; unavailable = no data.
+    AnalyticsSnapshotSubjectType:
+      type: string
+      enum:
+        - campaign
+        - product
+        - channel_connection
+    AnalyticsSnapshot:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - status
+        - subjectType
+        - subjectId
+        - sourceSummary
+        - snapshotAt
+        - createdAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        status:
+          $ref: "#/components/schemas/AnalyticsSnapshotStatus"
+        subjectType:
+          $ref: "#/components/schemas/AnalyticsSnapshotSubjectType"
+        subjectId:
+          type: string
+        metricSummary:
+          type:
+            - object
+            - "null"
+          additionalProperties: true
+          description: Metric data. Must not claim real production data unless sourceSummary confirms a real data source.
+        sourceSummary:
+          type: string
+          description: Required. Describes the data source and lineage. Must distinguish real data from mock, partial, or stale data.
+        snapshotAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    AnalyticsSnapshotResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AnalyticsSnapshot"
+    AnalyticsSnapshotListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalyticsSnapshot"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    AuditEvent:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - action
+        - targetType
+        - targetId
+        - occurredAt
+        - createdAt
+      properties:
+        id:
+          type: string
+        workspaceId:
+          type: string
+        actorUserId:
+          type:
+            - string
+            - "null"
+          description: The user who triggered the action. Null for system-initiated events.
+        action:
+          type: string
+          description: The action performed. Uses dot notation (e.g., workspace.member.invited, content_draft.submitted_for_review).
+        targetType:
+          type: string
+          description: The entity type that was acted upon.
+        targetId:
+          type: string
+          description: The entity id that was acted upon.
+        metadataSummary:
+          type:
+            - object
+            - "null"
+          additionalProperties: true
+          description: Summary metadata for the event. Must not contain raw credentials or secret values.
+        occurredAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      description: Append-only audit trail record. Created by the server; no client writes. Cannot be modified or deleted after creation.
+    AuditEventListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEvent"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
   securitySchemes:
     bearerAuth:
       type: http
