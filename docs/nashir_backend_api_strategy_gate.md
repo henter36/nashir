@@ -47,7 +47,7 @@ This gate decides backend/API strategy direction only.
 |---|---|
 | `README.md` | 23 screens; V1 Core journey documented; Extended V1 preserved |
 | `docs/screen_map.md` | 23 screens with V1 classification; `productIntelligence`, `creatorStudio`, `contentReview` documented as Extended V1 |
-| Productization Roadmap Gate (PR #67) | 6-phase roadmap defined; Backend/API Strategy Gate authorized as Phase 1 prerequisite |
+| Productization Roadmap Gate (PR #67) | 7-phase roadmap defined; Backend/API Strategy Gate authorized as Phase 1 prerequisite |
 | Productization Roadmap Review Gate (PR #68) | All 28 criteria PASS; Backend/API Strategy Gate authorized to begin |
 | V1 Scope Decision Gate (PR #64) | 10 V1 Core, 2 V1 Support, 8 V1 Admin/Governance, 3 Extended V1 approved |
 | V1 Scope Decision Review Gate (PR #65) | All 21 criteria PASS |
