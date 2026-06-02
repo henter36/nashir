@@ -288,7 +288,7 @@ Workspace
 - `workspaceId` — ownership/scope
 - `userId` — relationship
 - `rolePlaceholder` — status (Auth/RBAC Gate finalizes)
-- `status` — status: active / invited / disabled
+- `status` — status: active / invited / suspended
 - `joinedAt` — operational metadata
 - `createdAt`, `updatedAt` — audit
 
@@ -326,6 +326,7 @@ Workspace
 ### ChannelConnection
 - `id` — identity
 - `workspaceId` — ownership/scope
+- `dataSourceId` — relationship (optional)
 - `provider` — operational
 - `channelType` — operational
 - `displayName` — display
@@ -337,6 +338,7 @@ Workspace
 - `id` — identity
 - `workspaceId` — ownership/scope
 - `productId` — relationship (optional)
+- `campaignContentItemId` — relationship (optional)
 - `title` — display
 - `assetType` — operational
 - `source` — operational metadata
@@ -417,6 +419,7 @@ Workspace
 ### AnalyticsSnapshot
 - `id` — identity
 - `workspaceId` — ownership/scope
+- `status` — status: available / partial / stale / unavailable
 - `subjectType` — operational (Campaign / Product / ChannelConnection)
 - `subjectId` — relationship
 - `metricSummary` — content (must carry real source or be clearly flagged as mock/partial)
