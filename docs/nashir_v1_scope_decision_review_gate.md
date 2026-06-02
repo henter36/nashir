@@ -142,7 +142,7 @@ All 21 review criteria pass. The V1 scope decision is accurately reasoned and su
 | `marketing-os` boundary correctly maintained | **ACCEPT** |
 | No blocking corrections required | **CONFIRMED** |
 | **GO to open V1 Scope Documentation Update Gate** | **GO** |
-| **GO to plan Nashir Productization Roadmap** | **GO** |
+| **CONDITIONAL GO to plan Nashir Productization Roadmap after V1 Scope Documentation Update Gate** | **CONDITIONAL GO** |
 | UI implementation | **NO-GO** |
 | API/backend work | **NO-GO** |
 | `marketing-os` extraction | **NO-GO** |
