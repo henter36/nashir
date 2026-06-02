@@ -2600,6 +2600,8 @@ paths:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/StatusQuery"
+        - $ref: "#/components/parameters/UpdatedAfterQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -2848,6 +2850,7 @@ paths:
         - $ref: "#/components/parameters/CampaignIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/StatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -2924,6 +2927,7 @@ paths:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/StatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3117,6 +3121,158 @@ paths:
           $ref: "#/components/responses/Conflict"
         default:
           $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/submit-review:
+    post:
+      operationId: submitContentDraftReview
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: Submit content draft for review.
+      description: Submits a ContentDraft for human review. Transitions status to ready_for_review. Requires nashir.content.manage permission. Returns 409 if draft is already submitted or approved. Emits audit event.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Content draft submitted for review.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/approve:
+    post:
+      operationId: approveContentDraft
+      x-permission: nashir.content.approve
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentApprovals
+      summary: Approve content draft.
+      description: Approves a ContentDraft. Requires nashir.content.approve permission (reviewer, admin, or owner). Self-approval is forbidden at the service layer — the approver must not be the content creator (409 if attempted). Returns 409 if already decided. Emits audit event. Creates a ContentApproval record.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentApprovalDecisionRequest"
+      responses:
+        "201":
+          description: Content draft approved. ContentApproval record created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentApprovalResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/reject:
+    post:
+      operationId: rejectContentDraft
+      x-permission: nashir.content.approve
+      x-workspace-scope: route
+      x-human-review-required: true
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentApprovals
+      summary: Reject content draft.
+      description: Rejects a ContentDraft on governance grounds. Requires nashir.content.approve permission (reviewer, admin, or owner). This operation is for reviewer/admin/owner rejection only; creator self-withdrawal uses the /withdraw endpoint. Returns 409 if already decided. Emits audit event with action content_draft.rejected_by_reviewer. Creates a ContentApproval record.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentApprovalDecisionRequest"
+      responses:
+        "201":
+          description: Content draft rejected. ContentApproval record created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentApprovalResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
+  /workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/withdraw:
+    post:
+      operationId: withdrawContentDraft
+      x-permission: nashir.content.manage
+      x-workspace-scope: route
+      x-human-review-required: false
+      x-audit-required: true
+      x-sensitive-operation: false
+      x-guard-chain:
+        - authGuard
+        - workspaceContextGuard
+        - membershipCheck
+        - permissionGuard
+      tags:
+        - ContentDrafts
+      summary: Withdraw content draft.
+      description: Withdraws a ContentDraft submitted for review. Creator self-withdrawal only — the caller must be the draft's createdByUserId. Requires nashir.content.manage permission. This operation is semantically distinct from reviewer rejection; see /reject for governance rejection. Emits audit event with action content_draft.withdrawn_by_creator. Returns 409 if draft is not in ready_for_review status.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceIdPath"
+        - $ref: "#/components/parameters/ContentItemIdPath"
+        - $ref: "#/components/parameters/ContentDraftIdPath"
+        - $ref: "#/components/parameters/RequestIdHeader"
+      responses:
+        "200":
+          description: Content draft withdrawn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentDraftResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        default:
+          $ref: "#/components/responses/DefaultError"
   /workspaces/{workspaceId}/content-drafts:
     get:
       operationId: listWorkspaceContentDrafts
@@ -3133,11 +3289,12 @@ paths:
       tags:
         - ContentDrafts
       summary: List workspace content drafts.
-      description: Lists all ContentDraft records across the workspace. Supports pending-review dashboards and workspace-wide Content Studio views. ContentDraft lifecycle state naming is deferred to the OpenAPI YAML review gate. Requires content.read permission.
+      description: Lists all ContentDraft records across the workspace. Supports pending-review dashboards and workspace-wide Content Studio views. Requires content.read permission.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/StatusQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3444,6 +3601,7 @@ paths:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
         - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/SubjectTypeQuery"
         - $ref: "#/components/parameters/RequestIdHeader"
       responses:
         "200":
@@ -3754,6 +3912,17 @@ components:
       schema:
         type: string
         minLength: 1
+    SubjectTypeQuery:
+      name: subjectType
+      in: query
+      required: false
+      description: Filter analytics snapshots by subject type.
+      schema:
+        type: string
+        enum:
+          - campaign
+          - product
+          - channel_connection
     ContentItemIdPath:
       name: contentItemId
       in: path
@@ -5913,6 +6082,47 @@ components:
           type:
             - string
             - "null"
+    CampaignStatus:
+      type: string
+      enum:
+        - draft
+        - generating
+        - review
+        - ready
+        - scheduled
+        - active
+        - paused
+        - completed
+        - archived
+      description: Approved Campaign lifecycle status values. draft=created; generating=AI content in progress; review=under human review; ready=all content approved; scheduled=publishing date assigned; active=running; paused=temporarily halted; completed=ended; archived=soft-deleted.
+    ContentDraftStatus:
+      type: string
+      enum:
+        - draft
+        - ready_for_review
+        - approved
+        - rejected
+        - archived
+      description: Approved ContentDraft lifecycle status values. draft=created, not submitted; ready_for_review=submitted for review; approved=approved by reviewer; rejected=rejected by reviewer or withdrawn by creator; archived=soft-deleted.
+    CampaignContentItemStatus:
+      type: string
+      enum:
+        - draft
+        - ready_for_review
+        - approved
+        - rejected
+        - archived
+      description: Approved CampaignContentItem status values. Reflects the current approval state of the item's active draft.
+    PublishingJobStatus:
+      type: string
+      enum:
+        - draft
+        - scheduled
+        - queued
+        - simulated
+        - failed
+        - cancelled
+      description: Approved PublishingJob lifecycle status values. simulated must remain explicitly distinct from any future real publishing status. No real external publishing occurs in V1.
     WorkspaceStatus:
       type: string
       enum:
@@ -6370,10 +6580,7 @@ components:
             - string
             - "null"
         status:
-          type:
-            - string
-            - "null"
-          description: Campaign lifecycle status. Naming is deferred to the OpenAPI YAML review gate; do not assume approved enum values.
+          $ref: "#/components/schemas/CampaignStatus"
         createdAt:
           type: string
           format: date-time
@@ -6522,10 +6729,7 @@ components:
         channel:
           type: string
         status:
-          type:
-            - string
-            - "null"
-          description: CampaignContentItem status. Lifecycle naming deferred to OpenAPI YAML review gate.
+          $ref: "#/components/schemas/CampaignContentItemStatus"
         currentDraftId:
           type:
             - string
@@ -6604,10 +6808,7 @@ components:
           type: integer
           minimum: 1
         status:
-          type:
-            - string
-            - "null"
-          description: ContentDraft lifecycle status. Naming deferred to OpenAPI YAML review gate. Do not assume approved enum values.
+          $ref: "#/components/schemas/ContentDraftStatus"
         createdByUserId:
           type:
             - string
@@ -6753,13 +6954,7 @@ components:
             - "null"
           format: date-time
         status:
-          type:
-            - string
-            - "null"
-          description: >
-            PublishingJob lifecycle status. Planning candidates: draft, scheduled, confirmed, simulated, failed, cancelled.
-            simulated must remain distinct from any future real publishing status.
-            Final enum is deferred to the OpenAPI YAML review gate.
+          $ref: "#/components/schemas/PublishingJobStatus"
         targetChannelConnectionId:
           type:
             - string
