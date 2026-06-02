@@ -133,8 +133,8 @@ The next gate — **Nashir API Contract / OpenAPI Planning Review Gate** — rev
 | Partial update | PATCH for partial updates; PUT for full replacement where applicable |
 | Delete vs archive | Soft-delete (archive) preferred for content and campaign entities; hard delete deferred |
 | Resource naming | Plural kebab-case path segments: `store-profile`, `content-items`, `analytics-snapshots` |
-| OperationId convention | `{verb}{ResourceName}` in PascalCase (e.g., `listProducts`, `getStoreProfile`) |
-| Error model | Consistent error envelope across all endpoints: `{ code, message, userAction?, correlationId? }` |
+| OperationId convention | `{verb}{ResourceName}` in lowerCamelCase (e.g., `listProducts`, `getStoreProfile`) — matches existing operationIds in `docs/nashir_v1_openapi.yaml` |
+| Error model | Consistent error envelope aligned with the existing `ErrorModel` in `docs/nashir_v1_openapi.yaml`: `{ errorCode, message, details?, requestId, retryable, status }`; any future change to this shape requires an explicit migration decision in the OpenAPI YAML gate |
 | Timestamps | All timestamps are server-owned; ISO 8601 UTC; not accepted from client in create/update |
 | State transitions | Modeled as dedicated POST sub-resources (e.g., `.../submit-review`, `.../approve`) |
 
@@ -307,7 +307,7 @@ Route patterns only — no OpenAPI YAML. All paths are planning candidates.
 | Route Pattern | Methods | Purpose | Entity | Min Permission | Error Notes | V1 Status |
 |---|---|---|---|---|---|---|
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/approve` | POST | Approve a draft | ContentApproval | `content.approve` | 401/403/404/409 (self-approval = 409) | **V1 Required** |
-| `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/reject` | POST | Reject a draft (reviewer/admin/owner) or withdraw by creator | ContentApproval | `content.approve` (reviewer/admin/owner) / `content.manage` (creator self-withdrawal) | 401/403/404/409 | **V1 Required** |
+| `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/reject` | POST | Reject a draft (reviewer/admin/owner) or withdraw by creator; **planning note:** reviewer rejection and creator withdrawal are distinct business actions with different audit semantics; the OpenAPI YAML gate must decide whether to split creator withdrawal into a dedicated `.../withdraw` sub-resource | ContentApproval | `content.approve` (reviewer/admin/owner) / `content.manage` (creator self-withdrawal) | 401/403/404/409 | **V1 Required** |
 | `/workspaces/{workspaceId}/campaigns/{campaignId}/content-items/{itemId}/drafts/{draftId}/approvals` | GET | Read approval history for a draft | ContentApproval | `content.read` | 401/403/404 | **V1 Required** |
 
 ### Publishing
@@ -386,7 +386,7 @@ Route patterns only — no OpenAPI YAML. All paths are planning candidates.
 | Delete vs archive decided per entity | See entity matrix (Section 8); WorkspaceMember = remove; Campaign/ContentDraft/Asset = archive; AuditEvent/PublishingStatus = neither |
 | Audit-emitting operations documented | Operations that emit AuditEvent must note this in their description; not expressed as a response field |
 | State transitions as sub-resource POSTs | Lifecycle changes (submit-review, approve, reject, confirm, cancel, suspend, activate) are POST to a named sub-resource, not PATCH to a status field |
-| Response envelope | Consistent envelope for error responses: `{ code, message, userAction?, correlationId? }`; success responses may use direct object or `{ data: ... }` — to be decided in OpenAPI YAML gate |
+| Response envelope | Consistent envelope for error responses aligned with existing `ErrorModel`: `{ errorCode, message, details?, requestId, retryable, status }`; any change requires explicit migration decision at OpenAPI YAML gate; success responses may use direct object or `{ data: ... }` — to be decided in OpenAPI YAML gate |
 
 ---
 
@@ -434,7 +434,7 @@ Route patterns only — no OpenAPI YAML. All paths are planning candidates.
 | Decision | Trigger | Required Permission | Self-action rule | Audit |
 |---|---|---|---|---|
 | Approve | reviewer/admin/owner | `content.approve` | **Self-approval FORBIDDEN** — approver must not be the draft creator (409 if attempted) | YES |
-| Reject | reviewer/admin/owner OR draft creator (withdrawal) | `content.approve` (reviewer/admin/owner) / `content.manage` (creator self-withdrawal) | **Self-rejection/withdrawal ALLOWED** — creator may withdraw their own draft; a separate reviewer/admin/owner may reject on governance grounds | YES |
+| Reject / Withdraw | reviewer/admin/owner (rejection) OR draft creator (withdrawal) | `content.approve` (reviewer/admin/owner) / `content.manage` (creator self-withdrawal) | **Self-rejection/withdrawal ALLOWED** — creator may withdraw their own draft; a separate reviewer/admin/owner may reject on governance grounds; **planning note:** these are distinct business actions with different authorization and audit semantics; the OpenAPI YAML gate must decide whether to keep them on a single `/reject` endpoint or split creator withdrawal into a dedicated `/withdraw` sub-resource; if not split, the endpoint must explicitly encode both permission paths and emit distinct AuditEvent types | YES |
 
 ### PublishingJob
 
@@ -475,9 +475,9 @@ No OpenAPI YAML is created in this gate. This section proposes the structure for
 | `parameters` | `workspaceId` (path, required, string, UUID), `limit` (query, integer), `cursor` (query, string), common pagination params as `$ref` components | Reuse via `$ref` to avoid duplication |
 | `paths` | Organized by resource group; see Section 7 for route inventory | No ad hoc paths |
 | `schemas` | One schema per entity; error envelope schema; pagination envelope schema; status enums as `enum` arrays | Naming: `{EntityName}` (e.g., `Product`, `Campaign`, `ContentDraft`) |
-| Error model | `{ code: string, message: string, userAction?: string, correlationId?: string }` | Consistent across all 4xx/5xx responses; named `ErrorResponse` |
+| Error model | Aligned with existing `ErrorModel` in `docs/nashir_v1_openapi.yaml`: `{ errorCode, message, details?, requestId, retryable, status }` | Consistent across all 4xx/5xx responses; reuse existing `ErrorModel` schema reference; any divergence is a migration proposal requiring explicit decision at OpenAPI YAML gate |
 | Pagination model | `{ data: [...], nextCursor?: string, hasMore: boolean }` for list responses | Cursor-based only |
-| OperationId convention | `{verb}{ResourceName}` in PascalCase: `listProducts`, `getProduct`, `createProduct`, `updateProduct`, `archiveProduct`, `submitContentDraftReview`, `approveContentDraft` | Consistent naming enables clean generated client later |
+| OperationId convention | `{verb}{ResourceName}` in lowerCamelCase: `listProducts`, `getProduct`, `createProduct`, `updateProduct`, `archiveProduct`, `submitContentDraftReview`, `approveContentDraft` — matches existing operationIds in `docs/nashir_v1_openapi.yaml` | Consistent naming enables clean generated client later |
 | `examples` | Per-operation request/response examples; use realistic but mock data | Aids reviewers; required for generated docs quality |
 | Generated client | **NO-GO until OpenAPI is approved** | No TypeScript types, SDK, or client generation before OpenAPI YAML review gate merges |
 
@@ -624,6 +624,7 @@ The future OpenAPI YAML gate must verify all of the following before merging:
 | `git diff --stat` | Diff limited to `docs/nashir_api_contract_openapi_planning_gate.md` |
 | Forbidden files check | **PASS** — no `src/`, `package.json`, `README.md`, `docs/screen_map.md`, OpenAPI YAML, SQL, migrations, or marketing-os files modified |
 | No OpenAPI YAML/JSON added | **CONFIRMED** — `find docs/ -name "*.yaml" -o -name "*.json"` shows only `docs/nashir_v1_openapi.yaml` (pre-existing); no new YAML created |
+| Unicode scan (`docs/nashir_api_contract_openapi_planning_gate.md`) | Checked U+202A–U+202E and U+2066–U+2069 (bidirectional isolates and overrides); output: `BIDI_CONTROL_CHARS: none` — confirmed clean |
 
 ---
 
