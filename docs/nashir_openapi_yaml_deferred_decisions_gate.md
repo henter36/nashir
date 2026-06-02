@@ -192,6 +192,8 @@ Rationale: self-approval is forbidden, but self-withdrawal is allowed (PR #73/74
 | Reject | `POST .../reject` | `rejectContentDraft` | `nashir.content.approve` | Reviewer/admin/owner only |
 | Withdraw | `POST .../withdraw` | `withdrawContentDraft` | `nashir.content.manage` | Creator own-draft withdrawal only |
 
+**Request body contract rule:** The `decision` field must not appear in the request bodies for `/approve` or `/reject`. The decision is server-derived from the endpoint path (`/approve` → `approved`; `/reject` → `rejected`). The contract uses path-specific request schemas: `ContentApprovalApproveRequest` (optional `note`) and `ContentApprovalRejectRequest` (optional `note`, `rejectionReason`, `requiredChanges`) respectively. `ContentApprovalDecisionRequest` has been removed from the contract as it is no longer referenced by any authored V1 endpoint. The `ContentApprovalDecision` enum and the `decision` field on the `ContentApproval` response entity are preserved; they are server-set response fields, not client-supplied inputs.
+
 **YAML change:** Add four new path entries under `/workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/...`.
 
 ### 5G — Response success envelope shape

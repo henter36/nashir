@@ -3172,7 +3172,7 @@ paths:
       tags:
         - ContentApprovals
       summary: Approve content draft.
-      description: Approves a ContentDraft. Requires nashir.content.approve permission (reviewer, admin, or owner). Self-approval is forbidden at the service layer — the approver must not be the content creator (409 if attempted). Returns 409 if already decided. Emits audit event. Creates a ContentApproval record.
+      description: Approves a ContentDraft. The decision (approved) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). Self-approval is forbidden at the service layer — the approver must not be the content creator (409 if attempted). Returns 409 if already decided. Emits audit event. Creates a ContentApproval record.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/ContentItemIdPath"
@@ -3183,7 +3183,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ContentApprovalDecisionRequest"
+              $ref: "#/components/schemas/ContentApprovalApproveRequest"
       responses:
         "201":
           description: Content draft approved. ContentApproval record created.
@@ -3213,7 +3213,7 @@ paths:
       tags:
         - ContentApprovals
       summary: Reject content draft.
-      description: Rejects a ContentDraft on governance grounds. Requires nashir.content.approve permission (reviewer, admin, or owner). This operation is for reviewer/admin/owner rejection only; creator self-withdrawal uses the /withdraw endpoint. Returns 409 if already decided. Emits audit event with action content_draft.rejected_by_reviewer. Creates a ContentApproval record.
+      description: Rejects a ContentDraft on governance grounds. The decision (rejected) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). This operation is for reviewer/admin/owner rejection only; creator self-withdrawal uses the /withdraw endpoint. Returns 409 if already decided. Emits audit event with action content_draft.rejected_by_reviewer. Creates a ContentApproval record.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/ContentItemIdPath"
@@ -3224,7 +3224,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ContentApprovalDecisionRequest"
+              $ref: "#/components/schemas/ContentApprovalRejectRequest"
       responses:
         "201":
           description: Content draft rejected. ContentApproval record created.
@@ -6899,17 +6899,36 @@ components:
           type: string
           format: date-time
       description: Immutable after creation. Self-approval is forbidden; approver must not be the content creator.
-    ContentApprovalDecisionRequest:
+    ContentApprovalApproveRequest:
       type: object
-      required:
-        - decision
+      description: >
+        Request body for approving a ContentDraft. The decision (approved) is server-derived from the /approve
+        endpoint path. Clients must not supply a decision field.
       properties:
-        decision:
-          $ref: "#/components/schemas/ContentApprovalDecision"
         note:
           type:
             - string
             - "null"
+          description: Optional reviewer note for the approval record.
+    ContentApprovalRejectRequest:
+      type: object
+      description: Request body for rejecting a ContentDraft. The decision (rejected) is server-derived from the /reject endpoint path; do not supply a decision field.
+      properties:
+        note:
+          type:
+            - string
+            - "null"
+          description: Optional reviewer note for the rejection record.
+        rejectionReason:
+          type:
+            - string
+            - "null"
+          description: Optional structured reason for rejection.
+        requiredChanges:
+          type: array
+          items:
+            type: string
+          description: Optional list of specific changes required before resubmission.
     ContentApprovalResponse:
       type: object
       required:
