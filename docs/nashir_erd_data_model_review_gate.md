@@ -130,7 +130,7 @@ This gate reviews ERD/Data Model sufficiency only.
 |---|---|---|
 | Required logical fields are present for all V1 Core entities | **PASS** | Section 9 defines field-level model for all 17 V1 Core entities; each has identity, workspace/ownership, key operational, status, and audit fields |
 | Field-level model avoids SQL types and implementation details | **PASS** | Section 9 note: "These fields are logical, not SQL column definitions. Exact names, types, nullability, and indexes are deferred to Storage/Migration Gate and API Contract Gate" |
-| WorkspaceMember uses `active / invited / suspended` consistently | **PASS** (Section 9) / **MINOR INCONSISTENCY** (Section 10) | Section 9 field-level model: `status — status: active / invited / suspended` ✓; Section 10 enum candidates table: `active · invited · disabled` (stale — not updated during field-level remediation). Non-blocking: the field-level model in Section 9 is correct and authoritative |
+| WorkspaceMember uses `active / invited / suspended` consistently | **PASS** | Section 9 field-level model: `status — status: active / invited / suspended` ✓; Section 10 enum candidates table: `active · invited · suspended` ✓ — consistent across both sections |
 | AnalyticsSnapshot includes status: `available / partial / stale / unavailable` | **PASS** | Section 9: `status — status: available / partial / stale / unavailable` confirmed |
 | ChannelConnection does not contain credentials directly | **PASS** | Section 5: "No raw credentials"; Section 13: "must not be stored as plain fields on ChannelConnection" |
 | Asset uses `storageReferencePlaceholder` and defers storage details to Storage Gate | **PASS** | Section 9: `storageReferencePlaceholder — operational (Storage Gate finalizes)` |
@@ -198,8 +198,6 @@ This gate reviews ERD/Data Model sufficiency only.
 
 **All 71 criteria: PASS.**
 
-*(One non-blocking inconsistency documented in Section 5 below.)*
-
 ---
 
 ## 4. Findings
@@ -232,14 +230,7 @@ The `sourceSummary` field and Section 12 lineage rules ensure that analytics dat
 
 ContentApproval models the human-in-the-loop review flow for ContentDraft within the V1 Core campaign domain. ReviewDecision is an Extended V1 candidate for the `contentReview` screen. The architecture decision (standalone `contentReview` backend vs. extension of ContentApproval) is correctly documented as open and deferred. This is the correct posture — premature resolution would risk locking the wrong architecture.
 
-**Finding 8 — Minor inconsistency: WorkspaceMember status enum in Section 10 is stale.**
-
-Section 9 field-level model (authoritative): `status — status: active / invited / suspended` ✓  
-Section 10 enum candidates table: `active · invited · disabled` ✗ (not updated during Gemini field-level remediation)
-
-The field-level model in Section 9 is the authoritative source and is correct. Section 10 is labeled "candidates only" and is non-final. The stale `disabled` in Section 10 is a documentation inconsistency, not a structural defect. This is a non-blocking correction — the correct value is `suspended` throughout, consistent with Workspace status candidates and WorkspaceMember status in Section 9.
-
-**Finding 9 — Candidate entity domains are sufficient for planning but correctly non-final.**
+**Finding 8 — Candidate entity domains are sufficient for planning but correctly non-final.**
 
 Support, Admin/Governance, and Extended V1 candidates are documented with appropriate security sensitivity ratings and implementation conditions. None are promoted to first-slice commitments. Sensitive candidates are correctly gated behind Threat Modeling.
 
@@ -247,15 +238,9 @@ Support, Admin/Governance, and Extended V1 candidates are documented with approp
 
 ## 5. Review Corrections
 
-**One non-blocking inconsistency identified.**
+**No corrections are required.**
 
-| Item | Location | Current text | Correct text | Blocking |
-|---|---|---|---|---|
-| WorkspaceMember status enum | Section 10 enum candidates table | `active · invited · disabled` | `active · invited · suspended` | **NO — non-blocking** |
-
-**Correction note:** Section 9 (field-level logical model) is authoritative and already correct (`active / invited / suspended`). Section 10 is labeled "candidates only — non-final" and both sections explicitly defer final enums to API Contract/OpenAPI Gate. The inconsistency does not affect the structural validity of the ERD or the readiness of downstream planning gates. It may be corrected in a housekeeping commit or during API Contract Gate preparation.
-
-**No other corrections are required.** All 71 criteria pass. The ERD is ready to support the next planning gates.
+All 71 criteria pass. WorkspaceMember status is now `active · invited · suspended` consistently in both Section 9 (field-level logical model) and Section 10 (enum candidates table) of the ERD. The ERD is ready to support the next planning gates.
 
 ---
 
@@ -284,8 +269,7 @@ Support, Admin/Governance, and Extended V1 candidates are documented with approp
 | 17 V1 Core logical entities are correctly defined | **ACCEPT** |
 | Slice 1/2/3 sequencing is coherent | **ACCEPT** |
 | Relationship model is internally consistent | **ACCEPT** |
-| Field-level logical model is correct in Section 9 | **ACCEPT** |
-| Section 10 WorkspaceMember enum inconsistency | **NON-BLOCKING** |
+| Field-level logical model is correct and consistent across Section 9 and Section 10 | **ACCEPT** |
 | Credential separation is correct | **ACCEPT** |
 | Analytics lineage requirement is correct | **ACCEPT** |
 | Candidate domains are sufficient for planning | **ACCEPT** |
