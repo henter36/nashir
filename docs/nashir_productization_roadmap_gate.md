@@ -321,8 +321,10 @@ Extended V1 is not discarded work. All three screens remain visible, active, and
 | 5 | **Nashir Auth/RBAC/Workspace Identity Gate** | Defines workspace isolation and role model |
 | 6 | **Nashir Test Strategy Gate** | Defines test coverage requirements |
 | 7 | **Nashir Threat Modeling/Security Gate** | Required before sensitive API/governance implementation |
-| 8 | **Marketing OS Knowledge Extraction for Nashir Planning Gate** | After roadmap review; selective reference extraction only |
-| 9 | **Nashir Real Implementation Slice 1 Planning Gate** | First real backend implementation scope (Store/Product/DataSources/Assets) |
+| 8 | **Nashir Data Migration/Storage Strategy Gate** | Required if new persistent storage is introduced |
+| 9 | **Nashir Environment/Deployment Strategy Gate** | Required if runtime hosting is introduced for the backend |
+| 10 | **Marketing OS Knowledge Extraction for Nashir Planning Gate** | After roadmap review; selective reference extraction only |
+| 11 | **Nashir Real Implementation Slice 1 Planning Gate** | First real backend implementation scope (Store/Product/DataSources/Assets) |
 
 **Marketing OS extraction may begin after roadmap review, but must remain selective and non-binding. Real implementation cannot start before Backend/API, ERD, API Contract, Test Strategy, and Threat Modeling gates are complete.**
 
