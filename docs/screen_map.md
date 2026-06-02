@@ -45,7 +45,7 @@ The sidebar currently groups screens as follows:
    - Team Collaboration
 
 4. **الإدارة والحوكمة**
-   - Template Engine *(V1 Admin/Governance)*
+   - Template Engine
    - Workflow Runs
    - System Admin
    - Secrets and Keys
