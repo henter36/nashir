@@ -305,6 +305,7 @@ Future security controls to evaluate:
 - Provider credential isolation
 - Least privilege principle
 - Safe error handling (no internal detail leakage)
+- Data residency and local regulatory compliance assessment, including PDPL and GCC-relevant data protection requirements where applicable *(future evaluation; no compliance claim is made here)*
 
 ---
 
@@ -346,8 +347,8 @@ No tests are added in this gate.
 | 1 | **Nashir Backend/API Strategy Review Gate** | Reviews and accepts this strategy before strategy gates begin |
 | 2 | **Nashir Marketing OS Knowledge Extraction Planning Gate** | Optional non-binding reference study; only if needed before ERD/API details |
 | 3 | **Nashir ERD/Data Model Gate** | Approves entity model and relationships for V1 Core |
-| 4 | **Nashir API Contract/OpenAPI Gate** | Approves API contract before UI integration or generated types |
-| 5 | **Nashir Auth/RBAC/Workspace Identity Gate** | Defines workspace isolation and role/permission model |
+| 4 | **Nashir Auth/RBAC/Workspace Identity Gate** | Defines workspace isolation and role/permission model — must inform API contract auth schemes, workspace scoping, and permission expectations |
+| 5 | **Nashir API Contract/OpenAPI Gate** | Approves API contract after Auth/RBAC direction is established; auth schemes, workspace headers, and permission requirements must be reflected in the contract |
 | 6 | **Nashir Test Strategy Gate** | Defines test coverage requirements |
 | 7 | **Nashir Threat Modeling/Security Gate** | Required before sensitive area implementation |
 | 8 | **Nashir Data Migration/Storage Strategy Gate** | When persistent storage is introduced |
@@ -416,7 +417,8 @@ NO-GO: Production/pilot readiness claims.
 | **CONDITIONAL GO: Nashir Backend/API Strategy Review Gate** | After this gate merges |
 | **CONDITIONAL GO: Marketing OS Knowledge Extraction Planning Gate** | After strategy review; optional non-binding study only |
 | **CONDITIONAL GO: Nashir ERD/Data Model Gate** | After strategy review |
-| **CONDITIONAL GO: Nashir API Contract/OpenAPI Gate** | After strategy review and ERD direction |
+| **CONDITIONAL GO: Nashir Auth/RBAC/Workspace Identity Gate** | After strategy review and ERD direction — must precede API contract |
+| **CONDITIONAL GO: Nashir API Contract/OpenAPI Gate** | After Auth/RBAC direction is established; auth schemes and workspace scoping must be reflected |
 | Backend/API implementation | **NO-GO** |
 | UI integration | **NO-GO** |
 | ERD/schema implementation | **NO-GO** |
