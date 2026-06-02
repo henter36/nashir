@@ -59,7 +59,7 @@ This gate answers:
 | V1 Support 2 screens are correctly classified | **PASS** | multiPlatform and teamCollaboration support the merchant journey but can follow after first backend slice |
 | V1 Admin/Governance 8 screens are correctly classified | **PASS** | templateEngine, workflowRuns, systemAdmin, secrets, modelRouting, promptGovernance, costMonitor, settings — operational/governance screens that should not dominate first implementation |
 | `productIntelligence` classified as Extended V1 with sound rationale | **PASS** | Connected to campaign flow via `onNavigate`; valuable but not required for minimum merchant loop; Section 8 notes early acceleration potential |
-| `creatorStudio` classified as Extended V1 with sound rationale | **PASS** | Highest investment (fixture, generated types, package script); Section 8 explicitly notes re-evaluation for acceleration; not relegated to Post V1 |
+| `creatorStudio` classified as Extended V1 with sound rationale | **PASS** | Highest investment (fixture, generated types, package script); Section 8 of `docs/nashir_v1_scope_decision_gate.md` explicitly notes re-evaluation for acceleration; not relegated to Post V1 |
 | `contentReview` classified as Extended V1 with sound rationale | **PASS** | Active despite screen_map implying absorption; Section 8 requires explicit merge vs. standalone decision before backend |
 | No active screen classified as Post V1 | **PASS** | Section 9 explicitly states no active screen is Post V1; all 23 preserved |
 | No screen is deleted, deprecated, or reduced | **PASS** | Decision summary: "No active screen is deleted, deprecated, or reduced" |
@@ -120,10 +120,10 @@ All 21 review criteria pass. The V1 scope decision is accurately reasoned and su
 | Risk | Severity | Mitigation |
 |---|---|---|
 | Backend starting without this review merging | **HIGH** | This review must merge before any backend strategy begins |
-| Creator Studio's Extended V1 status treated as permanent deferral | **MEDIUM** | Section 8 explicitly notes re-evaluation for acceleration; must not be ignored in productization roadmap |
+| Creator Studio's Extended V1 status treated as permanent deferral | **MEDIUM** | Section 8 of `docs/nashir_v1_scope_decision_gate.md` explicitly notes re-evaluation for acceleration; must not be ignored in productization roadmap |
 | `contentReview`/`content` architectural decision delayed indefinitely | **MEDIUM** | Must be resolved in Backend/API Strategy Gate before content backend begins |
 | README/screen_map not updated, perpetuating the 3-screen documentation gap | **MEDIUM** | V1 Scope Documentation Update Gate must be opened promptly after this review |
-| All 10 V1 Core screens treated as requiring simultaneous Slice 1 implementation | **HIGH** | Backend/API Strategy Gate must sequence within V1 Core; Section 10 provides the priority order |
+| All 10 V1 Core screens treated as requiring simultaneous Slice 1 implementation | **HIGH** | Backend/API Strategy Gate must sequence within V1 Core; Section 10 of `docs/nashir_v1_scope_decision_gate.md` provides the priority order |
 | `marketing-os` extraction starting before documentation update | **MEDIUM** | Extraction gate is gated behind both this review and documentation update |
 
 ---
@@ -172,7 +172,7 @@ May open in parallel with or immediately after documentation update. Must:
 **3. Nashir Backend/API Strategy Gate**
 
 Follows productization roadmap. Must:
-- Sequence within V1 Core using Section 10 priority order
+- Sequence within V1 Core using Section 10 of `docs/nashir_v1_scope_decision_gate.md` priority order
 - Resolve the `contentReview` vs `content` architectural question before content backend begins
 - Re-evaluate Creator Studio for acceleration vs. default deferral
 
