@@ -108,7 +108,7 @@ The purpose of this review is to assess whether `docs/nashir_v1_openapi.yaml` is
 | Route Family | V1 Entity/Screen | Workspace Scoped | Min Permission | Read/Write | Assessment |
 |---|---|---|---|---|---|
 | `/workspaces/{workspaceId}` | Workspace / all screens | YES (root) | `nashir.workspace.read` / `nashir.workspace.update` | GET, PATCH | **PASS** |
-| `/workspaces/{workspaceId}/me` | WorkspaceMember (self) / all screens | YES | `nashir.workspace.read` | GET only | **PASS** — permissionGuard present; does not require members.manage |
+| `/workspaces/{workspaceId}/me` | WorkspaceMember (self) / all screens | YES | `nashir.workspace.read` | GET only | **PASS** — permissionGuard present; does not require `nashir.members.manage` |
 | `/workspaces/{workspaceId}/members` | WorkspaceMember / teamCollaboration | YES | `nashir.workspace.read` (list) / `nashir.members.manage` (create) | GET, POST | **PASS** |
 | `/workspaces/{workspaceId}/members/{memberId}` | WorkspaceMember | YES | `nashir.workspace.read` (GET) / `nashir.members.manage` (PATCH, DELETE) | GET, PATCH, DELETE | **PASS** |
 | `/workspaces/{workspaceId}/members/{memberId}/suspend` | WorkspaceMember state | YES | `nashir.members.manage` | POST | **PASS** |
@@ -186,7 +186,7 @@ Note: Approve/reject/submit-review operations for ContentDraft/ContentApproval s
 |---|---|---|---|---|---|---|
 | `Workspace` | YES — `Workspace`, `WorkspaceUpdateRequest`, `WorkspaceResponse` | GET, PATCH; no list (single root) | YES (PATCH) | NO | — | **PASS** |
 | `User` | NO explicit schema — accessed via WorkspaceMember | No direct route (auth provider managed) | YES (auth provider) | NO | — | **PASS** — correctly deferred |
-| `WorkspaceMember` | YES — full schema; `WorkspaceMemberStatus` and `WorkspaceMemberRole` enums | Full CRUD + state transitions + /me | YES (all mutations) | NO | — | **PASS** |
+| `WorkspaceMember` | YES — full schema; `WorkspaceMemberStatus` and `WorkspaceMemberRole` enums | Full CRUD + state transitions + `/workspaces/{workspaceId}/me` | YES (all mutations) | NO | — | **PASS** |
 | `StoreProfile` | YES — `StoreProfile`, `StoreProfileUpsertRequest`, `StoreProfileResponse` | GET, PUT (upsert) | YES (PUT) | NO | — | **PASS** |
 | `Product` | YES — `Product`, `ProductStatus`, `CreateProductRequest`, `ProductResponse`, `ProductListResponse` | GET, POST, GET/{id}, PUT/{id}, DELETE/{id} | YES | YES (snapshot subject) | — | **PASS** |
 | `DataSource` | YES — `DataSource`, `DataSourceStatus`, `DataSourceCreateRequest`, `DataSourceUpdateRequest`, `DataSourceResponse`, `DataSourceListResponse` | Full CRUD | YES | NO | — | **PASS** |
@@ -304,7 +304,7 @@ Note: Approve/reject/submit-review operations for ContentDraft/ContentApproval s
 
 ---
 
-## 15. `/me` Endpoint Correction Review
+## 15. `/workspaces/{workspaceId}/me` Endpoint Correction Review
 
 | Criterion | Status | Evidence |
 |---|---|---|
@@ -402,7 +402,7 @@ Scan checked U+202A–U+202E and U+2066–U+2069 (bidirectional isolates and ove
 | OperationId consistency (lowerCamelCase; unique; 0 PascalCase) | **PASS** |
 | Credential secrecy (vaultRef only; no raw secret returned) | **PASS** |
 | ContentDraft correction (nested paths + parameters authored; mutation schemas matched) | **PASS** |
-| `/me` correction (nashir.workspace.read; permissionGuard present) | **PASS** |
+| `/workspaces/{workspaceId}/me` correction (nashir.workspace.read; permissionGuard present) | **PASS** |
 | Deferred-decision discipline (10 decisions correctly not implemented) | **PASS** |
 | Audit/analytics governance (AuditEvent append-only; sourceSummary required on snapshots) | **PASS** |
 | Unicode scan (all three files clean) | **PASS** |
@@ -465,7 +465,7 @@ Scan checked U+202A–U+202E and U+2066–U+2069 (bidirectional isolates and ove
 | ErrorModel is aligned to existing contract | **ACCEPT** |
 | OperationIds are unique, lowerCamelCase, and stable | **ACCEPT** |
 | ContentDraft correction is closed | **ACCEPT** |
-| `/me` correction is closed | **ACCEPT** |
+| `/workspaces/{workspaceId}/me` correction is closed | **ACCEPT** |
 | All 10 deferred decisions remain correctly unimplemented | **ACCEPT** |
 | No blocking corrections required | **CONFIRMED** |
 | **GO: OpenAPI YAML authoring review gate complete** | **GO** |
@@ -499,7 +499,7 @@ This review authorizes only the next approved planning or review step. It does n
 | Output | Detail |
 |---|---|
 | YAML contract review | All 15 checklist criteria PASS |
-| All previous review findings | ContentDraft correction CLOSED; `/me` correction CLOSED |
+| All previous review findings | ContentDraft correction CLOSED; `/workspaces/{workspaceId}/me` correction CLOSED |
 | GO decision | OpenAPI YAML authoring is contract-sufficient |
 | 10 deferred decisions confirmed | Status enum names, reject/withdraw split, approve/reject ops, URL versioning, envelope shape, filter params |
 
