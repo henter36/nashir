@@ -5,7 +5,7 @@
 | Gate type | SQL/Schema planning gate — documentation only |
 | Status | Planning complete |
 | Date | 2026-06-02 |
-| Scope | Translates the approved ERD/Data Model, Auth/RBAC/Workspace Identity, and OpenAPI V1 contract into a planned PostgreSQL persistence model without writing SQL migrations or implementation code |
+| Scope | Plans the Nashir V1 PostgreSQL persistence model from the approved ERD, Auth/RBAC, and OpenAPI contract — no SQL migrations or implementation |
 | Prerequisite gates | `docs/nashir_openapi_yaml_deferred_decisions_review_gate.md` — merged (PR #80) |
 | SQL DDL created | NO |
 | Migrations created | NO |
@@ -52,7 +52,9 @@ The SQL schema must be derived from:
 3. **Approved approval/lifecycle operations** (PR #79) — defines ContentDraft state machine transitions that schema must support.
 4. **Approved idempotency/concurrency semantics** (PR #79) — identifies which tables need version fields and idempotency records.
 
-Writing migrations before these decisions are stable creates expensive schema drift. This gate produces a planning document that the SQL Schema Authoring Gate and Backend Slice 1 Planning Gate can execute against a stable contract.
+Writing migrations before these decisions are stable creates expensive schema drift.
+This gate produces a planning document that the SQL Schema Authoring Gate and
+Backend Slice 1 Planning Gate can execute against a stable contract.
 
 ---
 
@@ -62,10 +64,10 @@ Writing migrations before these decisions are stable creates expensive schema dr
 
 | Input | Finding |
 |---|---|
-| `docs/nashir_erd_data_model_gate.md` (PR #71) | 17 V1 Core logical entities + IntegrationCredential; field-level logical model; relationship model; workspace root; approved status enums for WorkspaceMember and AnalyticsSnapshot |
+| `docs/nashir_erd_data_model_gate.md` (PR #71) | 17 V1 Core entities + IntegrationCredential; field-level model; workspace root; approved enums for WorkspaceMember and AnalyticsSnapshot |
 | `docs/nashir_erd_data_model_review_gate.md` (PR #72) | All 71 criteria PASS; entity model confirmed |
 | `docs/nashir_auth_rbac_workspace_identity_gate.md` (PR #73) | 7 roles; 24 permission groups; workspace scoping rules; `nashir.content.approve` vs `nashir.content.manage` boundaries |
-| `docs/nashir_v1_openapi.yaml` | 62 paths, 157 schemas, 37 parameters; all 4 status enums approved (CampaignStatus, ContentDraftStatus, CampaignContentItemStatus, PublishingJobStatus); ContentDraft lifecycle ops; idempotency/concurrency headers |
+| `docs/nashir_v1_openapi.yaml` | 62 paths, 157 schemas, 37 params; 4 status enums locked; ContentDraft lifecycle ops; idempotency/concurrency headers |
 | `docs/nashir_openapi_yaml_deferred_decisions_gate.md` (PR #79) | Status enums resolved; ContentDraft sub-resource ops authored; idempotency/concurrency headers added; response envelope approved |
 | `docs/nashir_openapi_yaml_deferred_decisions_review_gate.md` (PR #80) | All 15 criteria PASS; SQL/Schema Planning Gate authorized |
 | `README.md` | 23 screens; V1 Core journey; Nashir-first |
@@ -121,8 +123,8 @@ Writing migrations before these decisions are stable creates expensive schema dr
 | `workspace_id` scope | NOT NULL foreign key on all workspace-scoped tables; always path-derived, never from request body |
 | Soft-delete pattern | `archived_at TIMESTAMPTZ` nullable column for archivable entities; `NULL` = active, non-NULL = archived |
 | Server-owned fields | `id`, `workspace_id`, `created_at`, `updated_at`, `archived_at` never accepted from client |
-| Status columns — OpenAPI-approved | OpenAPI-locked enums (CampaignStatus, ContentDraftStatus, CampaignContentItemStatus, PublishingJobStatus, WorkspaceMemberStatus, AnalyticsSnapshotStatus) are candidates for PostgreSQL ENUM type — stable and explicitly approved by PR #79. Physical DDL deferred to SQL Schema Authoring Gate. |
-| Status columns — SQL planning proposals | Additional status fields not yet in OpenAPI (workspace status, user status, store profile status, product status, asset status, data source/channel connection status) are SQL planning proposals only — marked as such throughout this document. These require SQL Schema Authoring Gate approval before implementation. Candidates for TEXT + CHECK constraint until the Authoring Gate confirms stability. |
+| Status columns — OpenAPI-approved | Six enums locked by PR #79 are PostgreSQL ENUM candidates. See Section 8 for values. DDL deferred to SQL Schema Authoring Gate. |
+| Status columns — SQL proposals | Non-OpenAPI statuses (workspace, user, store, product, asset, data source) are SQL planning proposals. TEXT + CHECK candidates. See Section 8. |
 | Audit fields | `created_at`, `updated_at` on all mutable tables; `occurred_at` on append-only tables |
 | Idempotency | Candidate `idempotency_keys` table for lifecycle POST deduplication |
 | Version/concurrency | `version INTEGER DEFAULT 1` on mutable entities with lifecycle POSTs |
@@ -171,7 +173,10 @@ Writing migrations before these decisions are stable creates expensive schema dr
 
 ### Group A — V1 Entity Tables (18 tables)
 
-The core merchant-owned and system entity tables. All workspace-scoped tables require a `workspace_id` column. Status enums marked **OpenAPI** are locked by the approved contract; those marked **SQL proposal** require SQL Schema Authoring Gate approval.
+The core merchant-owned and system entity tables.
+All workspace-scoped tables require a `workspace_id` column.
+Status enums marked **OpenAPI** are locked by the approved contract;
+those marked **SQL proposal** require SQL Schema Authoring Gate approval.
 
 | Table | Source Entity | Workspace-Scoped | Primary Key | Status Field | Soft-Delete | V1 Required |
 |---|---|---|---|---|---|---|
@@ -204,7 +209,9 @@ Infrastructure tables needed to support API contract requirements. Not merchant-
 
 ### Group C — RBAC Reference/Seed Tables (3 tables)
 
-Role and permission reference tables. These are planning candidates. Seed data (role_codes, permission_codes) is required before backend routes are functional, but the physical DDL and seed files are deferred to Backend Slice 1 Planning Gate.
+Role and permission reference tables — planning candidates only.
+Seed data (role_codes, permission_codes) is required before backend routes can be functional,
+but physical DDL and seed files are deferred to Backend Slice 1 Planning Gate.
 
 | Table | Purpose | Global/Scoped | Notes |
 |---|---|---|---|
@@ -227,13 +234,19 @@ Role and permission reference tables. These are planning candidates. Seed data (
 ### `workspaces`
 - **Identity:** `id UUID PK`
 - **Display:** `name TEXT NOT NULL`
-- **Status:** `status TEXT NOT NULL DEFAULT 'active'` — *SQL planning proposal (active/inactive/suspended); TEXT + CHECK candidate; not an OpenAPI-approved enum; requires SQL Schema Authoring Gate approval*
-- **Audit:** `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- **Status:** `status TEXT NOT NULL DEFAULT 'active'`
+  - *SQL planning proposal — values: active/inactive/suspended*
+  - *TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
+- **Audit:** `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- **Audit:** `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 
 ### `users`
 - **Identity:** `id UUID PK`
 - **Display/PII:** `display_name TEXT`, `email TEXT UNIQUE NOT NULL` — PII; auth provider may own this
-- **Status:** `status TEXT NOT NULL DEFAULT 'invited'` — *SQL planning proposal (active/invited/suspended); auth provider integration may own this field; TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
+- **Status:** `status TEXT NOT NULL DEFAULT 'invited'`
+  - *SQL planning proposal — values: active/invited/suspended*
+  - *Auth provider integration may own this field; TEXT + CHECK candidate*
+  - *Requires SQL Schema Authoring Gate approval*
 - **Audit:** `created_at`, `updated_at`
 
 ### `workspace_members`
@@ -250,14 +263,18 @@ Role and permission reference tables. These are planning candidates. Seed data (
 - **Identity:** `id UUID PK`
 - **Tenant:** `workspace_id UUID NOT NULL UNIQUE REFERENCES workspaces(id)` — one per workspace
 - **Display:** `store_name TEXT NOT NULL`, `store_url TEXT`, `brand_summary TEXT`, `target_market_summary TEXT`, `default_language TEXT`
-- **Status:** `status TEXT NOT NULL DEFAULT 'inactive'` — *SQL planning proposal (active/inactive); TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
+- **Status:** `status TEXT NOT NULL DEFAULT 'inactive'`
+  - *SQL planning proposal — values: active/inactive*
+  - *TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
 - **Audit:** `created_at`, `updated_at`
 
 ### `products`
 - **Identity:** `id UUID PK`
 - **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
 - **Display:** `name TEXT NOT NULL`, `description TEXT`, `category TEXT`, `price_placeholder TEXT` — commerce integration deferred
-- **Status:** `status TEXT NOT NULL DEFAULT 'draft'` — *SQL planning proposal (draft/active/archived); TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
+- **Status:** `status TEXT NOT NULL DEFAULT 'draft'`
+  - *SQL planning proposal — values: draft/active/archived*
+  - *TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
 - **Soft-delete:** `archived_at TIMESTAMPTZ`
 - **Audit:** `created_at`, `updated_at`
 
@@ -288,7 +305,9 @@ Role and permission reference tables. These are planning candidates. Seed data (
 - **Relationships:** `product_id UUID REFERENCES products(id)`, `campaign_content_item_id UUID REFERENCES campaign_content_items(id)` — both optional
 - **Display:** `title TEXT NOT NULL`, `asset_type TEXT NOT NULL`, `source TEXT`
 - **Storage:** `storage_reference TEXT` — placeholder; Storage Gate finalizes
-- **Status:** `status TEXT NOT NULL DEFAULT 'active'` — *SQL planning proposal (active/archived); TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
+- **Status:** `status TEXT NOT NULL DEFAULT 'active'`
+  - *SQL planning proposal — values: active/archived*
+  - *TEXT + CHECK candidate; requires SQL Schema Authoring Gate approval*
 - **Soft-delete:** `archived_at TIMESTAMPTZ`
 - **Audit:** `created_at`, `updated_at`
 
@@ -312,7 +331,9 @@ Role and permission reference tables. These are planning candidates. Seed data (
 ### `campaign_content_items`
 - **Identity:** `id UUID PK`
 - **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
-- **Relationships:** `campaign_id UUID NOT NULL REFERENCES campaigns(id)`, `current_draft_id UUID REFERENCES content_drafts(id)` — optional circular; set after first draft created
+- **Relationships:**
+  - `campaign_id UUID NOT NULL REFERENCES campaigns(id)`
+  - `current_draft_id UUID REFERENCES content_drafts(id)` — optional circular FK; set after first draft created
 - **Operational:** `content_type TEXT NOT NULL`, `channel TEXT NOT NULL`
 - **Status:** `status campaign_content_item_status_enum NOT NULL DEFAULT 'draft'`
 - **Version:** `version INTEGER NOT NULL DEFAULT 1`
@@ -343,7 +364,10 @@ Role and permission reference tables. These are planning candidates. Seed data (
 ### `publishing_jobs`
 - **Identity:** `id UUID PK`
 - **Tenant:** `workspace_id UUID NOT NULL REFERENCES workspaces(id)`
-- **Relationships:** `campaign_id UUID NOT NULL REFERENCES campaigns(id)`, `campaign_content_item_id UUID REFERENCES campaign_content_items(id)`, `target_channel_connection_id UUID REFERENCES channel_connections(id)` — optional
+- **Relationships:**
+  - `campaign_id UUID NOT NULL REFERENCES campaigns(id)`
+  - `campaign_content_item_id UUID REFERENCES campaign_content_items(id)` — optional
+  - `target_channel_connection_id UUID REFERENCES channel_connections(id)` — optional
 - **Operational:** `scheduled_at TIMESTAMPTZ`
 - **Status:** `status publishing_job_status_enum NOT NULL DEFAULT 'draft'`
 - **Version:** `version INTEGER NOT NULL DEFAULT 1`
@@ -413,33 +437,40 @@ Role and permission reference tables. These are planning candidates. Seed data (
 
 **OpenAPI-approved stable enums (candidates for PostgreSQL ENUM):**
 
-| Table.column | Enum Source | Values | Transition Risk | Audit Required | SQL Type Candidate |
+| Table.column | Approval Level | Proposed Values | Transition Risk | Audit Required | SQL Type Strategy |
 |---|---|---|---|---|---|
-| `workspace_members.status` | **OpenAPI-approved** (PR #73/79) | active, invited, suspended | MEDIUM | YES | PostgreSQL ENUM — stable |
-| `campaign_content_items.status` | **OpenAPI-approved** (PR #79) | draft, ready_for_review, approved, rejected, archived | HIGH — driven by ContentApproval | YES | PostgreSQL ENUM — stable |
-| `content_drafts.status` | **OpenAPI-approved** (PR #79) | draft, ready_for_review, approved, rejected, archived | HIGH — lifecycle POSTs | YES | PostgreSQL ENUM — stable |
-| `content_approvals.decision` | **OpenAPI-approved** (PR #79) | approved, rejected | CRITICAL — immutable after creation | YES | PostgreSQL ENUM — stable |
-| `campaigns.status` | **OpenAPI-approved** (PR #79) | draft, generating, review, ready, scheduled, active, paused, completed, archived | HIGH | YES | PostgreSQL ENUM — stable |
-| `publishing_jobs.status` | **OpenAPI-approved** (PR #79) | draft, scheduled, queued, simulated, failed, cancelled | HIGH — `simulated` must remain distinct | YES | PostgreSQL ENUM — stable |
-| `analytics_snapshots.status` | **OpenAPI-approved** (PR #71/79) | available, partial, stale, unavailable | MEDIUM | YES (on transition) | PostgreSQL ENUM — stable |
-
-**SQL planning proposal enums (TEXT + CHECK candidates; require SQL Schema Authoring Gate approval):**
-
-| Table.column | Proposed Values | Transition Risk | Audit Required | SQL Type Candidate |
-|---|---|---|---|---|
-| `workspaces.status` | active, inactive, suspended | MEDIUM | YES | TEXT + CHECK — pending Authoring Gate |
-| `users.status` | active, invited, suspended | LOW | YES (auth provider) | TEXT + CHECK — pending Authoring Gate |
-| `store_profiles.status` | active, inactive | LOW | YES | TEXT + CHECK — pending Authoring Gate |
-| `products.status` | draft, active, archived | LOW | YES | TEXT + CHECK — pending Authoring Gate |
-| `assets.status` | active, archived | LOW | YES | TEXT + CHECK — pending Authoring Gate |
-| `data_sources.connection_status` | not_connected, connected, error, expired | LOW | YES | TEXT + CHECK — pending Authoring Gate |
-| `channel_connections.connection_status` | not_connected, connected, error, expired | LOW | YES | TEXT + CHECK — pending Authoring Gate |
+| `workspace_members.status` | **OpenAPI-approved** | active, invited, suspended | MEDIUM | YES | PostgreSQL ENUM candidate; final DDL deferred |
+| `campaign_content_items.status` | **OpenAPI-approved** | draft, ready_for_review, approved, rejected, archived | HIGH | YES | PostgreSQL ENUM candidate; final DDL deferred |
+| `content_drafts.status` | **OpenAPI-approved** | draft, ready_for_review, approved, rejected, archived | HIGH — lifecycle POSTs | YES | PostgreSQL ENUM candidate; final DDL deferred |
+| `content_approvals.decision` | **OpenAPI-approved** | approved, rejected | CRITICAL — immutable | YES | PostgreSQL ENUM candidate; final DDL deferred |
+| `campaigns.status` | **OpenAPI-approved** | draft, generating, review, ready, scheduled, active, paused, completed, archived | HIGH | YES | PostgreSQL ENUM candidate; final DDL deferred |
+| `publishing_jobs.status` | **OpenAPI-approved** | draft, scheduled, queued, simulated, failed, cancelled | HIGH — simulated distinct | YES | PostgreSQL ENUM candidate; final DDL deferred |
+| `analytics_snapshots.status` | **OpenAPI-approved** | available, partial, stale, unavailable | MEDIUM | YES | PostgreSQL ENUM candidate; final DDL deferred |
+| `workspaces.status` | **SQL planning proposal** | active, inactive, suspended | MEDIUM | YES | TEXT + CHECK candidate; requires Authoring Gate |
+| `users.status` | **SQL planning proposal** | active, invited, suspended | LOW | YES | TEXT + CHECK candidate; requires Authoring Gate |
+| `store_profiles.status` | **SQL planning proposal** | active, inactive | LOW | YES | TEXT + CHECK candidate; requires Authoring Gate |
+| `products.status` | **SQL planning proposal** | draft, active, archived | LOW | YES | TEXT + CHECK candidate; requires Authoring Gate |
+| `assets.status` | **SQL planning proposal** | active, archived | LOW | YES | TEXT + CHECK candidate; requires Authoring Gate |
+| `data_sources.connection_status` | **SQL planning proposal** | not_connected, connected, error, expired | LOW | YES | TEXT + CHECK candidate; requires Authoring Gate |
+| `channel_connections.connection_status` | **SQL planning proposal** | not_connected, connected, error, expired | LOW | YES | TEXT + CHECK candidate; requires Authoring Gate |
+| `idempotency_keys.status` | **SQL planning proposal** | pending, completed, failed | LOW | NO | TEXT + CHECK candidate; requires Authoring Gate |
+| `publishing_statuses.status` | **SQL planning proposal** | free-text status string | LOW | NO | TEXT (append-only, not an enum) |
 
 **PostgreSQL ENUM vs TEXT + CHECK planning rule:**
 
-- **OpenAPI-approved stable enums** (locked by PR #79): candidates for `CREATE TYPE … AS ENUM`. The SQL Schema Authoring Gate will finalize the DDL. Note: adding values to PostgreSQL ENUM requires `ALTER TYPE`; if rapid enum evolution is anticipated, defer to TEXT + CHECK until the enum is truly stable.
-- **SQL planning proposal statuses**: use `TEXT NOT NULL CHECK (status IN (…))` until the SQL Schema Authoring Gate approves them as stable. This avoids costly `ALTER TYPE` operations during early development.
-- **Final physical representation** for all status fields is deferred to the SQL Schema Authoring Gate. This planning gate does not approve DDL.
+- **OpenAPI-approved stable enums** (locked by PR #79):
+  Candidates for `CREATE TYPE … AS ENUM`.
+  The SQL Schema Authoring Gate will finalize the DDL.
+  Note: adding values to a PostgreSQL ENUM requires `ALTER TYPE`.
+  If rapid enum evolution is anticipated, defer to TEXT + CHECK until the enum is truly stable.
+
+- **SQL planning proposal statuses**:
+  Use `TEXT NOT NULL CHECK (status IN (…))` until the SQL Schema Authoring Gate
+  confirms stability and approves the values.
+  This avoids costly `ALTER TYPE` operations during early development.
+
+- **Final physical representation** for all status fields is deferred to the SQL Schema Authoring Gate.
+  This planning gate does not approve DDL.
 
 ---
 
@@ -538,7 +569,12 @@ Role and permission reference tables. These are planning candidates. Seed data (
 | No edit/delete | Enforced at application layer; no API route offers modification |
 
 ### Audit-required operations (minimum V1)
-Content draft submit/approve/reject/withdraw; workspace member invite/suspend/activate/remove/role-change; campaign create/archive; publishing job confirm/cancel; integration credential create/revoke; workspace settings update
+- Content draft: submit, approve, reject, withdraw
+- Workspace member: invite, suspend, activate, remove, role-change
+- Campaign: create, archive
+- Publishing job: confirm, cancel
+- Integration credential: create, revoke
+- Workspace settings: update
 
 ---
 
@@ -553,7 +589,7 @@ Content draft submit/approve/reject/withdraw; workspace member invite/suspend/ac
 | `snapshot_at TIMESTAMPTZ NOT NULL` | When the snapshot was taken |
 | `metric_summary JSONB` | Flexible metric payload; nullable initially |
 | No cross-workspace data | All snapshots scoped to `workspace_id`; no aggregation across workspaces |
-| Storage tradeoff | JSONB `metric_summary` allows flexible metric data without schema migrations per new metric type; trade-off: harder to query normalized. Deferred to SQL Schema Authoring Gate for final decision |
+| Storage tradeoff | JSONB `metric_summary` allows flexible metrics without per-type migrations. Trade-off: harder to query normalized. Deferred to SQL Schema Authoring Gate. |
 | No production metric claims | `status` field enforces partial/stale/unavailable states; `source_summary` documents what is real vs mock |
 
 ---
@@ -716,7 +752,8 @@ Until this planning gate and its review gate are both merged:
 | `git status --short` | Working tree clean after commit; changes limited to documentation |
 | `git diff --stat` | Changes limited to `docs/nashir_sql_schema_planning_gate.md` |
 | `git diff -- docs/nashir_sql_schema_planning_gate.md` | Only gate document changes |
+| `wc -l docs/nashir_sql_schema_planning_gate.md` | No extremely long compressed lines; document is reviewable line-by-line |
 | No SQL/migrations/schema files | **CONFIRMED** — `find . -name "*.sql"` shows no new SQL files; no `migrations/` directory created |
-| No src/backend/API/runtime/generated/UI/package files changed | **CONFIRMED** — no `src/`, `package.json`, `package-lock.json`, or generated files modified |
+| No src/backend/API/runtime/generated/UI/package files | **CONFIRMED** — no `src/`, `package.json`, `package-lock.json`, or generated files modified |
 | No ORM models or seed files | **CONFIRMED** |
 | BIDI scan (`docs/nashir_sql_schema_planning_gate.md`) | Checked U+202A–U+202E and U+2066–U+2069; `BIDI_CONTROL_CHARS: none` |
