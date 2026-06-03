@@ -410,7 +410,7 @@ Future migrations must plan these tenancy and constraint requirements:
 | Global `users` table | Allowed as Auth/RBAC global identity |
 | Cross-workspace FK prevention | Same-workspace constraints required where child and parent are both workspace-owned |
 | Composite uniqueness | Required where uniqueness is tenant-scoped or relationship-scoped |
-| `users.email` global uniqueness | Candidate required; normalization/case-folding decision must be made before executable DDL |
+| `users.email` global uniqueness | Case-insensitive uniqueness is required at database level; future authoring may use a functional unique index on `LOWER(email)` or a `citext` type/extension if approved later; exact implementation is deferred to SQL Migration Authoring Gate / Review Gate |
 | `workspace_members` user/workspace uniqueness | Required |
 | `store_profiles` workspace uniqueness | Required |
 | `campaign_briefs` campaign uniqueness | Required |
@@ -430,9 +430,10 @@ Future migrations must preserve the credential boundary.
 | Credential area | Planning rule |
 |---|---|
 | `channel_connections` | Must not include raw credential columns |
-| `integration_credentials.channel_connection_id` | Optional target candidate |
-| `integration_credentials.data_source_id` | Optional target candidate |
-| Target model | Future authoring must decide exact target exclusivity or documented credential-scope model |
+| `integration_credentials.channel_connection_id` | Optional target candidate; same-workspace scoping must be enforced through composite foreign keys including `workspace_id` |
+| `integration_credentials.data_source_id` | Optional target candidate; same-workspace scoping must be enforced through composite foreign keys including `workspace_id` |
+| Target model | Future authoring must decide exact target exclusivity or documented credential-scope model before executable migrations |
+| Final FK/check shape | Deferred to SQL Migration Authoring Gate / Review Gate, including composite FK shape and target exclusivity/check constraint |
 | Credential reference | `credential_ref` / `vault_ref` only |
 | Plaintext secrets | Forbidden |
 | Audit implication | Credential create, revoke, rotate, and remove operations require audit support |
@@ -480,7 +481,7 @@ Future migrations must support:
 
 | Area | Planning rule |
 |---|---|
-| `audit_events` | Append-only structure required |
+| `audit_events` | Append-only structure must be planned for database-level enforcement |
 | Audit actor | Actor user/member references must be representable |
 | Audit resource | Resource type and resource id fields required |
 | Audit request correlation | `request_id` / `correlation_id` candidate required |
@@ -490,6 +491,15 @@ Future migrations must support:
 | Snapshot period | Snapshot timestamp required; period fields require future authoring decision |
 | Analytics leakage | Cross-workspace aggregation leakage forbidden |
 | Retention/data residency | Future legal/security assessment |
+
+Future audit append-only enforcement options include:
+
+- Triggers preventing `UPDATE` and `DELETE`.
+- Revoking `UPDATE` and `DELETE` privileges from the application role.
+- Other reviewed database-level enforcement.
+
+Final audit enforcement implementation is deferred to SQL Migration Authoring
+Gate / Review Gate.
 
 Audit and analytics migration review must verify that operational visibility
 does not leak credentials, raw secrets, cross-workspace data, or unapproved
@@ -512,6 +522,9 @@ Future SQL Migration Authoring Gate must verify:
 - OpenAPI-to-SQL alignment remains intact.
 - Workspace scoping constraints exist.
 - Same-workspace FK protection exists where needed.
+- Case-insensitive `users.email` uniqueness is enforced at database level.
+- Credential target FKs enforce same-workspace linkage.
+- `audit_events` append-only behavior has database-level enforcement.
 - No raw credential columns exist.
 - Enum values match approved contract.
 - SQL-only statuses remain labeled and constrained as approved.
@@ -546,7 +559,10 @@ Future verification commands should include, as applicable:
 | Destructive DDL risk | CRITICAL | Destructive operations are NO-GO without explicit review |
 | Enum migration risk | HIGH | Enum changes require contract review first |
 | Cross-workspace leakage | CRITICAL | Require same-workspace constraints and review |
+| Case-sensitive duplicate user emails | HIGH | Require case-insensitive database-level uniqueness for `users.email`; final mechanism deferred |
+| Cross-workspace credential linkage | CRITICAL | Require composite credential target FKs including `workspace_id`; final FK/check shape deferred |
 | Credential leakage | CRITICAL | Plaintext secrets and raw credential columns forbidden |
+| Audit log tampering if append-only is only service-enforced | HIGH | Require database-level append-only enforcement planning; final mechanism deferred |
 | Audit/idempotency gaps | HIGH | Audit, version, and idempotency support must be in migration scope before backend lifecycle implementation |
 | Backend starting before migration review | HIGH | Backend Slice 1 remains unauthorized |
 | Generated client starting too early | HIGH | Generated clients remain unauthorized |
