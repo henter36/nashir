@@ -149,13 +149,13 @@ No sequencing blocker was found.
 
 | Safety rule | Result | Assessment |
 |---|---|---|
-| No destructive operations without explicit review | **PASS** |
-| Additive changes preferred | **PASS** |
-| Hard deletes forbidden unless separately approved | **PASS** |
-| Table and column drops forbidden unless separately approved | **PASS** |
+| No destructive operations without explicit review | **PASS** | Explicit review is required before destructive DDL |
+| Additive changes preferred | **PASS** | Additive-first migration posture is preserved |
+| Hard deletes forbidden unless separately approved | **PASS** | Hard delete behavior remains blocked without later approval |
+| Table and column drops forbidden unless separately approved | **PASS** | Drop operations remain blocked without later approval |
 | Restrict/cascade behavior explicit | **PASS** | Restrict/no cascade is default; `CASCADE` requires explicit review |
-| No plaintext credential columns | **PASS** |
-| No cross-workspace leakage | **PASS** |
+| No plaintext credential columns | **PASS** | Credential columns must remain reference-only |
+| No cross-workspace leakage | **PASS** | Same-workspace constraints are required where needed |
 | Idempotent migration execution expectations | **PASS** | Runner metadata or protection against repeat corruption is planned |
 | Rollback expectations | **PASS** | Rollback strategy must be defined before executable files exist |
 | Data backfill rules | **PASS** | Backfills are out of scope unless separately planned with source, target, batching, validation, rollback, and no-secret rules |
@@ -210,16 +210,16 @@ No enum migration blocker was found.
 
 | Tenancy/constraint item | Result | Assessment |
 |---|---|---|
-| `workspace_id` on merchant-owned tables | **PASS** |
+| `workspace_id` on merchant-owned tables | **PASS** | Merchant-owned persistence remains workspace-scoped |
 | Global `users` table | **PASS** | Global identity exception is explicit |
 | Same-workspace FK constraints | **PASS** | Required where child and parent are workspace-owned |
 | Composite uniqueness | **PASS** | Required where tenant-scoped or relationship-scoped |
 | `users.email` global case-insensitive uniqueness | **PASS** | Database-level case-insensitive uniqueness is required |
 | Email implementation options | **PASS** | `LOWER(email)` functional unique index or approved `citext` type/extension are listed |
 | Email implementation deferral | **PASS** | Final choice is deferred to SQL Migration Authoring Gate / Review Gate |
-| `workspace_members` user/workspace uniqueness | **PASS** |
-| `store_profiles` workspace uniqueness | **PASS** |
-| `campaign_briefs` campaign uniqueness | **PASS** |
+| `workspace_members` user/workspace uniqueness | **PASS** | Unique membership per user/workspace is planned |
+| `store_profiles` workspace uniqueness | **PASS** | One store profile per workspace is planned |
+| `campaign_briefs` campaign uniqueness | **PASS** | One brief per campaign is planned |
 | Idempotency scope uniqueness | **PASS** | Workspace, operation family, actor/member, and idempotency key scope is required |
 
 No tenancy or constraint blocker was found.
@@ -235,8 +235,8 @@ No tenancy or constraint blocker was found.
 | Same-workspace scoping | **PASS** | Composite FKs including `workspace_id` are required for credential target links |
 | Target exclusivity or credential-scope decision | **PASS** | Must be decided before executable migrations |
 | Final FK/check shape | **PASS** | Deferred to SQL Migration Authoring Gate / Review Gate |
-| `credential_ref` / `vault_ref` only | **PASS** |
-| No plaintext secrets | **PASS** |
+| `credential_ref` / `vault_ref` only | **PASS** | Credential storage remains opaque-reference only |
+| No plaintext secrets | **PASS** | Raw secrets remain forbidden |
 | Credential mutation audit | **PASS** | Create, revoke, rotate, and remove operations require audit support |
 
 No credential planning blocker was found.
@@ -247,15 +247,15 @@ No credential planning blocker was found.
 
 | Lifecycle/idempotency item | Result | Assessment |
 |---|---|---|
-| Resource version fields | **PASS** |
+| Resource version fields | **PASS** | Mutable resources require version support |
 | `idempotency_keys` table | **PASS** | Included if approved for migration scope |
 | Idempotency key scope | **PASS** | Workspace, operation family, actor/member, and idempotency key are required |
 | Request hash / replay metadata | **PASS** | Replay validation and response replay metadata are addressed as candidates |
-| Expiry/retention | **PASS** |
-| Content draft lifecycle support | **PASS** |
-| ContentApproval immutability | **PASS** |
-| `rejectionReason` persistence | **PASS** |
-| `requiredChanges` persistence | **PASS** |
+| Expiry/retention | **PASS** | Expiry and retention planning is required |
+| Content draft lifecycle support | **PASS** | Draft lifecycle state support is planned |
+| ContentApproval immutability | **PASS** | Approval records remain immutable decision records |
+| `rejectionReason` persistence | **PASS** | Rejection reason round-trip is preserved |
+| `requiredChanges` persistence | **PASS** | Required changes round-trip is preserved |
 | Self-approval prevention support | **PASS** | Creator/reviewer references are preserved for service-layer rules |
 | 409 conflict support | **PASS** | Version and idempotency metadata support conflict behavior |
 
@@ -267,14 +267,14 @@ No lifecycle/idempotency/concurrency blocker was found.
 
 | Audit/analytics item | Result | Assessment |
 |---|---|---|
-| `audit_events` append-only structure | **PASS** |
+| `audit_events` append-only structure | **PASS** | Audit events remain append-only |
 | Database-level append-only enforcement | **PASS** | Enforcement is planned beyond service-layer behavior |
 | Future enforcement options | **PASS** | Triggers preventing `UPDATE`/`DELETE`, revoked `UPDATE`/`DELETE` privileges, and other reviewed database-level enforcement are listed |
 | Final audit enforcement deferral | **PASS** | Final implementation is deferred to SQL Migration Authoring Gate / Review Gate |
 | Audit query indexes | **PASS** | Workspace/resource/action/time indexes are required |
 | Safe metadata payload | **PASS** | No secrets are allowed in audit metadata |
-| `analytics_snapshots` sourceSummary/data lineage | **PASS** |
-| No cross-workspace aggregation leakage | **PASS** |
+| `analytics_snapshots` sourceSummary/data lineage | **PASS** | Analytics lineage remains required |
+| No cross-workspace aggregation leakage | **PASS** | Workspace isolation remains required for analytics |
 | Retention/data residency | **PASS** | Remains future legal/security assessment |
 
 No audit or analytics blocker was found.
@@ -285,22 +285,22 @@ No audit or analytics blocker was found.
 
 | Verification requirement | Result | Assessment |
 |---|---|---|
-| Migration files parse | **PASS** |
-| Migration runner decision reviewed | **PASS** |
-| Up/down execution strategy | **PASS** |
-| Rollback strategy | **PASS** |
-| No backend/runtime/package changes unless separately approved | **PASS** |
-| No generated client | **PASS** |
-| OpenAPI-to-SQL alignment | **PASS** |
-| Workspace scoping constraints | **PASS** |
-| Same-workspace FK protection | **PASS** |
-| Case-insensitive email uniqueness | **PASS** |
-| Credential target same-workspace linkage | **PASS** |
-| Database-level audit append-only enforcement | **PASS** |
-| No raw credential columns | **PASS** |
-| Enum values match approved contract | **PASS** |
-| Forbidden path scan | **PASS** |
-| No database application without later execution gate | **PASS** |
+| Migration files parse | **PASS** | Future migration files must parse before approval |
+| Migration runner decision reviewed | **PASS** | Runner decisions must be reviewed before setup |
+| Up/down execution strategy | **PASS** | Future authoring must define execution direction strategy |
+| Rollback strategy | **PASS** | Rollback planning is required before executable artifacts |
+| No backend/runtime/package changes unless separately approved | **PASS** | Runtime and package changes remain outside this gate |
+| No generated client | **PASS** | Generated clients remain unauthorized |
+| OpenAPI-to-SQL alignment | **PASS** | Future migrations must remain contract-aligned |
+| Workspace scoping constraints | **PASS** | Workspace constraints must be present |
+| Same-workspace FK protection | **PASS** | Same-workspace FK protection must be verified |
+| Case-insensitive email uniqueness | **PASS** | Database-level case-insensitive uniqueness must be verified |
+| Credential target same-workspace linkage | **PASS** | Credential target FKs must preserve workspace scoping |
+| Database-level audit append-only enforcement | **PASS** | Audit append-only enforcement must be database-level |
+| No raw credential columns | **PASS** | Raw credential columns remain forbidden |
+| Enum values match approved contract | **PASS** | Enum values must match approved OpenAPI/planning contracts |
+| Forbidden path scan | **PASS** | Future authoring must scan changed paths |
+| No database application without later execution gate | **PASS** | Database application remains blocked without later approval |
 
 No verification-strategy blocker was found.
 
