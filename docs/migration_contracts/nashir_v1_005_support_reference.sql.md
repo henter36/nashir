@@ -42,38 +42,52 @@ before any executable migration artifact is created.
 -- idempotency_keys
 -- ============================================================
 -- Workspace-owned. Lifecycle POST support.
--- Key scope: workspace + operation family + actor/member + idempotency key.
+-- Key scope: workspace + operation family + idempotency key (unique constraint).
+-- Actor fields: actor_user_id and actor_member_id are nullable reference fields;
+--   actor_user_id references global users (simple FK);
+--   actor_member_id uses same-workspace composite FK to workspace_members.
 -- Request hash for replay validation.
 -- Response replay metadata if approved.
 -- Expiry and retention required.
 -- idempotency_keys.status: SQL-only TEXT + CHECK candidate.
 -- 409 conflict alignment: stale version and in-progress idempotency conflicts.
+--
+-- actor_member_id uses a same-workspace composite FK:
+--   (workspace_id, actor_member_id) REFERENCES workspace_members (workspace_id, id)
+-- MATCH SIMPLE: if actor_member_id IS NULL, FK is not checked.
+-- Requires workspace_members UNIQUE (workspace_id, id).
 
 CREATE TABLE idempotency_keys (
-    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    workspace_id      UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
-    operation_family  TEXT NOT NULL,   -- e.g., 'campaign.publish', 'content.submit_review'
-    actor_user_id     UUID REFERENCES users (id) ON DELETE RESTRICT,
-    actor_member_id   UUID REFERENCES workspace_members (id) ON DELETE RESTRICT,
-    idempotency_key   TEXT NOT NULL,
-    request_hash      TEXT,            -- hash of request body for replay validation
-    response_status   INTEGER,         -- HTTP status for completed replay
-    response_body     JSONB,           -- response payload for completed replay (no secrets)
-    status            TEXT NOT NULL CHECK (status IN (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id     UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
+    operation_family TEXT NOT NULL,   -- e.g., 'campaign.publish', 'content.submit_review'
+    actor_user_id    UUID REFERENCES users (id) ON DELETE RESTRICT,
+    -- actor_user_id references global users table; simple FK is correct.
+    actor_member_id  UUID,
+    -- actor_member_id uses same-workspace composite FK below.
+    idempotency_key  TEXT NOT NULL,
+    request_hash     TEXT,            -- hash of request body for replay validation
+    response_status  INTEGER,         -- HTTP status for completed replay
+    response_body    JSONB,           -- response payload for completed replay (no secrets)
+    status           TEXT NOT NULL CHECK (status IN (
         'in_progress', 'completed', 'failed', 'expired'
     )),
     -- status is SQL-only; values subject to review.
-    expires_at        TIMESTAMPTZ NOT NULL,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    -- Unique idempotency scope: workspace + operation + actor + key.
+    expires_at       TIMESTAMPTZ NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- Unique idempotency scope: workspace + operation + key.
+    -- Actor is not in unique constraint to allow key lookup without knowing
+    -- which actor field is set; actor validated at service layer.
+    -- Confirm with review gate whether actor should be in the constraint.
     CONSTRAINT uq_idempotency_keys_scope UNIQUE (
         workspace_id, operation_family, idempotency_key
-    )
-    -- Note: actor_user_id / actor_member_id not in unique constraint here
-    -- to allow key lookup without knowing which actor field is set;
-    -- uniqueness enforced at operation+key level; actor validated in service layer.
-    -- Confirm with review gate whether actor should be in the constraint.
+    ),
+    -- Same-workspace composite FK for actor_member_id.
+    -- MATCH SIMPLE: if actor_member_id IS NULL, FK is not checked.
+    CONSTRAINT fk_idempotency_keys_actor_member
+        FOREIGN KEY (workspace_id, actor_member_id)
+        REFERENCES workspace_members (workspace_id, id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_idempotency_keys_workspace_id ON idempotency_keys (workspace_id);
@@ -160,7 +174,8 @@ Down section is safe only in test environments with no operational data.
 |---|---|
 | `idempotency_keys` unique scope (workspace + operation + key) | PLANNED |
 | `idempotency_keys` expiry field | PLANNED |
-| `idempotency_keys` actor reference fields (nullable; either user or member) | PLANNED |
+| `idempotency_keys` global-user simple FK for `actor_user_id` | PLANNED — users is global |
+| `idempotency_keys` same-workspace composite FK for `actor_member_id` | PLANNED |
 | `roles` global scope (no workspace_id) | PLANNED |
 | `permissions` global scope (no workspace_id) | PLANNED |
 | `role_permissions` composite uniqueness | PLANNED |

@@ -179,16 +179,19 @@ Citation from the follow-up review gate:
 | Control | Status in draft files |
 |---|---|
 | `workspace_id` on all merchant-owned tables | PLANNED in all five drafts |
-| Same-workspace FK constraints | PLANNED; cascade behavior defaults to RESTRICT |
-| Composite unique constraints on parent tables referenced by `(workspace_id, id)` | PLANNED — `channel_connections` and `data_sources` carry `UNIQUE (workspace_id, id)` |
+| Same-workspace composite FK constraints across all workspace-owned child-to-parent relationships | APPLIED — all workspace-owned FK references use composite FKs including `workspace_id` |
+| Global-user simple FK for `users` references | APPLIED — `users` is global; `creator_user_id`, `reviewer_user_id`, `actor_user_id`, `actor_user_id` in idempotency_keys remain simple FKs to `users (id)` |
+| Composite `UNIQUE (workspace_id, id)` on all parent tables referenced by composite FKs | APPLIED — `workspace_members`, `products`, `data_sources`, `channel_connections`, `campaigns`, `campaign_content_items`, `content_drafts`, `publishing_jobs` |
+| Product SKU partial unique index within workspace (non-archived, non-null) | APPLIED in draft 002 |
 | `users.email` global case-insensitive uniqueness via `LOWER(email)` functional index | PLANNED in draft 001 |
 | Credential XOR target constraint | PLANNED in draft 002 |
 | No plaintext credential columns | CONFIRMED in all five drafts |
 | `audit_events` append-only enforcement plan | DOCUMENTED in draft 004; trigger pattern in comments |
 | Idempotency/concurrency support | PLANNED in draft 005 |
 | Status enum alignment with OpenAPI | PLANNED; open items listed per draft |
-| No cross-workspace leakage | PLANNED via `workspace_id` on all workspace-owned tables |
+| No cross-workspace leakage | PLANNED via `workspace_id` on all workspace-owned tables and composite FKs |
 | No production readiness claim | CONFIRMED |
+| No runtime, runner, execution, backend, ORM, generated client, package, or DB-applied change | CONFIRMED |
 
 ---
 
@@ -203,14 +206,26 @@ A primary key on `id` alone is not sufficient for a composite FK referencing
 
 ### Composite unique constraints in draft output
 
-| Parent table | Required constraint | Status |
-|---|---|---|
-| `channel_connections` | `UNIQUE (workspace_id, id)` | PLANNED in draft 002 — required for `integration_credentials (workspace_id, channel_connection_id)` FK |
-| `data_sources` | `UNIQUE (workspace_id, id)` | PLANNED in draft 002 — required for `integration_credentials (workspace_id, data_source_id)` FK |
+All workspace-owned parent tables that are referenced through composite FKs
+carry `UNIQUE (workspace_id, id)` constraints in the draft files.
 
-Any other workspace-owned parent table referenced through a composite FK must
-include the matching composite unique constraint before the referencing migration
-can be applied.
+| Parent table | Required constraint | Applied in draft |
+|---|---|---|
+| `workspace_members` | `UNIQUE (workspace_id, id)` | draft 001 — required for composite FK from `audit_events` and `idempotency_keys` |
+| `products` | `UNIQUE (workspace_id, id)` | draft 002 — required for composite FK from `assets` and `campaigns` |
+| `data_sources` | `UNIQUE (workspace_id, id)` | draft 002 — required for composite FK from `channel_connections` and `integration_credentials` |
+| `channel_connections` | `UNIQUE (workspace_id, id)` | draft 002 — required for composite FK from `integration_credentials` and `publishing_jobs` |
+| `campaigns` | `UNIQUE (workspace_id, id)` | draft 003 — required for composite FK from `campaign_briefs`, `campaign_content_items`, and `publishing_jobs` |
+| `campaign_content_items` | `UNIQUE (workspace_id, id)` | draft 003 — required for composite FK from `content_drafts`, `publishing_jobs`, and deferred `fk_current_draft` |
+| `content_drafts` | `UNIQUE (workspace_id, id)` | draft 003 — required for composite FK from `content_approvals` and deferred `fk_current_draft` |
+| `publishing_jobs` | `UNIQUE (workspace_id, id)` | draft 004 — required for composite FK from `publishing_statuses` |
+
+Global tables (`workspaces`, `users`) are referenced by simple FKs and do not
+need composite unique constraints for this purpose.
+
+Any additional workspace-owned parent table referenced through a composite FK
+must include the matching `UNIQUE (workspace_id, id)` constraint before the
+referencing migration can be applied.
 
 ---
 

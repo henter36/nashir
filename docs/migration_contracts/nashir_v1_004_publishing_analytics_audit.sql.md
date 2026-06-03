@@ -45,22 +45,46 @@ before any executable migration artifact is created.
 -- Optimistic concurrency via resource version field.
 -- Soft delete via cancelled_at.
 -- OpenAPI: PublishingJob / PublishingJobStatus (OpenAPI-approved enum candidate).
+--
+-- UNIQUE (workspace_id, id): required for same-workspace composite FK
+-- from publishing_statuses.
+--
+-- campaign_id, content_item_id, and channel_connection_id all use
+-- same-workspace composite FKs to prevent cross-workspace linkage.
 
 CREATE TABLE publishing_jobs (
-    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    workspace_id            UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
-    campaign_id             UUID NOT NULL REFERENCES campaigns (id) ON DELETE RESTRICT,
-    content_item_id         UUID NOT NULL REFERENCES campaign_content_items (id) ON DELETE RESTRICT,
-    channel_connection_id   UUID NOT NULL REFERENCES channel_connections (id) ON DELETE RESTRICT,
-    scheduled_at            TIMESTAMPTZ,
-    status                  TEXT NOT NULL CHECK (status IN (
+    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id          UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
+    campaign_id           UUID NOT NULL,
+    content_item_id       UUID NOT NULL,
+    channel_connection_id UUID NOT NULL,
+    scheduled_at          TIMESTAMPTZ,
+    status                TEXT NOT NULL CHECK (status IN (
         'pending', 'in_progress', 'published', 'failed', 'cancelled'
     )),
     -- PublishingJobStatus: OpenAPI-approved enum candidate; values must match OpenAPI.
-    version                 INTEGER NOT NULL DEFAULT 1, -- optimistic concurrency
-    cancelled_at            TIMESTAMPTZ,
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+    version               INTEGER NOT NULL DEFAULT 1, -- optimistic concurrency
+    cancelled_at          TIMESTAMPTZ,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- Composite unique on (workspace_id, id): required for composite FK references
+    -- from publishing_statuses.
+    CONSTRAINT uq_publishing_jobs_workspace_id UNIQUE (workspace_id, id),
+    -- Same-workspace composite FK for campaign_id.
+    -- Requires campaigns UNIQUE (workspace_id, id).
+    CONSTRAINT fk_publishing_jobs_campaign
+        FOREIGN KEY (workspace_id, campaign_id)
+        REFERENCES campaigns (workspace_id, id) ON DELETE RESTRICT,
+    -- Same-workspace composite FK for content_item_id.
+    -- Requires campaign_content_items UNIQUE (workspace_id, id).
+    CONSTRAINT fk_publishing_jobs_content_item
+        FOREIGN KEY (workspace_id, content_item_id)
+        REFERENCES campaign_content_items (workspace_id, id) ON DELETE RESTRICT,
+    -- Same-workspace composite FK for channel_connection_id.
+    -- Requires channel_connections UNIQUE (workspace_id, id).
+    CONSTRAINT fk_publishing_jobs_channel_connection
+        FOREIGN KEY (workspace_id, channel_connection_id)
+        REFERENCES channel_connections (workspace_id, id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_publishing_jobs_workspace_id ON publishing_jobs (workspace_id);
@@ -75,17 +99,25 @@ CREATE INDEX idx_publishing_jobs_scheduled ON publishing_jobs (workspace_id, sch
 -- Workspace-owned. Append-only trail for publishing job status changes.
 -- No UPDATE or DELETE: status records are immutable trail entries.
 -- publishing_statuses.status: SQL-only TEXT candidate (trail field).
+--
+-- publishing_job_id uses a same-workspace composite FK:
+--   (workspace_id, publishing_job_id) REFERENCES publishing_jobs (workspace_id, id)
 
 CREATE TABLE publishing_statuses (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id      UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
-    publishing_job_id UUID NOT NULL REFERENCES publishing_jobs (id) ON DELETE RESTRICT,
+    publishing_job_id UUID NOT NULL,
     status            TEXT NOT NULL,
     -- status is SQL-only trail field; not an OpenAPI-approved enum.
     message           TEXT,
     occurred_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     -- No updated_at: append-only trail records are not updated.
+    -- Same-workspace composite FK for publishing_job_id.
+    -- Requires publishing_jobs UNIQUE (workspace_id, id).
+    CONSTRAINT fk_publishing_statuses_job
+        FOREIGN KEY (workspace_id, publishing_job_id)
+        REFERENCES publishing_jobs (workspace_id, id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_publishing_statuses_workspace_id ON publishing_statuses (workspace_id);
@@ -100,18 +132,18 @@ CREATE INDEX idx_publishing_statuses_occurred ON publishing_statuses (workspace_
 -- AnalyticsSnapshotStatus values: available, partial, stale, unavailable.
 
 CREATE TABLE analytics_snapshots (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    workspace_id    UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
-    status          TEXT NOT NULL CHECK (status IN (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id   UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
+    status         TEXT NOT NULL CHECK (status IN (
         'available', 'partial', 'stale', 'unavailable'
     )),
     -- AnalyticsSnapshotStatus: OpenAPI-approved enum candidate; values must match OpenAPI.
-    subject_type    TEXT NOT NULL, -- e.g., 'campaign', 'content_item', 'channel'
-    subject_id      UUID NOT NULL,
-    metrics         JSONB,         -- metric payload; no secrets; subject to review
-    source_summary  JSONB NOT NULL, -- required lineage field; never null
-    snapshot_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+    subject_type   TEXT NOT NULL, -- e.g., 'campaign', 'content_item', 'channel'
+    subject_id     UUID NOT NULL,
+    metrics        JSONB,         -- metric payload; no secrets; subject to review
+    source_summary JSONB NOT NULL, -- required lineage field; never null
+    snapshot_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
     -- No updated_at: snapshots are immutable once created.
 );
 
@@ -134,21 +166,36 @@ CREATE INDEX idx_analytics_snapshots_snapshot_at ON analytics_snapshots (workspa
 --   not by the application role, for privilege restriction to be effective.
 --
 -- No secrets in audit payload. Safe metadata JSONB only.
+--
+-- actor_user_id: references global users table; simple FK is correct
+--   (users is not workspace-owned).
+-- actor_member_id: workspace_members is workspace-owned; same-workspace
+--   composite FK is used: (workspace_id, actor_member_id) REFERENCES
+--   workspace_members (workspace_id, id).
+-- Requires workspace_members UNIQUE (workspace_id, id).
+-- MATCH SIMPLE: if actor_member_id IS NULL, FK is not checked.
 
 CREATE TABLE audit_events (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    workspace_id     UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
-    actor_user_id    UUID REFERENCES users (id) ON DELETE RESTRICT,
-    actor_member_id  UUID REFERENCES workspace_members (id) ON DELETE RESTRICT,
-    resource_type    TEXT NOT NULL,
-    resource_id      UUID NOT NULL,
-    action           TEXT NOT NULL,
-    request_id       TEXT,          -- correlation ID candidate
-    correlation_id   TEXT,          -- alternative correlation field
-    metadata         JSONB,         -- safe metadata only; no secrets; no credentials
-    occurred_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id    UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
+    actor_user_id   UUID REFERENCES users (id) ON DELETE RESTRICT,
+    -- actor_user_id references global users table; simple FK is correct.
+    actor_member_id UUID,
+    -- actor_member_id uses same-workspace composite FK below.
+    resource_type   TEXT NOT NULL,
+    resource_id     UUID NOT NULL,
+    action          TEXT NOT NULL,
+    request_id      TEXT,          -- correlation ID candidate
+    correlation_id  TEXT,          -- alternative correlation field
+    metadata        JSONB,         -- safe metadata only; no secrets; no credentials
+    occurred_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     -- No updated_at, no archived_at: audit records are never modified or deleted.
+    -- Same-workspace composite FK for actor_member_id.
+    -- MATCH SIMPLE: if actor_member_id IS NULL, FK is not checked.
+    CONSTRAINT fk_audit_events_actor_member
+        FOREIGN KEY (workspace_id, actor_member_id)
+        REFERENCES workspace_members (workspace_id, id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_audit_events_workspace_id ON audit_events (workspace_id);
@@ -209,12 +256,19 @@ no operational data was applied.
 | Constraint | Status |
 |---|---|
 | `publishing_jobs` workspace scoping + version field | PLANNED |
+| `publishing_jobs` `UNIQUE (workspace_id, id)` for composite FK references | PLANNED |
+| `publishing_jobs` same-workspace composite FK for `campaign_id` | PLANNED |
+| `publishing_jobs` same-workspace composite FK for `content_item_id` | PLANNED |
+| `publishing_jobs` same-workspace composite FK for `channel_connection_id` | PLANNED |
 | `publishing_statuses` append-only trail (no `updated_at`) | PLANNED |
+| `publishing_statuses` same-workspace composite FK for `publishing_job_id` | PLANNED |
 | `analytics_snapshots` `source_summary` required (NOT NULL) | PLANNED |
 | `analytics_snapshots` no cross-workspace aggregation | PLANNED via workspace_id scope |
 | `audit_events` append-only (no `updated_at`, no `archived_at`) | PLANNED |
 | `audit_events` database-level trigger enforcement | DOCUMENTED — deferred to executable migration |
 | `audit_events` privilege restriction (application role must be non-owner) | DOCUMENTED |
+| `audit_events` global-user simple FK for `actor_user_id` | PLANNED — users is global |
+| `audit_events` same-workspace composite FK for `actor_member_id` | PLANNED |
 | No secrets in `audit_events.metadata` | PLANNED |
 | No cross-workspace leakage | PLANNED via workspace_id on all tables |
 
@@ -226,7 +280,7 @@ no operational data was applied.
 - Confirm `AnalyticsSnapshotStatus` enum values match current OpenAPI (available, partial, stale, unavailable).
 - Confirm `publishing_statuses.status` values or defer.
 - Confirm `analytics_snapshots.metrics` JSONB schema or leave as open JSONB.
-- Confirm `audit_events.actor_member_id` FK on `workspace_members` (both actor fields are nullable; either may be set).
+- Confirm both actor fields on `audit_events` are nullable (either user or member may be set, or both).
 - Confirm trigger pattern for audit_events immutability and name in executable migration.
 - Confirm application role name for privilege restriction on audit_events.
 - Confirm snapshot period fields: is `snapshot_at` sufficient or are `period_start` / `period_end` needed?

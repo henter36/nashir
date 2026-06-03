@@ -88,6 +88,9 @@ CREATE UNIQUE INDEX idx_users_email_lower ON users (LOWER(email));
 -- Authorization binding: user + workspace + role + status.
 -- OpenAPI: WorkspaceMember / WorkspaceMemberStatus
 -- WorkspaceMemberStatus values: active, invited, suspended (OpenAPI-approved).
+--
+-- UNIQUE (workspace_id, id): required for same-workspace composite FKs
+-- from audit_events and idempotency_keys referencing workspace_members.
 
 CREATE TABLE workspace_members (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -100,7 +103,10 @@ CREATE TABLE workspace_members (
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     -- One membership per user per workspace.
-    CONSTRAINT uq_workspace_members_workspace_user UNIQUE (workspace_id, user_id)
+    CONSTRAINT uq_workspace_members_workspace_user UNIQUE (workspace_id, user_id),
+    -- Composite unique on (workspace_id, id): required for composite FK references
+    -- from child tables that include workspace_id in the FK column set.
+    CONSTRAINT uq_workspace_members_workspace_id UNIQUE (workspace_id, id)
 );
 
 CREATE INDEX idx_workspace_members_workspace_id ON workspace_members (workspace_id);
@@ -140,6 +146,7 @@ Review Gate.
 | `workspaces` soft archive only | PLANNED |
 | `users.email` case-insensitive uniqueness via `LOWER(email)` functional index | PLANNED |
 | `workspace_members` user/workspace uniqueness | PLANNED |
+| `workspace_members` `UNIQUE (workspace_id, id)` for composite FK references | PLANNED |
 | `workspace_members` restrict on delete | PLANNED |
 | No hard delete for workspaces | PLANNED |
 | No cross-workspace leakage (foundation; no merchant-owned rows yet) | N/A |

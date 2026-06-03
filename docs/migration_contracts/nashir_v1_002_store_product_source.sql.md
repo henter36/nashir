@@ -64,6 +64,11 @@ CREATE TABLE store_profiles (
 -- Workspace-owned. Soft archive via archived_at.
 -- OpenAPI: Product
 -- products.status: SQL-only TEXT + CHECK candidate.
+--
+-- UNIQUE (workspace_id, id): required for same-workspace composite FKs
+-- from assets and campaigns referencing products.
+-- SKU uniqueness: partial unique index for non-archived non-null SKUs
+-- within each workspace (catalog integrity).
 
 CREATE TABLE products (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -75,11 +80,21 @@ CREATE TABLE products (
     -- status is a SQL-only planning proposal; values subject to review.
     archived_at  TIMESTAMPTZ,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- Composite unique on (workspace_id, id): required for composite FK references
+    -- from child tables that include workspace_id in the FK column set.
+    CONSTRAINT uq_products_workspace_id UNIQUE (workspace_id, id)
 );
 
 CREATE INDEX idx_products_workspace_id ON products (workspace_id);
 CREATE INDEX idx_products_workspace_status ON products (workspace_id, status);
+
+-- Catalog integrity: SKU must be unique within a workspace for non-archived
+-- non-null SKUs. Partial index excludes archived rows and null SKUs.
+-- Draft logic only; not executable in this gate.
+CREATE UNIQUE INDEX idx_products_workspace_sku_active_unique
+    ON products (workspace_id, sku)
+    WHERE archived_at IS NULL AND sku IS NOT NULL;
 
 -- ============================================================
 -- data_sources
@@ -103,7 +118,8 @@ CREATE TABLE data_sources (
     last_synced_at  TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    -- Composite unique required for same-workspace composite FK from integration_credentials.
+    -- Composite unique required for same-workspace composite FK from integration_credentials
+    -- and from channel_connections.
     CONSTRAINT uq_data_sources_workspace_id UNIQUE (workspace_id, id)
 );
 
@@ -115,13 +131,16 @@ CREATE INDEX idx_data_sources_workspace_id ON data_sources (workspace_id);
 -- Workspace-owned. Provider/channel metadata. No credential columns.
 -- OpenAPI: ChannelConnection
 -- channel_connections.status: SQL-only TEXT + CHECK candidate.
--- UNIQUE (workspace_id, id): required for composite FK from integration_credentials.
+-- UNIQUE (workspace_id, id): required for composite FK from integration_credentials
+-- and from publishing_jobs.
 
 CREATE TABLE channel_connections (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id    UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
-    data_source_id  UUID REFERENCES data_sources (id) ON DELETE RESTRICT,
-    -- data_source_id is an optional link; does not carry credentials.
+    data_source_id  UUID,
+    -- data_source_id is optional; both are workspace-owned so composite FK is used.
+    -- Same-workspace composite FK: (workspace_id, data_source_id) REFERENCES data_sources (workspace_id, id).
+    -- MATCH SIMPLE (default): if data_source_id IS NULL the FK is not checked.
     provider        TEXT NOT NULL,
     channel_type    TEXT NOT NULL,
     display_name    TEXT NOT NULL,
@@ -132,8 +151,14 @@ CREATE TABLE channel_connections (
     capability_metadata JSONB,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    -- Composite unique required for same-workspace composite FK from integration_credentials.
-    CONSTRAINT uq_channel_connections_workspace_id UNIQUE (workspace_id, id)
+    -- Composite unique required for same-workspace composite FK from integration_credentials
+    -- and from publishing_jobs.
+    CONSTRAINT uq_channel_connections_workspace_id UNIQUE (workspace_id, id),
+    -- Same-workspace composite FK for optional data_source_id.
+    -- Requires data_sources UNIQUE (workspace_id, id).
+    CONSTRAINT fk_channel_connections_data_source
+        FOREIGN KEY (workspace_id, data_source_id)
+        REFERENCES data_sources (workspace_id, id) ON DELETE RESTRICT
 );
 
 CREATE INDEX idx_channel_connections_workspace_id ON channel_connections (workspace_id);
@@ -171,12 +196,16 @@ CREATE TABLE integration_credentials (
 
     -- Same-workspace composite FK for channel_connection_id.
     -- Requires channel_connections UNIQUE (workspace_id, id).
-    CONSTRAINT fk_credentials_channel_connection FOREIGN KEY (workspace_id, channel_connection_id)
+    -- MATCH SIMPLE: if channel_connection_id IS NULL, FK is not checked.
+    CONSTRAINT fk_credentials_channel_connection
+        FOREIGN KEY (workspace_id, channel_connection_id)
         REFERENCES channel_connections (workspace_id, id) ON DELETE RESTRICT,
 
     -- Same-workspace composite FK for data_source_id.
     -- Requires data_sources UNIQUE (workspace_id, id).
-    CONSTRAINT fk_credentials_data_source FOREIGN KEY (workspace_id, data_source_id)
+    -- MATCH SIMPLE: if data_source_id IS NULL, FK is not checked.
+    CONSTRAINT fk_credentials_data_source
+        FOREIGN KEY (workspace_id, data_source_id)
         REFERENCES data_sources (workspace_id, id) ON DELETE RESTRICT
 );
 
@@ -216,9 +245,11 @@ corrective migration strategy.
 | Constraint | Status |
 |---|---|
 | `store_profiles` workspace uniqueness | PLANNED |
-| `products` workspace scoping | PLANNED |
+| `products` `UNIQUE (workspace_id, id)` for composite FK references | PLANNED |
+| `products` SKU partial unique index (non-archived, non-null, per workspace) | PLANNED |
 | `data_sources` `UNIQUE (workspace_id, id)` for composite FK | PLANNED |
 | `channel_connections` `UNIQUE (workspace_id, id)` for composite FK | PLANNED |
+| `channel_connections` same-workspace composite FK for optional `data_source_id` | PLANNED |
 | `integration_credentials` XOR target constraint | PLANNED |
 | `integration_credentials` same-workspace composite FKs | PLANNED |
 | No plaintext credential columns | PLANNED |
@@ -234,6 +265,6 @@ corrective migration strategy.
 - Confirm `products.status` values.
 - Confirm `store_profiles.status` values.
 - Confirm whether `credential_ref` and `vault_ref` are both needed or one is sufficient.
-- Confirm `channel_connections.data_source_id` FK behavior (nullable; RESTRICT is safe default).
+- Confirm `channel_connections.data_source_id` composite FK MATCH SIMPLE behavior is acceptable (nullable; not checked when NULL).
 - Confirm `gen_random_uuid()` extension availability.
 - Confirm `capability_metadata` JSONB column is appropriate or needs a more structured form.
