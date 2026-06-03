@@ -178,8 +178,9 @@ CREATE TABLE integration_credentials (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id          UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
     credential_type       TEXT NOT NULL,
-    credential_ref        TEXT,          -- opaque vault reference; no plaintext secret
-    vault_ref             TEXT,          -- alternative vault reference field
+    credential_ref        TEXT,          -- single opaque reference; provider-specific path/ARN/key; no plaintext secret
+    -- vault_ref removed: single credential_ref field is sufficient; credential_type identifies the provider.
+    -- See SQL Migration Draft Correction Gate for rationale.
     channel_connection_id UUID,
     data_source_id        UUID,
     revoked_at            TIMESTAMPTZ,
@@ -253,7 +254,7 @@ corrective migration strategy.
 | `integration_credentials` XOR target constraint | PLANNED |
 | `integration_credentials` same-workspace composite FKs | PLANNED |
 | No plaintext credential columns | PLANNED |
-| `credential_ref` / `vault_ref` only | PLANNED |
+| `credential_ref` only — `vault_ref` removed; single opaque reference field | CORRECTED |
 | No cross-workspace leakage via credential FKs | PLANNED |
 | Credential mutation audit requirement | DOCUMENTED — audit events table in group 4 |
 
@@ -264,7 +265,7 @@ corrective migration strategy.
 - Confirm `data_sources.connection_status` and `channel_connections.connection_status` values align with OpenAPI or remain SQL-only.
 - Confirm `products.status` values.
 - Confirm `store_profiles.status` values.
-- Confirm whether `credential_ref` and `vault_ref` are both needed or one is sufficient.
+- `vault_ref` removed in SQL Migration Draft Correction Gate; single `credential_ref` field confirmed sufficient; `credential_type` identifies the provider.
 - Confirm `channel_connections.data_source_id` composite FK MATCH SIMPLE behavior is acceptable (nullable; not checked when NULL).
 - Confirm `gen_random_uuid()` extension availability.
 - Confirm `capability_metadata` JSONB column is appropriate or needs a more structured form.
