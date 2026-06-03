@@ -228,8 +228,8 @@ Future SQL DDL for each table must specify:
 
 | Status source | Contract strategy |
 |---|---|
-| `WorkspaceMember.status` | OpenAPI-approved enum candidate: active, invited, suspended |
-| `AnalyticsSnapshot.status` | OpenAPI-approved enum candidate: available, partial, stale, unavailable |
+| `WorkspaceMemberStatus -> workspace_members.status` | OpenAPI-approved enum candidate: active, invited, suspended |
+| `AnalyticsSnapshotStatus -> analytics_snapshots.status` | OpenAPI-approved enum candidate: available, partial, stale, unavailable |
 | `CampaignStatus` | OpenAPI-approved PostgreSQL ENUM candidate |
 | `ContentDraftStatus` | OpenAPI-approved PostgreSQL ENUM candidate |
 | `CampaignContentItemStatus` | OpenAPI-approved PostgreSQL ENUM candidate |
@@ -244,6 +244,11 @@ Future SQL DDL for each table must specify:
 | Channel connection status | SQL-only TEXT + CHECK candidate |
 | Idempotency key status | SQL-only TEXT + CHECK candidate |
 | `publishing_statuses.status` | SQL-only TEXT + CHECK or TEXT candidate |
+
+OpenAPI-approved here refers to enum schemas present in
+`docs/nashir_v1_openapi.yaml` and mapped to SQL table fields.
+SQL-only fields such as `users.status` remain planning proposals and are not
+OpenAPI-approved.
 
 No enum may introduce values not approved by OpenAPI or prior planning docs.
 
