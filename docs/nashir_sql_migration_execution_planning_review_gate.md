@@ -6,7 +6,7 @@
 | Status | Review complete |
 | Date | 2026-06-03 |
 | Primary reviewed artifact | `docs/nashir_sql_migration_execution_planning_gate.md` |
-| Draft contract artifacts | `docs/migration_contracts/nashir_v1_001` through `nashir_v1_005` |
+| Draft contract artifacts | `docs/migration_contracts/nashir_v1_001_foundation_identity_tenant.sql.md`, `nashir_v1_002_store_product_source.sql.md`, `nashir_v1_003_asset_campaign_content.sql.md`, `nashir_v1_004_publishing_analytics_audit.sql.md`, `nashir_v1_005_support_reference.sql.md` |
 | API contract authority | `docs/nashir_v1_openapi.yaml` |
 | Executable migrations created | NO |
 | Migration runner introduced | NO |
