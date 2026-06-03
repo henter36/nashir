@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Gate type | Backend Repository Creation Review/Setup Planning Gate - documentation only |
-| Status | Planning complete |
+| Status | Planning documented — setup decisions pending |
 | Date | 2026-06-03 |
 | Controlling prerequisite | `docs/nashir_backend_repository_creation_decision_review_gate.md` |
 | Selected direction from prior gate | Separate future backend repository as planning direction only |
