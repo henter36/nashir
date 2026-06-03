@@ -131,7 +131,7 @@ files. No other files are modified.
 |---|---|---|
 | `campaigns.status` enum alignment | `nashir_v1_003` | CHECK constraint updated from 5 values to 9 OpenAPI-approved values |
 | `campaign_content_items.status` enum alignment | `nashir_v1_003` | CHECK constraint updated; `in_review`→`ready_for_review`; `published` removed |
-| `content_drafts.status` enum alignment | `nashir_v1_003` | CHECK constraint updated; `submitted`→`ready_for_review`; `withdrawn`→`archived`; per OpenAPI `rejected` covers creator withdrawal |
+| `content_drafts.status` enum alignment | `nashir_v1_003` | CHECK constraint updated; `submitted`→`ready_for_review`; `withdrawn` removed (creator withdrawal maps to `rejected` per OpenAPI); `archived` added as separate archive/resource state |
 | `publishing_jobs.status` enum alignment | `nashir_v1_004` | CHECK constraint updated from 5 non-OpenAPI values to 6 OpenAPI-approved values |
 | `vault_ref` removal | `nashir_v1_002` | `vault_ref TEXT` column removed; single `credential_ref TEXT` confirmed |
 
@@ -272,7 +272,7 @@ A comment documents the removal:
 | `campaigns` table `status` comment | Updated to reflect corrected values with descriptions |
 | `campaign_content_items` table `status` CHECK constraint | Updated: `in_review`→`ready_for_review`; `published` removed |
 | `campaign_content_items` table `status` comment | Updated to reflect correction |
-| `content_drafts` table `status` CHECK constraint | Updated: `submitted`→`ready_for_review`; `withdrawn`→`archived` |
+| `content_drafts` table `status` CHECK constraint | Updated: `submitted`→`ready_for_review`; `withdrawn` removed (creator withdrawal maps to `rejected`); `archived` added as separate archive/resource state |
 | `content_drafts` table `status` comment | Updated with withdrawal mapping note |
 | Open items section | Three resolved open items updated to record correction |
 
