@@ -388,7 +388,7 @@ SQL Migration Execution Gate remains blocked.
 |---|---|
 | `npm run lint` | **PASSED** |
 | `npm run build` | **PASSED** |
-| `git status --short` | ` A docs/nashir_backend_repository_creation_planning_gate.md` after intent-to-add, before commit |
+| `git status --short` | `A docs/nashir_backend_repository_creation_planning_gate.md` after intent-to-add, before commit |
 | `git diff --stat` | `1 file changed, 416 insertions(+)` |
 | `git diff -- docs/` | New creation planning document only |
 | BIDI scan: `docs/nashir_backend_repository_creation_planning_gate.md` | `BIDI_CONTROL_CHARS none` |
