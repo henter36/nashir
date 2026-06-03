@@ -193,6 +193,7 @@ not authorize repository creation.
 | Relation to `henter36/nashir` | YES | PENDING - current source relationship preserved; cross-repo mechanics not selected | **WATCH** |
 | OpenAPI synchronization | YES | PENDING - future control named; no sync workflow implemented | **WATCH** |
 | SQL draft contract synchronization | YES | PENDING - future control named; no executable migration path exists | **WATCH** |
+| Auth/RBAC/Workspace Identity synchronization | YES | PENDING - future control named; no sync workflow implemented | **WATCH** |
 
 The planning gate adequately identifies naming and ownership decisions, but
 these items are not resolved yet. They must remain WATCH/PENDING before any
