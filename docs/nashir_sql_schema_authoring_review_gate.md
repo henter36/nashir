@@ -367,7 +367,7 @@ No OpenAPI update is required by this review.
 | `git status --short` | `?? docs/nashir_sql_schema_authoring_review_gate.md` before commit |
 | `git diff --stat` | No tracked unstaged diff before staging; new review document shown by `git status --short` |
 | `git diff -- docs/` | No tracked unstaged docs diff before staging; new review document shown by `git status --short` |
-| `wc -l docs/nashir_sql_schema_authoring_review_gate.md` | 477 lines before verification-result update |
+| `wc -l docs/nashir_sql_schema_authoring_review_gate.md` | 478 lines |
 | BIDI scan: `docs/nashir_sql_schema_authoring_gate.md` | `BIDI_CONTROL_CHARS none` |
 | BIDI scan: `docs/nashir_sql_schema_authoring_review_gate.md` | `BIDI_CONTROL_CHARS none` |
 | Forbidden changed-file search | `FORBIDDEN_CHANGED_FILES: none` |
@@ -423,7 +423,7 @@ Expected verification result:
 | Risk / gap | Severity | Required next control |
 |---|---|---|
 | Migration strategy not final | MEDIUM | SQL Migration Planning Gate must decide location, naming, runner, parse checks, up/down expectations, and rollback strategy before migrations exist |
-| SQL authoring before review | HIGH | This review gate closes the authoring-review requirement, but executable SQL still requires separate planning/review authorization |
+| SQL migration authoring before planning | HIGH | Executable SQL still requires separate SQL Migration Planning and Review authorization before migrations exist |
 | Cross-workspace leakage | CRITICAL | Future executable DDL must prove same-workspace FK/constraint strategy |
 | Credential leakage | CRITICAL | Future DDL and backend planning must preserve no-plaintext-secret boundary |
 | Credential target exclusivity | MEDIUM | Future gate must choose exact target exclusivity or documented credential-scope model |
