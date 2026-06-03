@@ -140,24 +140,24 @@ verification requirements.
 | Table | Result | Assessment |
 |---|---|---|
 | `workspaces` | **PASS** | Root tenant table checklist covers PK, status, server-owned timestamps, no hard delete, indexes, OpenAPI mapping, and verification |
-| `users` | **PASS** | Global identity checklist covers PK, email/display fields, global unique email candidate, normalization deferral, PII ownership, auth deferrals, indexes, and verification |
+| `users` | **PASS** | Global identity, email uniqueness, normalization deferral, PII ownership, auth deferrals, indexes, and verification are covered |
 | `workspace_members` | **PASS** | Checklist covers workspace/user FKs, role code, OpenAPI status, archive fields, timestamps, uniqueness, RBAC mapping, and verification |
-| `store_profiles` | **PASS** | Checklist covers one-per-workspace boundary, fields, SQL proposal status, timestamps, unique workspace constraint, OpenAPI mapping, and verification |
+| `store_profiles` | **PASS** | One-per-workspace boundary, status, timestamps, uniqueness, mapping, and verification are covered |
 | `products` | **PASS** | Checklist covers workspace ownership, business fields, status, archive, timestamps, status filters, FK behavior, OpenAPI mapping, and verification |
 | `data_sources` | **PASS** | Checklist covers workspace boundary, provider fields, connection status, sync status, indexes, nullify/delete expectations, and verification |
-| `channel_connections` | **PASS** | Checklist covers workspace/data source relationship, provider fields, connection status, provider/account uniqueness decision, no credential fields, and verification |
-| `integration_credentials` | **PASS** | Checklist covers workspace boundary, optional channel and data source targets, target-scope decision, vault/ref boundary, no plaintext secrets, audit, deferred FK/check constraints, and verification |
+| `channel_connections` | **PASS** | Workspace/source relationship, provider fields, status, uniqueness decision, no credential fields, and verification are covered |
+| `integration_credentials` | **PASS** | Optional targets, scope decision, vault/ref boundary, no plaintext secrets, audit, deferred constraints, and verification are covered |
 | `assets` | **PASS** | Checklist covers workspace, optional product/content links, storage reference, status, archive, timestamps, indexes, OpenAPI mapping, and verification |
 | `campaigns` | **PASS** | Checklist covers workspace, product relationship, OpenAPI status, version, archive, timestamps, indexes, and verification |
 | `campaign_briefs` | **PASS** | Checklist covers campaign uniqueness, workspace, fields, archive-with-campaign expectations, mapping, and verification |
 | `campaign_content_items` | **PASS** | Checklist covers campaign/current draft relationships, status, version, archive, circular FK strategy, indexes, mapping, and verification |
-| `content_drafts` | **PASS** | Checklist covers content item/creator relationships, body/language, lifecycle status, resource version, archive, lifecycle indexes, mapping, and verification |
-| `content_approvals` | **PASS** | Checklist covers draft/reviewer FKs, decision enum, rejection metadata, created-only audit field, immutability, self-approval prevention support, mapping, and verification |
+| `content_drafts` | **PASS** | Content item/creator relationships, lifecycle status, resource version, archive, indexes, mapping, and verification are covered |
+| `content_approvals` | **PASS** | Draft/reviewer FKs, decision enum, rejection metadata, immutability, self-approval prevention, mapping, and verification are covered |
 | `publishing_jobs` | **PASS** | Checklist covers campaign/content/channel FKs, schedule, status, version, cancel field, queue indexes, mapping, and verification |
 | `publishing_statuses` | **PASS** | Checklist covers job FK, status trail field, message, occurred timestamp, append-only behavior, indexes, mapping, and verification |
 | `analytics_snapshots` | **PASS** | Checklist covers status, subject, JSON metrics, source summary, snapshot time/period decision, indexes, mapping, and verification |
-| `audit_events` | **PASS** | Checklist covers workspace, actor/member references, resource fields, action, request/correlation decision, safe metadata, append-only behavior, indexes, and no secrets |
-| `idempotency_keys` | **PASS** | Checklist covers workspace, operation family, actor/member, key, request hash, response replay, status, expiry, uniqueness, retention, header mapping, and verification |
+| `audit_events` | **PASS** | Workspace, actor/member references, resource fields, action, correlation, safe metadata, append-only behavior, indexes, and no secrets are covered |
+| `idempotency_keys` | **PASS** | Workspace, operation family, actor/member, key, request hash, replay fields, expiry, uniqueness, retention, and mapping are covered |
 | `roles` | **PASS** | Reference/seed candidate checklist remains planning-only and defers seed files |
 | `permissions` | **PASS** | Reference/seed candidate checklist remains planning-only and defers seed files |
 | `role_permissions` | **PASS** | Mapping checklist covers FK/composite strategy and remains planning-only |
@@ -458,10 +458,10 @@ This does not authorize production or pilot readiness.
 |---|---|
 | `npm run lint` | **PASSED** |
 | `npm run build` | **PASSED** |
-| `git status --short` | `?? docs/nashir_sql_schema_authoring_planning_review_gate.md` before commit; changes limited to the new review document |
-| `git diff --stat` | No tracked unstaged diff before staging; new document shown by `git status --short` |
-| `git diff -- docs/` | No tracked unstaged diff before staging; new document shown by `git status --short` |
-| `wc -l docs/nashir_sql_schema_authoring_planning_review_gate.md` | 477 lines before verification-result update |
+| `git status --short` | `M docs/nashir_sql_schema_authoring_planning_review_gate.md` before commit |
+| `git diff --stat` | One docs file changed: 12 insertions, 12 deletions |
+| `git diff -- docs/` | Review-gate Markdown formatting changes only |
+| `wc -l docs/nashir_sql_schema_authoring_planning_review_gate.md` | 477 lines |
 | BIDI scan: `docs/nashir_sql_schema_authoring_planning_gate.md` | `BIDI_CONTROL_CHARS none` |
 | BIDI scan: `docs/nashir_sql_schema_authoring_planning_review_gate.md` | `BIDI_CONTROL_CHARS none` |
 | Forbidden-path changed-file search | **CONFIRMED NONE** - no SQL, migrations, schema, backend, generated, UI, package, or runtime files changed |
