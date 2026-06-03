@@ -259,7 +259,7 @@ No OpenAPI or schema alignment blocker was found.
 | Same-workspace FK constraints | **PASS** | Required where child and parent are workspace-owned |
 | Composite uniqueness where required | **PASS** | Required where tenant-scoped or relationship-scoped |
 | `users.email` global case-insensitive uniqueness | **PASS** | Database-level case-insensitive uniqueness required; acceptable mechanisms documented: functional unique index on `LOWER(email)` or `citext` type/extension if approved later |
-| `users.email` implementation deferral | **PASS** | Final mechanism deferred to SQL Migration Authoring Review Gate or later approved authoring decision |
+| `users.email` implementation deferral | **PASS** | Final mechanism deferred to a subsequent authoring gate or later approved authoring decision |
 | `workspace_members` user/workspace uniqueness | **PASS** | Unique membership per user/workspace required |
 | `store_profiles` workspace uniqueness | **PASS** | One store profile per workspace required |
 | `campaign_briefs` campaign uniqueness | **PASS** | One brief per campaign required |
@@ -278,7 +278,7 @@ No tenancy or constraint blocker was found.
 | `integration_credentials.channel_connection_id` optional target candidate | **PASS** | Documented as an optional target candidate |
 | `integration_credentials.data_source_id` optional target candidate | **PASS** | Documented as an optional target candidate |
 | Same-workspace scoping via composite FK including `workspace_id` | **PASS** | Composite FKs including `workspace_id` required for credential target links |
-| Credential target exclusivity or credential-scope decision | **PASS** | Must be decided before executable migrations; explicitly deferred to SQL Migration Authoring Review Gate or later approved authoring decision |
+| Credential target exclusivity or credential-scope decision | **PASS** | Must be decided before executable migrations; explicitly deferred to a subsequent authoring gate or later approved authoring decision |
 | `credential_ref` / `vault_ref` only | **PASS** | Credential storage remains opaque-reference only |
 | No plaintext secrets | **PASS** | Raw token, API key, OAuth secret, password, or vault secret value columns are forbidden |
 | Credential mutation audit implications | **PASS** | Create, revoke, rotate, and remove operations must have audit implications planned |
@@ -297,7 +297,7 @@ tracked deferred decision, consistent with prior gate findings.
 |---|---|---|
 | `audit_events` append-only structure | **PASS** | Append-only structure explicitly required |
 | Database-level enforcement plan | **PASS** | Database-level enforcement planning required; acceptable mechanisms documented: triggers preventing `UPDATE`/`DELETE`, revoking `UPDATE`/`DELETE` privileges, or another reviewed database-level mechanism |
-| Final audit enforcement deferral | **PASS** | Final implementation is deferred to SQL Migration Authoring Review Gate or later approved authoring decision; service-layer-only enforcement is explicitly insufficient |
+| Final audit enforcement deferral | **PASS** | Final implementation is deferred to a subsequent authoring gate or later approved authoring decision; service-layer-only enforcement is explicitly insufficient |
 | Safe metadata payload | **PASS** | Safe metadata only; no secrets allowed in audit metadata |
 | No secrets in audit payload | **PASS** | Explicitly required |
 | Audit query indexes | **PASS** | Workspace/resource/action/time indexes required |
@@ -366,7 +366,7 @@ No verification blocker was found.
 | Enum migration risk | HIGH | Enum changes require contract review and exact OpenAPI alignment |
 | Cross-workspace leakage | CRITICAL | Same-workspace constraints must be proven in future executable migration authoring |
 | Credential leakage | CRITICAL | Plaintext credential columns remain forbidden |
-| Credential target exclusivity unresolved | MEDIUM | Deferred to SQL Migration Authoring Review Gate or later approved authoring decision; controlled watch item |
+| Credential target exclusivity unresolved | MEDIUM | Deferred to a subsequent authoring gate or later approved authoring decision; controlled watch item |
 | Audit log tampering | HIGH | Database-level append-only enforcement mechanism must be selected before executable migration approval |
 | Idempotency gaps | HIGH | Lifecycle POST backend implementation remains blocked without idempotency storage or approved alternative |
 | Backend starting too early | HIGH | Backend Slice 1 remains unauthorized |
