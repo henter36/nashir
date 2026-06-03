@@ -178,8 +178,9 @@ CREATE TABLE integration_credentials (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workspace_id          UUID NOT NULL REFERENCES workspaces (id) ON DELETE RESTRICT,
     credential_type       TEXT NOT NULL,
-    credential_ref        TEXT,          -- single opaque reference; provider-specific path/ARN/key; no plaintext secret
+    credential_ref        TEXT NOT NULL, -- single opaque reference; provider-specific path/ARN/key; no plaintext secret
     -- vault_ref removed: single credential_ref field is sufficient; credential_type identifies the provider.
+    -- credential_ref is NOT NULL because every credential row must have exactly one opaque reference.
     -- See SQL Migration Draft Correction Gate for rationale.
     channel_connection_id UUID,
     data_source_id        UUID,

@@ -163,7 +163,7 @@ No existing controls are weakened.
 | OpenAPI-approved values | `draft`, `ready_for_review`, `approved`, `rejected`, `archived` |
 | Previous draft values | `draft`, `submitted`, `approved`, `rejected`, `withdrawn` |
 | Corrected draft values | `draft`, `ready_for_review`, `approved`, `rejected`, `archived` |
-| Correction action | Replaced `submitted` with `ready_for_review`; replaced `withdrawn` with `archived`; added `archived` |
+| Correction action | Replaced `submitted` with `ready_for_review`; removed `withdrawn` because creator withdrawal maps to `rejected` per OpenAPI semantics; added `archived` as a separate archive/resource state |
 | Rationale | `submitted` is not an OpenAPI-approved value; `ready_for_review` is the correct term. `withdrawn` is not an OpenAPI-approved value; creator withdrawal is represented by `rejected` per the OpenAPI description (which states: "rejected = rejected by reviewer or withdrawn by creator"). The `archived` status represents soft-deletion and is a separate lifecycle state. |
 | Withdrawal mapping | `withdrawn` → `rejected` per OpenAPI semantics; not `withdrawn` → `archived`. The `archived` status was missing from the draft and is added as a distinct soft-delete state. |
 | Residual risk | Low — values now match OpenAPI; withdrawal semantics correctly mapped to `rejected`; `archived` correctly separate |
