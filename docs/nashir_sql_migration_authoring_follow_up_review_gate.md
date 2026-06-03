@@ -213,7 +213,7 @@ No allowed-path or verification-tooling blocker was found.
 |---|---|---|
 | Preferred mechanism is clear | **PASS** | `LOWER(email)` functional unique index is the recommended candidate |
 | `citext` remains a valid alternative with explicit approval gate | **PASS** | Requires later gate to approve extension and confirm managed provider support |
-| Application-layer query implication documented | **PASS** | Future backend must use `WHERE LOWER(email) = LOWER($1)`; plain `WHERE email = $1` may not use the functional index |
+| Application-layer query implication documented | **PASS** | Future backend preferred pattern: lowercase the input email in application code, then query `WHERE LOWER(email) = $1`; acceptable but less optimal: `WHERE LOWER(email) = LOWER($1)`; plain `WHERE email = $1` may not use the functional index |
 | Sequential scan risk from plain lookup documented | **PASS** | Follow-up gate explicitly identifies this as a future backend planning requirement |
 | Backend implementation not authorized | **PASS** | Application-layer implication is documented as a future requirement only |
 | No SQL index written | **PASS** | Implementation boundary is explicit |
@@ -251,11 +251,31 @@ No audit enforcement blocker was found.
 | Both-null case is INVALID | **PASS** | Credential must have exactly one target |
 | Both-non-null case is INVALID | **PASS** | Credential cannot serve two targets simultaneously |
 | Same-workspace composite FK requirement preserved | **PASS** | `workspace_id` must be included in FK for both `channel_connection_id` and `data_source_id` paths |
+| Composite FK referenced unique-constraint requirement documented | **PASS** | PostgreSQL requires the referenced parent table to have an explicit unique or primary key constraint on the exact referenced column set; `id` being a primary key alone is not sufficient for a composite FK referencing `(workspace_id, id)`; parent tables must include `UNIQUE (workspace_id, id)` |
 | No plaintext secrets | **PASS** | `credential_ref` / `vault_ref` boundary preserved |
 | No SQL or CHECK constraint written | **PASS** | Implementation boundary is explicit |
 | XOR model deferred to SQL Migration Draft Authoring Gate | **PASS** | Appropriate deferral with named gate |
 
 No credential scope blocker was found.
+
+### Composite FK unique-constraint requirement
+
+PostgreSQL requires the referenced table to have an explicit unique or primary
+key constraint on the exact referenced column set when a composite foreign key
+is defined.
+
+For same-workspace composite FKs on `integration_credentials`, the following
+parent tables must include composite unique constraints:
+
+- `channel_connections`: `UNIQUE (workspace_id, id)`
+- `data_sources`: `UNIQUE (workspace_id, id)`
+
+A primary key on `id` alone is not sufficient for a composite FK referencing
+`(workspace_id, id)`.
+
+This is a required control for the SQL Migration Draft Authoring Gate.
+
+No SQL is added in this review gate.
 
 ---
 
@@ -346,9 +366,10 @@ selections from items 7–9, and prepare for future backend repository context.
 | Unclear repository boundary | HIGH | Decided and confirmed in this review; migration artifacts belong in future backend repository |
 | Rollback ambiguity | HIGH | Convention decided; per-migration rollback procedures must be documented in SQL Migration Draft Authoring Gate |
 | Email duplicate risk | HIGH | `LOWER(email)` functional unique index is the recommended candidate; confirmed in SQL Migration Draft Authoring Gate |
-| Email lookup performance risk | HIGH | Future backend must query with `WHERE LOWER(email) = LOWER($1)`; plain `WHERE email = $1` may cause sequential scans; documented as future backend planning requirement |
+| Email lookup performance risk | HIGH | Future backend preferred pattern: lowercase email in application code, then query `WHERE LOWER(email) = $1`; acceptable but less optimal: `WHERE LOWER(email) = LOWER($1)`; plain `WHERE email = $1` may cause sequential scans; documented as future backend planning requirement |
 | Audit tampering risk | HIGH | Combined triggers + privilege revocation is the recommended candidate; service-layer-only enforcement remains insufficient |
 | Audit immutability risk from role ownership | HIGH | `audit_events` must be owned by a separate migration/deployment owner role; if application role owns `audit_events`, privilege revocation is ineffective; triggers become sole enforcement |
+| Same-workspace composite FK failure | CRITICAL | Parent tables `channel_connections` and `data_sources` must include `UNIQUE (workspace_id, id)`; primary key on `id` alone is not sufficient for composite FK referencing `(workspace_id, id)`; required control for SQL Migration Draft Authoring Gate |
 | Credential cross-workspace leakage | CRITICAL | XOR constraint with same-workspace composite FKs required; subject to SQL Migration Draft Authoring Gate confirmation |
 | Parse/dry-run tooling gap | HIGH | Deferred to backend repository with explicit blocker; no executable migration approved without parse or dry-run step |
 | Backend starting too early | HIGH | Backend Slice 1 remains unauthorized; no backend implementation is approved |
