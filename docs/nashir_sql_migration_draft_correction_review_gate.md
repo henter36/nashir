@@ -100,7 +100,7 @@ This review does not claim database readiness.
 
 | Input | Role |
 |---|---|
-| `docs/nashir_sql_migration_execution_planning_follow_up_review_gate.md` | Issued GO to SQL Migration Draft Authoring Correction Gate |
+| `docs/nashir_sql_migration_execution_planning_follow_up_review_gate.md` | Issued GO to SQL Migration Draft Correction Gate |
 | `docs/nashir_sql_migration_execution_planning_follow_up_gate.md` | Source of five correction requirements |
 | `docs/nashir_sql_migration_execution_planning_review_gate.md` | Source of the seven WATCH items |
 | `docs/nashir_sql_migration_draft_authoring_review_gate.md` | Draft authoring review; FK and constraint baseline |
@@ -374,7 +374,7 @@ No FAIL or WATCH items.
 | Draft/OpenAPI mismatch in executable migration | HIGH | SQL Migration Execution Gate must re-verify enum values against OpenAPI before any executable migration is applied |
 | Wrong withdrawal mapping in future documentation | MEDIUM | Withdrawal mapping is documented as `rejected` in correction gate and draft 003; executable migration authoring must preserve this |
 | Credential reference ambiguity in future | LOW | Single `credential_ref NOT NULL` field; `credential_type` identifies provider; no ambiguity remains |
-| Cross-workspace leakage if FK controls weakened | CRITICAL | All composite FK controls and parent `UNIQUE (workspace_id, id)` constraints confirmed unchanged |
+| Cross-workspace leakage if FK controls weakened | CRITICAL | Future executable migration authoring and the SQL Migration Execution Gate must verify that all composite FK controls and parent UNIQUE (workspace_id, id) constraints remain intact. |
 | Premature execution | CRITICAL | SQL Migration Execution Gate requires backend repository, runner, path, and verification tooling; not authorized by this review |
 | Runner introduced too early | CRITICAL | Runner-free; no runner introduced |
 | Backend starting too early | HIGH | Backend Slice 1 remains unauthorized |
