@@ -380,6 +380,7 @@ parent `UNIQUE (workspace_id, id)` constraints remain intact.
 | Backend repository ambiguity | CRITICAL | Backend Repository Boundary Review Gate must choose new repository, backend subproject, or explicitly approved path |
 | Database config leakage | CRITICAL | No database config in this gate; future config gate must prevent checked-in connection strings |
 | Secrets leakage | CRITICAL | No environment/secrets config in this gate; future secrets model must keep secrets out of repository and logs |
+| Plaintext secrets in database schema | CRITICAL | Future executable migration authoring and the SQL Migration Execution Gate must verify that all secrets use credential_ref and no plaintext secrets are stored. |
 | Production database risk | CRITICAL | No production database target is approved; backup/snapshot and production execution review required before production execution |
 | Audit tampering due to bad role ownership | HIGH | Future execution gate must verify application role does not own `audit_events`, lacks UPDATE/DELETE, and trigger enforcement exists |
 | Enum drift | HIGH | Future executable migration authoring and execution gate must re-verify enums against current OpenAPI |
