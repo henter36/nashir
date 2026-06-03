@@ -151,7 +151,7 @@ This gate does not authorize Backend Slice 1.
 |---|---|
 | Execution belongs in a future backend repository, not in this repository | This repository is a UI prototype and OpenAPI contract host; adding execution tooling here violates the established boundary |
 | Execution planning is documentation-only | No runner, no DB config, no package script, no executable artifact introduced |
-| Seven sequential execution groups are planned | Foundation → Store/product/source → Asset/campaign/content → Publishing/analytics/audit → Support/reference; within each, table order follows FK dependency |
+| Five sequential execution groups are planned | Foundation → Store/product/source → Asset/campaign/content → Publishing/analytics/audit → Support/reference; within each, table order follows FK dependency |
 | Pre-execution validation is required before any migration run | Defined in Section 8 |
 | Transaction boundaries are per migration file | Each `.sql` file runs in a single transaction unless explicitly identified as non-transactional DDL |
 | Audit trigger must be in the executable migration, not deferred to a later patch | Audit append-only enforcement must be enforced from the moment `audit_events` is created |
