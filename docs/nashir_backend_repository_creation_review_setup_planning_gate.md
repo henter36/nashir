@@ -312,9 +312,17 @@ secret-scanning configuration.
 |---|---|---|---|---|---|---|
 | Repository name | PENDING | Repository can be created with ambiguous purpose or conflict with current repo | YES | YES | YES | Backend Repository Creation Setup Review Gate |
 | Owner/org | PENDING | Wrong owner can weaken governance and access controls | YES | YES | YES | Decide owner/org before creation authorization |
+| Visibility | PENDING | Creating repository with incorrect visibility, such as public instead of private, can leak intellectual property | YES | YES | YES | Decide visibility before creation authorization |
 | Access model | PENDING | Excessive write/admin access can bypass review controls | YES | YES | YES | Define access tiers and automation identities |
+| Admin restrictions | PENDING | Unrestricted admin access can bypass security controls and branch protections | YES | YES | YES | Define admin restriction and auditing controls |
 | Branch protection | PENDING | Runtime or migration changes could merge without review | YES | YES | YES | Define protected branch rules and required checks |
 | Required reviewers | PENDING | Contract, security, and migration risks may lack accountable reviewers | YES | YES | YES | Assign reviewer categories and CODEOWNERS/equivalent expectations |
+| CODEOWNERS or equivalent | PENDING | Lack of explicit ownership routing can lead to unreviewed sensitive changes | YES | YES | YES | Define CODEOWNERS or equivalent rules |
+| Required checks | PENDING | Code or migrations could be merged without passing minimum quality and security checks | YES | YES | YES | Define required status checks for protected branches |
+| Secret scanning | PENDING | Credentials or API keys could be committed to the repository without detection | YES | YES | YES | Enable secret scanning before repository creation |
+| Dependency scanning | PENDING | Vulnerable dependencies could be introduced into the codebase | YES | YES | YES | Enable dependency scanning before package changes |
+| Issue/PR template expectations | PENDING | Inconsistent PR descriptions can lead to unreviewed contract or migration changes | YES | YES | YES | Define issue and PR templates |
+| Security policy expectations | PENDING | Vulnerabilities might be reported publicly instead of through a secure channel | YES | YES | YES | Define security policy and reporting guidelines |
 | Contract sync | PENDING | OpenAPI, SQL, or Auth/RBAC drift can produce incompatible backend behavior, or OpenAPI may not accurately reflect Auth/RBAC/Workspace Identity design | YES | YES | YES | Define pinning, drift detection, dependency rules, failure handling, and verify OpenAPI alignment with Auth/RBAC/Workspace Identity design, including authentication schemes, workspace scoping, and permission expectations |
 | `ContentApprovalDecision` enum re-verification | PENDING | Backend or migration may encode enum values inconsistent with OpenAPI | NO | YES | YES | Re-verify OpenAPI enum before implementation and executable migration authoring |
 | PostgreSQL UUID / `gen_random_uuid()` verification | PENDING | Future migrations may rely on unavailable UUID function or extension behavior | NO | YES | YES | Verify target PostgreSQL version and `pgcrypto`/UUID support before execution |
