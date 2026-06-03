@@ -254,23 +254,23 @@ requirement.
 
 | Execution readiness prerequisite | Required by planning gate | Review result |
 |---|---|---|
-| Backend repository or approved backend boundary exists | YES | **PASS** |
-| Runner selected through review gate | YES | **PASS** |
-| Executable migration path approved | YES | **PASS** |
-| Package changes reviewed | YES | **PASS** |
-| Database config reviewed | YES | **PASS** |
-| Environment secrets model reviewed | YES | **PASS** |
-| Dry-run/parse tooling confirmed | YES | **PASS** |
-| Enum re-verification completed | YES | **PASS** |
-| Same-workspace FK scan completed | YES | **PASS** |
-| Parent `UNIQUE (workspace_id, id)` scan completed | YES | **PASS** |
-| `credential_ref` and no plaintext secrets scan completed | YES | **PASS** |
-| Audit role ownership plan verified | YES | **PASS** |
-| Backup/snapshot plan approved | YES | **PASS** |
-| Rollback/recovery plan approved | YES | **PASS** |
-| Migration lock behavior confirmed | YES | **PASS** |
-| Migration history/checksum behavior confirmed | YES | **PASS** |
-| CI/CD migration execution boundary reviewed | YES | **PASS** |
+| Backend repository or approved backend boundary exists | YES | PENDING — required before SQL Migration Execution Gate |
+| Runner selected through review gate | YES | PENDING — required before SQL Migration Execution Gate |
+| Executable migration path approved | YES | PENDING — required before SQL Migration Execution Gate |
+| Package changes reviewed | YES | PENDING — required before SQL Migration Execution Gate |
+| Database config reviewed | YES | PENDING — required before SQL Migration Execution Gate |
+| Environment secrets model reviewed | YES | PENDING — required before SQL Migration Execution Gate |
+| Dry-run/parse tooling confirmed | YES | PENDING — required before SQL Migration Execution Gate |
+| Enum re-verification completed | YES | PENDING — required before SQL Migration Execution Gate |
+| Same-workspace FK scan completed | YES | PENDING — required before SQL Migration Execution Gate |
+| Parent `UNIQUE (workspace_id, id)` scan completed | YES | PENDING — required before SQL Migration Execution Gate |
+| `credential_ref` and no plaintext secrets scan completed | YES | PENDING — required before SQL Migration Execution Gate |
+| Audit role ownership plan verified | YES | PENDING — required before SQL Migration Execution Gate |
+| Backup/snapshot plan approved | YES | PENDING — required before SQL Migration Execution Gate |
+| Rollback/recovery plan approved | YES | PENDING — required before SQL Migration Execution Gate |
+| Migration lock behavior confirmed | YES | PENDING — required before SQL Migration Execution Gate |
+| Migration history/checksum behavior confirmed | YES | PENDING — required before SQL Migration Execution Gate |
+| CI/CD migration execution boundary reviewed | YES | PENDING — required before SQL Migration Execution Gate |
 
 The planning gate correctly requires these items before SQL Migration Execution
 Gate can open. None of these items is completed by this review.
