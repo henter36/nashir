@@ -267,15 +267,17 @@ is defined.
 For same-workspace composite FKs on `integration_credentials`, the following
 parent tables must include composite unique constraints:
 
-- `channel_connections`: `UNIQUE (workspace_id, id)`
-- `data_sources`: `UNIQUE (workspace_id, id)`
+- `channel_connections`: future migration draft must provide
+  `UNIQUE (workspace_id, id)` if referenced by `(workspace_id, channel_connection_id)`.
+- `data_sources`: future migration draft must provide
+  `UNIQUE (workspace_id, id)` if referenced by `(workspace_id, data_source_id)`.
 
 A primary key on `id` alone is not sufficient for a composite FK referencing
 `(workspace_id, id)`.
 
 This is a required control for the SQL Migration Draft Authoring Gate.
 
-No SQL is added in this review gate.
+No SQL files or migration files are added in this review gate.
 
 ---
 
@@ -455,7 +457,7 @@ execution.
 | `git status --short` | `?? docs/nashir_sql_migration_authoring_follow_up_review_gate.md` before commit |
 | `git diff --stat` | No tracked unstaged diff before staging; new review document shown by `git status --short` |
 | `git diff -- docs/` | No tracked unstaged docs diff before staging; new review document shown by `git status --short` |
-| `wc -l docs/nashir_sql_migration_authoring_follow_up_review_gate.md` | 458 lines |
+| `wc -l docs/nashir_sql_migration_authoring_follow_up_review_gate.md` | 481 lines |
 | BIDI scan: `docs/nashir_sql_migration_authoring_follow_up_gate.md` | `BIDI_CONTROL_CHARS none` |
 | BIDI scan: `docs/nashir_sql_migration_authoring_follow_up_review_gate.md` | `BIDI_CONTROL_CHARS none` |
 | Backend/API runtime/ORM/generated/UI/package changed-file search | `RUNTIME_FORBIDDEN_CHANGED_FILES: none` |
