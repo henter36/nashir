@@ -7,7 +7,7 @@
 | Date | 2026-06-03 |
 | Controlling prerequisite | `docs/nashir_backend_repository_creation_planning_review_gate.md` |
 | API contract authority | `docs/nashir_v1_openapi.yaml` |
-| Auth/RBAC/workspace authority | `docs/nashir_auth_rbac_workspace_identity_gate.md`, `docs/nashir_auth_rbac_workspace_identity_review_gate.md` |
+| Auth/RBAC/Workspace Identity authority | `docs/nashir_auth_rbac_workspace_identity_gate.md`, `docs/nashir_auth_rbac_workspace_identity_review_gate.md` |
 | Persistence contract authority | SQL schema gates and non-executable migration draft contracts |
 | Repository created | NO |
 | Backend/API routes implemented | NO |
@@ -342,7 +342,7 @@ secret-scanning configuration.
 | Migration runner introduced too early | HIGH | Runner planning remains blocked until creation decision review is complete |
 | Database config leakage | CRITICAL | No database config is added; future database config requires a dedicated gate |
 | Secrets leakage | CRITICAL | No environment/secrets config is added; future secrets model requires a dedicated gate |
-| OpenAPI/SQL/Auth-RBAC contract drift | HIGH | Future backend repository must define pinning, drift detection, and sync failure handling |
+| OpenAPI/SQL/Auth/RBAC contract drift | HIGH | Future backend repository must define pinning, drift detection, and sync failure handling |
 | Generated client starting too early | HIGH | Generated clients remain blocked until a generated-client planning/review gate |
 | Package changes too early | HIGH | No package or lockfile changes are authorized by this gate |
 | Execution readiness falsely implied | CRITICAL | SQL Migration Execution Gate remains blocked; this gate does not authorize execution |
@@ -424,7 +424,7 @@ This does not authorize production or pilot readiness.
 |---|---|
 | `npm run lint` | PASS |
 | `npm run build` | PASS |
-| `git status --short` | PASS - ` A docs/nashir_backend_repository_creation_decision_gate.md` |
+| `git status --short` | PASS - `A docs/nashir_backend_repository_creation_decision_gate.md` |
 | `git diff --stat` | PASS - `1 file changed, 438 insertions(+)` |
 | `git diff -- docs/` | PASS - new documentation-only decision gate diff reviewed |
 | BIDI scan on `docs/nashir_backend_repository_creation_decision_gate.md` | PASS - no BIDI control characters found |
