@@ -454,7 +454,7 @@ explicitly authorizes it.
 |---|---|
 | `npm run lint` | **PASSED** |
 | `npm run build` | **PASSED** |
-| `git status --short` | ` A docs/nashir_backend_repository_migration_execution_environment_planning_gate.md` after intent-to-add, before commit |
+| `git status --short` | `A docs/nashir_backend_repository_migration_execution_environment_planning_gate.md` after intent-to-add, before commit |
 | `git diff --stat` | `1 file changed, 477 insertions(+)` |
 | `git diff -- docs/` | New planning document only |
 | BIDI scan on new/modified docs files | `BIDI_CONTROL_CHARS none` |
