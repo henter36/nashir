@@ -60,9 +60,12 @@ CREATE TABLE publishing_jobs (
     channel_connection_id UUID NOT NULL,
     scheduled_at          TIMESTAMPTZ,
     status                TEXT NOT NULL CHECK (status IN (
-        'pending', 'in_progress', 'published', 'failed', 'cancelled'
+        'draft', 'scheduled', 'queued', 'simulated', 'failed', 'cancelled'
     )),
-    -- PublishingJobStatus: OpenAPI-approved enum candidate; values must match OpenAPI.
+    -- PublishingJobStatus: OpenAPI-approved enum values (corrected).
+    -- draft=created not yet scheduled; scheduled=set for future time; queued=ready to process;
+    -- simulated=V1 simulation only — must remain distinct from any future real publishing status.
+    -- pending/in_progress/published removed; not in OpenAPI V1.
     version               INTEGER NOT NULL DEFAULT 1, -- optimistic concurrency
     cancelled_at          TIMESTAMPTZ,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -276,7 +279,7 @@ no operational data was applied.
 
 ## Open items for SQL Migration Draft Authoring Review Gate
 
-- Confirm `PublishingJobStatus` enum values match current OpenAPI.
+- `PublishingJobStatus` enum values corrected in SQL Migration Draft Correction Gate; values now match OpenAPI.
 - Confirm `AnalyticsSnapshotStatus` enum values match current OpenAPI (available, partial, stale, unavailable).
 - Confirm `publishing_statuses.status` values or defer.
 - Confirm `analytics_snapshots.metrics` JSONB schema or leave as open JSONB.

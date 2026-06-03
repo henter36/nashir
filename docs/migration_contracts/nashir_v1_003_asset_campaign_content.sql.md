@@ -99,9 +99,12 @@ CREATE TABLE campaigns (
     name               TEXT NOT NULL,
     objective          TEXT,
     status             TEXT NOT NULL CHECK (status IN (
-        'draft', 'active', 'paused', 'completed', 'archived'
+        'draft', 'generating', 'review', 'ready', 'scheduled',
+        'active', 'paused', 'completed', 'archived'
     )),
-    -- CampaignStatus: OpenAPI-approved enum candidate; values must match OpenAPI.
+    -- CampaignStatus: OpenAPI-approved enum values (corrected).
+    -- generating=AI content in progress; review=under human review; ready=approved for use;
+    -- scheduled=queued for future activation.
     version            INTEGER NOT NULL DEFAULT 1, -- optimistic concurrency
     archived_at        TIMESTAMPTZ,
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -171,9 +174,10 @@ CREATE TABLE campaign_content_items (
     content_type     TEXT NOT NULL,
     channel          TEXT NOT NULL,
     status           TEXT NOT NULL CHECK (status IN (
-        'draft', 'in_review', 'approved', 'rejected', 'published', 'archived'
+        'draft', 'ready_for_review', 'approved', 'rejected', 'archived'
     )),
-    -- CampaignContentItemStatus: OpenAPI-approved enum candidate; values must match OpenAPI.
+    -- CampaignContentItemStatus: OpenAPI-approved enum values (corrected).
+    -- ready_for_review replaces in_review; published removed (not in OpenAPI V1).
     version          INTEGER NOT NULL DEFAULT 1, -- optimistic concurrency
     archived_at      TIMESTAMPTZ,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -216,9 +220,12 @@ CREATE TABLE content_drafts (
     language        TEXT NOT NULL DEFAULT 'en',
     draft_version   INTEGER NOT NULL DEFAULT 1,
     status          TEXT NOT NULL CHECK (status IN (
-        'draft', 'submitted', 'approved', 'rejected', 'withdrawn'
+        'draft', 'ready_for_review', 'approved', 'rejected', 'archived'
     )),
-    -- ContentDraftStatus: OpenAPI-approved enum candidate; values must match OpenAPI.
+    -- ContentDraftStatus: OpenAPI-approved enum values (corrected).
+    -- ready_for_review replaces submitted; archived replaces withdrawn.
+    -- Creator withdrawal is represented by rejected per OpenAPI description
+    -- (rejected covers both reviewer rejection and creator withdrawal).
     version         INTEGER NOT NULL DEFAULT 1, -- optimistic concurrency
     archived_at     TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -347,9 +354,9 @@ references these tables.
 
 ## Open items for SQL Migration Draft Authoring Review Gate
 
-- Confirm `CampaignStatus` enum values match current OpenAPI.
-- Confirm `ContentDraftStatus` enum values match current OpenAPI.
-- Confirm `CampaignContentItemStatus` enum values match current OpenAPI.
+- `CampaignStatus` enum values corrected in SQL Migration Draft Correction Gate; values now match OpenAPI.
+- `ContentDraftStatus` enum values corrected in SQL Migration Draft Correction Gate; values now match OpenAPI.
+- `CampaignContentItemStatus` enum values corrected in SQL Migration Draft Correction Gate; values now match OpenAPI.
 - Confirm `ContentApprovalDecision` enum values match current OpenAPI.
 - Confirm circular composite FK strategy for `campaign_content_items.current_draft_id`
   (SET NULL on delete; MATCH SIMPLE when NULL; requires review).
