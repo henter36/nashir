@@ -125,7 +125,7 @@ This gate does not claim database readiness.
 | No migration runner | **PASS** | Gate confirms no migration runner introduced |
 | No package changes | **PASS** | Gate confirms no package or build changes |
 | No database-applied changes | **PASS** | Gate confirms no database commands executed and no migration files created |
-| Separate review required before execution/runtime work | **PASS** | Gate states SQL Migration Authoring Review Gate is required before any later migration execution, runner setup, database application, backend, ORM, seed, generated-client, package, or UI work |
+| Separate review required before execution/runtime work | **PASS** | Gate states this review gate is required before any later migration execution, runner setup, database application, backend, ORM, seed, generated-client, package, or UI work |
 
 No output classification blocker was found.
 
@@ -476,15 +476,20 @@ are required before any later SQL Migration Execution Planning Gate.
 |---|---|
 | `npm run lint` | **PASSED** |
 | `npm run build` | **PASSED** |
-| `git status --short` | Clean; `?? docs/nashir_sql_migration_authoring_review_gate.md` before commit |
-| `git diff --stat` | No tracked unstaged diff before staging; new review document shown by `git status --short` |
-| `git diff -- docs/` | No tracked unstaged docs diff before staging; new review document shown by `git status --short` |
+| `git status --short` | `M docs/nashir_sql_migration_authoring_review_gate.md` (this patch) |
+| `git diff --stat` | `docs/nashir_sql_migration_authoring_review_gate.md` only; no other files changed |
+| `git diff -- docs/nashir_sql_migration_authoring_review_gate.md` | Reviewability reformat and BIDI verification update only |
+| `wc -l docs/nashir_sql_migration_authoring_review_gate.md` | 504 lines |
 | BIDI scan: `docs/nashir_sql_migration_authoring_gate.md` | `BIDI_CONTROL_CHARS none` |
 | BIDI scan: `docs/nashir_sql_migration_authoring_review_gate.md` | `BIDI_CONTROL_CHARS none` |
+| Circular deferral phrase scan | No circular self-referencing deferral phrases found; all deferrals use `a subsequent authoring gate` |
 | Backend/API runtime/ORM/generated/UI/package changed-file search | `RUNTIME_FORBIDDEN_CHANGED_FILES: none` |
 | Migration runner/SQL executable changed-file search | `MIGRATION_RUNNER_SQL_CHANGED_FILES: none` |
 | Existing migration/SQL file scan | `MIGRATION_SQL_FILES: none` |
 | Database-applied changes search | No database commands executed; no migration files created |
+
+BIDI scan method: Python `pathlib` + Unicode code-point lookup;
+no BIDI control characters embedded in shell patterns.
 
 Expected result:
 
