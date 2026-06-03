@@ -158,7 +158,7 @@ No file with any of those names is created by this gate.
 | Store/product/source | `store_profiles`, `products`, `data_sources`, `channel_connections`, `integration_credentials` | After foundation tables | MEDIUM; credential target rollback requires care | Same-workspace FKs required for source/channel/credential links | V1 required; provider implementation deferred | Documented only; no migration file |
 | Asset/campaign/content | `assets`, `campaigns`, `campaign_briefs`, `campaign_content_items`, `content_drafts`, `content_approvals` | After foundation plus store/product/source context | HIGH because content lifecycle and immutable approvals require careful rollback | Same-workspace campaign/content/draft/approval constraints required | V1 required | Documented only; no migration file |
 | Publishing/analytics/audit | `publishing_jobs`, `publishing_statuses`, `analytics_snapshots`, `audit_events` | After campaign/content/channel resources | HIGH because append-only trail and lineage tables should not be destructively changed | Workspace-scoped operational data and no cross-workspace analytics aggregation | V1 required | Documented only; no migration file |
-| Support/reference | `idempotency_keys`, `roles`, `permissions`, `role_permissions` if approved | After foundation and Auth/RBAC decisions | MEDIUM; seed/reference coupling must be avoided | Idempotency uniqueness must include workspace, operation, actor/member, and key | Support/reference candidates | Documented only; no migration file |
+| Support/reference | `idempotency_keys`; `roles`, `permissions`, `role_permissions` as Auth/RBAC reference candidates | After foundation and established Auth/RBAC design; physical seed/reference implementation remains deferred | MEDIUM; seed/reference coupling must be avoided | Idempotency uniqueness must include workspace, operation, actor/member, and key | Support/reference candidates; no seed/runtime RBAC implementation authorized | Documented only; no migration file or seed file |
 
 Authoring rule:
 
@@ -317,7 +317,7 @@ exists.
 | `git diff --stat` | No tracked unstaged diff before staging; new authoring document shown by `git status --short` |
 | `git diff -- docs/` | No tracked unstaged docs diff before staging; new authoring document shown by `git status --short` |
 | `git diff -- migration files` | NOT APPLICABLE - no migration files created |
-| `wc -l docs/nashir_sql_migration_authoring_gate.md` | 393 lines before verification-result update |
+| `wc -l docs/nashir_sql_migration_authoring_gate.md` | 395 lines |
 | BIDI scan on `docs/nashir_sql_migration_authoring_gate.md` | `BIDI_CONTROL_CHARS none` |
 | Backend/API runtime/ORM/generated/UI/package changed-file search | `RUNTIME_FORBIDDEN_CHANGED_FILES: none` |
 | Migration runner / SQL executable changed-file search | `MIGRATION_RUNNER_SQL_CHANGED_FILES: none` |
