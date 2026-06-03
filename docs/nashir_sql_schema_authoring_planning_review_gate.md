@@ -475,3 +475,4 @@ Expected result:
 - No backend implementation.
 - No generated client.
 - No package/UI changes.
+- No production/pilot readiness claim or authorization.
