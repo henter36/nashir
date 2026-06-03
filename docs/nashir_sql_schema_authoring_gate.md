@@ -149,8 +149,8 @@ It is not executable SQL.
 
 | Table | Schema contract |
 |---|---|
-| `workspaces` | UUID primary key; root tenant boundary; `name`; SQL-only status proposal; server-owned `created_at` and `updated_at`; no hard delete; workspace status index candidate; OpenAPI `Workspace` mapping |
-| `users` | UUID primary key; global identity; `email` and display fields; global unique email candidate; email normalization/case-folding deferred; SQL-only status proposal; server-owned timestamps; OpenAPI `User` mapping |
+| `workspaces` | UUID primary key; root tenant boundary; `name`; OpenAPI `WorkspaceStatus`; server-owned `created_at` and `updated_at`; no hard delete; workspace status index candidate; OpenAPI `Workspace` mapping |
+| `users` | UUID primary key; global identity; `email` and display fields; global unique email candidate; email normalization/case-folding deferred; `users.status` is SQL-only planning proposal — final representation deferred to SQL Schema Authoring Review Gate / later authoring decision; server-owned timestamps; Auth/RBAC global User identity mapping; OpenAPI exposes user identity through WorkspaceMember.userId / membership context unless a dedicated User schema is approved later |
 | `workspace_members` | UUID primary key; `workspace_id` FK; `user_id` FK; role code; OpenAPI-approved status; joined/archive timestamps; unique workspace/user membership; RBAC and OpenAPI `WorkspaceMember` mapping |
 | `store_profiles` | UUID primary key; `workspace_id` FK and unique constraint; store display/profile fields; SQL-only status proposal; timestamps; OpenAPI `StoreProfile` mapping |
 | `products` | UUID primary key; `workspace_id` FK; product business fields; SQL-only status proposal; `archived_at`; timestamps; workspace/status indexes; OpenAPI `Product` mapping |
@@ -160,7 +160,7 @@ It is not executable SQL.
 | `assets` | UUID primary key; `workspace_id` FK; optional product/content links; title/type/source; storage reference; SQL-only status proposal; `archived_at`; timestamps; OpenAPI `Asset` mapping |
 | `campaigns` | UUID primary key; `workspace_id` FK; optional primary product FK; name/objective; OpenAPI `CampaignStatus`; resource `version`; `archived_at`; timestamps; OpenAPI `Campaign` mapping |
 | `campaign_briefs` | UUID primary key; `workspace_id` FK; unique `campaign_id`; objective, audience, channel, tone, and constraint fields; timestamps; OpenAPI `CampaignBrief` mapping |
-| `campaign_content_items` | UUID primary key; `workspace_id` FK; `campaign_id` FK; optional current draft FK; content type/channel; OpenAPI `CampaignContentItemStatus`; resource `version`; `archived_at`; OpenAPI mapping |
+| `campaign_content_items` | UUID primary key; `workspace_id` FK; `campaign_id` FK; optional current draft FK; content type/channel; OpenAPI `CampaignContentItem` / `CampaignContentItemStatus` mapping; resource `version`; `archived_at` |
 | `content_drafts` | UUID primary key; `workspace_id` FK; content item FK; creator user FK; body/language; version number; OpenAPI `ContentDraftStatus`; resource `version`; `archived_at`; OpenAPI mapping |
 | `content_approvals` | UUID primary key; `workspace_id` FK; content draft FK; reviewer user FK; OpenAPI `ContentApprovalDecision`; note, rejection reason, required changes; decided/created timestamps; immutable; OpenAPI mapping |
 | `publishing_jobs` | UUID primary key; `workspace_id` FK; campaign/content/channel FKs; scheduled timestamp; OpenAPI `PublishingJobStatus`; resource `version`; `cancelled_at`; queue indexes; OpenAPI mapping |
@@ -176,6 +176,30 @@ It is not executable SQL.
 | `roles` | Reference candidate only; role code; display/description fields; global scope; no seed file in this gate |
 | `permissions` | Reference candidate only; permission code; display/description fields; global scope; no seed file in this gate |
 | `role_permissions` | Reference mapping candidate only; role/permission references; composite uniqueness or primary key; no seed file in this gate |
+
+### OpenAPI vs Auth/RBAC Mapping Clarification
+
+Some persistence tables map directly to OpenAPI schemas.
+
+Some persistence tables are required by Auth/RBAC/Data Model gates even if they
+are not standalone API resources.
+
+SQL authoring must not delete identity tables just because they are not exposed
+as direct CRUD resources.
+
+SQL authoring must not claim direct OpenAPI mapping for schemas that do not
+exist.
+
+The `users` table is required by the Auth/RBAC/Workspace Identity gates even if
+User is not a standalone V1 OpenAPI resource.
+
+The canonical SQL table name remains `campaign_content_items` because the
+current V1 OpenAPI route/schema family uses `CampaignContentItem`,
+`CampaignContentItemResponse`, `CampaignContentItemStatus`, and
+`/content-items` routes.
+
+Any legacy or alternate CampaignContent naming must be handled by a future
+OpenAPI cleanup/review decision, not by renaming the SQL table in this gate.
 
 ### Required contract dimensions
 
@@ -211,8 +235,8 @@ Future SQL DDL for each table must specify:
 | `CampaignContentItemStatus` | OpenAPI-approved PostgreSQL ENUM candidate |
 | `PublishingJobStatus` | OpenAPI-approved PostgreSQL ENUM candidate |
 | `ContentApprovalDecision` | OpenAPI-approved PostgreSQL ENUM candidate; server-owned decision |
-| Workspace status | SQL-only TEXT + CHECK candidate |
-| User status | SQL-only TEXT + CHECK candidate |
+| `WorkspaceStatus` | OpenAPI-approved PostgreSQL ENUM candidate |
+| `users.status` | SQL-only planning proposal — final representation deferred to SQL Schema Authoring Review Gate / later authoring decision |
 | Store profile status | SQL-only TEXT + CHECK candidate |
 | Product status | SQL-only TEXT + CHECK candidate |
 | Asset status | SQL-only TEXT + CHECK candidate |
@@ -357,14 +381,12 @@ analytics, and credential relationships where both sides are workspace-owned.
 | `npm run lint` | **PASSED** |
 | `npm run build` | **PASSED** |
 | SQL parse | NOT RUN - no SQL files created |
-| `git status --short` | `?? docs/nashir_sql_schema_authoring_gate.md` before commit; changes limited to the new gate document |
-| `git diff --stat` | No tracked unstaged diff before staging; new document shown by `git status --short` |
-| `git diff -- docs/` | No tracked unstaged diff before staging; new document shown by `git status --short` |
+| `git status --short` | `M docs/nashir_sql_schema_authoring_gate.md` before commit |
+| `git diff --stat` | One docs file changed: 34 insertions, 12 deletions |
+| `git diff -- docs/nashir_sql_schema_authoring_gate.md` | OpenAPI/SQL mapping clarification changes only |
 | Schema/SQL contract diff | NOT APPLICABLE - no schema/SQL files created |
-| `wc -l docs/nashir_sql_schema_authoring_gate.md` | 408 lines before verification-result update |
-| BIDI scan on new/modified docs files | `docs/nashir_sql_schema_authoring_gate.md: BIDI_CONTROL_CHARS none` |
-| Backend/API/runtime/ORM/generated/UI/package changed-file search | `FORBIDDEN_RUNTIME_CHANGED_FILES: none` |
-| Migration introduced search | `MIGRATION_OR_SQL_CHANGED_FILES: none` |
+| BIDI scan on `docs/nashir_sql_schema_authoring_gate.md` | `BIDI_CONTROL_CHARS none` |
+| Migrations/backend/API runtime/ORM/generated/UI/package changed-file search | `FORBIDDEN_CHANGED_FILES: none` |
 
 ---
 
