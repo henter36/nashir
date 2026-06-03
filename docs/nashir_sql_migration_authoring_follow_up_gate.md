@@ -390,6 +390,27 @@ The `LOWER(email)` functional unique index:
 enabling the extension in the target PostgreSQL environment and confirms that
 the managed provider supports it.
 
+### Application-layer implication
+
+Future backend lookup queries must use `LOWER(email)` comparisons to use the
+functional index effectively.
+
+Correct future query pattern:
+
+```text
+WHERE LOWER(email) = LOWER($1)
+```
+
+Plain `WHERE email = $1` lookups may not use the functional index and may
+cause sequential scans on the `users` table.
+
+This is a future backend planning requirement.
+
+It does not authorize backend implementation in this gate.
+
+Backend query patterns must be confirmed in the SQL Migration Draft Authoring
+Gate or the relevant Backend Slice planning gate.
+
 ### Implementation boundary
 
 No SQL index is written in this gate.
@@ -411,9 +432,9 @@ the application database role.
 
 | Mechanism | Assessment |
 |---|---|
-| Triggers preventing `UPDATE` and `DELETE` | Self-contained in migration SQL; fires at database level regardless of application behavior; catches direct psql access; recommended primary mechanism |
-| Revoke `UPDATE`/`DELETE` privileges from application role | Defense-in-depth; catches cases where trigger logic is bypassed by a superuser-equivalent role or trigger is accidentally dropped; recommended secondary mechanism |
-| Both combined | Defense-in-depth; preferred; one mechanism survives failure of the other |
+| Triggers preventing `UPDATE` and `DELETE` | Self-contained in migration SQL; fires at database level regardless of application behavior; catches direct psql access; available enforcement option |
+| Revoke `UPDATE`/`DELETE` privileges from application role | Defense-in-depth layer; effective only when the application role is a non-owner role; requires `audit_events` to be owned by a separate migration/deployment owner role |
+| Both combined | Defense-in-depth; preferred when role ownership is correctly separated; one mechanism survives failure of the other |
 | Service-layer only | Explicitly insufficient per SQL schema contract and all prior gates |
 
 ### Rationale
@@ -430,22 +451,51 @@ Together, they prevent:
 - Accidental mutation from a buggy migration rollback.
 - Audit tampering through credential escalation to the application role.
 
+### PostgreSQL owner-role caveat
+
+PostgreSQL table owners retain all privileges on their tables.
+
+`REVOKE UPDATE, DELETE ON audit_events FROM <role>` has no effect if that
+role is the owner of `audit_events`.
+
+For privilege revocation to work as a second enforcement layer, the following
+must be true:
+
+- `audit_events` must be owned by a **separate migration/deployment owner
+  role**, not by the application role.
+- The **application role must be a non-owner role** with only the privileges
+  explicitly granted to it.
+- `UPDATE` and `DELETE` must never be granted to the application role on
+  `audit_events`.
+
+If the application role owns `audit_events`, privilege revocation is
+ineffective and triggers become the sole database-level enforcement mechanism.
+
+Role ownership separation must be planned as part of backend database setup
+and confirmed before executable migration authoring is approved.
+
 ### Tradeoff
 
 Both mechanisms require the backend database setup to know the application role
-name.
+name and to enforce role ownership separation.
 
-Role management must be part of backend infrastructure planning.
+Role management and ownership decisions must be part of backend infrastructure
+planning.
 
-If a managed PostgreSQL provider restricts trigger creation, the privilege
-revocation mechanism remains effective alone.
+If a managed PostgreSQL provider restricts trigger creation, privilege
+revocation remains effective as the sole mechanism provided the owner-role
+separation requirement is met.
+
+Final implementation is deferred to a later approved authoring decision.
 
 ### Implementation boundary
 
-No SQL triggers or `REVOKE` statements are written in this gate.
+No SQL triggers, `REVOKE` statements, or role definitions are written in this
+gate.
 
-The combined mechanism is the recommended candidate for the SQL Migration Draft
-Authoring Gate.
+The combined mechanism — triggers plus privilege revocation with confirmed
+owner-role separation — is the recommended candidate for the SQL Migration
+Draft Authoring Gate.
 
 ---
 
@@ -587,7 +637,9 @@ from items 7–9, and prepare for a future backend repository context.
 | Unclear repository boundary | HIGH | Decided: migration artifacts belong in future backend repository; `docs/migration_contracts/` approved for documentation-only drafts only |
 | Rollback ambiguity | HIGH | Decided: prefer down sections within each migration file; forward-only corrective migrations as fallback |
 | Email duplicate risk | HIGH | Decided: `LOWER(email)` functional unique index is recommended candidate; subject to SQL Migration Draft Authoring Gate confirmation |
+| Email lookup performance risk | HIGH | Future backend must query with `LOWER(email) = LOWER($1)`; plain `WHERE email = $1` may not use the functional index and may cause sequential scans |
 | Audit tampering risk | HIGH | Decided: combined triggers + privilege revocation is recommended candidate; service-layer-only enforcement remains explicitly insufficient |
+| Audit immutability risk from role ownership | HIGH | If the application role owns `audit_events`, privilege revocation is ineffective; `audit_events` must be owned by a separate migration/deployment owner role; application role must be a non-owner with restricted privileges |
 | Credential cross-workspace leakage | CRITICAL | Decided: XOR constraint model with same-workspace composite FKs; subject to SQL Migration Draft Authoring Gate confirmation |
 | Parse/dry-run tooling gap | HIGH | Decided: deferred to backend repository with explicit blocker — no executable migration may be approved without a parse or dry-run step |
 | Backend starting too early | HIGH | Backend Slice 1 remains unauthorized; no backend implementation is approved by this gate |
