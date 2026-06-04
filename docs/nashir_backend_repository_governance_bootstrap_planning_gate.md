@@ -173,11 +173,18 @@ mirrored, generated, or synchronized contract artifacts.
 
 ## 9. OpenAPI/Auth/RBAC Alignment Boundary
 
-`docs/nashir_v1_openapi.yaml` remains the current OpenAPI authority.
+`docs/nashir_v1_openapi.yaml` is resolved as the OpenAPI authority location.
 
-OpenAPI/Auth/RBAC alignment remains PENDING ALIGNMENT.
+Resolving the authority location does not mean OpenAPI/Auth/RBAC/Workspace
+Identity alignment readiness is resolved.
 
-This planning gate does not resolve OpenAPI/Auth/RBAC alignment.
+OpenAPI/Auth/RBAC/Workspace Identity alignment remains PENDING ALIGNMENT.
+
+The authority location itself can be resolved even if alignment readiness with
+Auth/RBAC/Workspace Identity remains pending.
+
+This planning gate does not resolve OpenAPI/Auth/RBAC/Workspace Identity
+alignment readiness.
 
 This planning gate does not authorize OpenAPI edits.
 
@@ -187,6 +194,13 @@ This planning gate does not authorize SQL contract changes.
 
 Any later governance bootstrap review must preserve the PENDING ALIGNMENT status
 unless a separate explicit alignment gate changes it.
+
+### Canonical Carry-Forward Rule
+
+Future Nashir governance, bootstrap, review, action, backend, OpenAPI, Auth/RBAC,
+SQL, migration, or generated-client gates that reference OpenAPI/Auth/RBAC
+alignment must preserve this distinction between authority location and alignment
+readiness unless a later explicit alignment gate changes the status.
 
 ---
 
@@ -212,10 +226,11 @@ This planning gate must NOT create the first commit.
 |---|---|---|
 | Accidental backend implementation | High impact if introduced early | Explicitly out of scope |
 | Accidental first commit | High impact because it changes empty repository state | Must require a later explicit bootstrap action gate |
-| Contract drift from `henter36/nashir` | Medium to high impact | Use only a planned pinned commit, tag, or snapshot reference model |
+| Contract authority drift from `henter36/nashir` | Risk: backend repository redefines, forks, or diverges from `henter36/nashir` contract authorities. | Mitigation: use only planned pinned commit, tag, or approved snapshot reference model. |
+| Premature OpenAPI/Auth/RBAC sequencing | Risk: defining or modifying OpenAPI authentication schemes, workspace scoping, permission expectations, or related error semantics before prerequisite Auth/RBAC/Workspace Identity alignment is established. | Mitigation: require a later explicit Auth/RBAC/OpenAPI alignment gate before such changes. |
+| Authority location vs alignment readiness ambiguity | Risk: readers may confuse resolved OpenAPI authority location with resolved alignment readiness. | Mitigation: state that `docs/nashir_v1_openapi.yaml` is the authority location while alignment remains PENDING ALIGNMENT. |
 | Premature branch protection assumptions | Medium impact because no default branch exists yet | Plan requirements only after default branch exists |
 | Premature dependency scanning configuration | Low to medium impact before dependency files exist | Define expectation only; do not add package files |
-| OpenAPI/Auth/RBAC misalignment | High impact | Alignment remains PENDING ALIGNMENT |
 
 ---
 
@@ -257,5 +272,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "GO / NO-GO|Decision: GO to Backend Repository Governance Bootstrap Review Gate, planning-only|Recommended Next Gate|PENDING ALIGNMENT|must NOT modify henter36/nashir-backend|first commit|does not authorize" docs/nashir_backend_repository_governance_bootstrap_planning_gate.md
+grep -E -n "Authority location|alignment readiness|PENDING ALIGNMENT|Contract authority drift|Premature OpenAPI/Auth/RBAC sequencing|Authority location vs alignment readiness ambiguity|Canonical Carry-Forward Rule|Decision:|Recommended Next Gate|must NOT modify henter36/nashir-backend" docs/nashir_backend_repository_governance_bootstrap_planning_gate.md
 ```
