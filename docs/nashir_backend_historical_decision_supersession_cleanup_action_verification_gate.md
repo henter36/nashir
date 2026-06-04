@@ -100,7 +100,7 @@ authority.
 
 The notice states that it does not authorize backend implementation, API routes,
 SQL migrations, migration runner setup, database config, environment/secrets
-config, ORM models, generated clients, package/dependency files, workflows/CI
+config, ORM, generated clients, package/dependency files, workflows/CI
 execution, deployment config, production readiness, or pilot readiness.
 
 ---
