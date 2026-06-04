@@ -60,7 +60,7 @@ Correct current backend repository state:
 
 - `henter36/nashir-backend` exists.
 - `henter36/nashir-backend` is private.
-- `henter36/nashir-backend` default branch is main.
+- `henter36/nashir-backend` default branch is `main`.
 - `henter36/nashir-backend` has first commit:
   `1d6b897 docs: bootstrap nashir backend governance files`.
 - The first commit is governance-files-only.
@@ -178,7 +178,7 @@ The following are explicitly out of scope:
 
 Do NOT modify docs/nashir_backend_home_decision.md in this planning gate.
 
-Do NOT modify henter36/nashir-backend in this planning gate.
+Do NOT modify `henter36/nashir-backend` in this planning gate.
 
 This planning gate does not authorize backend implementation.
 
@@ -299,5 +299,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "Prerequisite sequencing risk|authority location itself can be resolved|alignment readiness remains PENDING ALIGNMENT|Do NOT modify henter36/nashir-backend|Decision:|Recommended Next Gate|planning-only|1d6b897|governance-files-only" docs/nashir_backend_historical_decision_supersession_cleanup_action_planning_gate.md
+grep -E -n "default branch is `main`|Do NOT modify `henter36/nashir-backend`|Decision:|Recommended Next Gate|planning-only" docs/nashir_backend_historical_decision_supersession_cleanup_action_planning_gate.md
 ```
