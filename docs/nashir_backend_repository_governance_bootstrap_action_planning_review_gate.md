@@ -221,7 +221,7 @@ not be used as an active downstream synchronization authority for backend
 implementation, generated clients, route implementation, permission enforcement,
 migration/runtime work, or deployment decisions.
 
-The Auth/RBAC/Workspace Identity design must be established before defining or modifying the API Contract/OpenAPI.
+When tracking risks in this governance gate, we distinguish between contract drift risk and prerequisite sequencing risk. Contract drift risk means downstream repositories must not redefine, fork, or diverge from henter36/nashir contract authorities. Prerequisite sequencing risk means the Auth/RBAC/Workspace Identity design must be established before defining or modifying the API Contract/OpenAPI so the contract accurately reflects authentication schemes, workspace scoping, permission expectations, and related error semantics. The OpenAPI authority location can be resolved as docs/nashir_v1_openapi.yaml while alignment and content readiness remain PENDING ALIGNMENT until the prerequisite designs are finalized by a later explicit Auth/RBAC/OpenAPI alignment gate.
 
 Contract drift risk: downstream repositories must not redefine, fork, or diverge
 from `henter36/nashir` contract authorities.
