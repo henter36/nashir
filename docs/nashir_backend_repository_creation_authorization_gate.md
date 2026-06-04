@@ -196,6 +196,31 @@ The contract authority remains in `henter36/nashir`.
 
 OpenAPI/Auth/RBAC alignment readiness remains `PENDING ALIGNMENT`.
 
+### Authority Location vs Alignment Readiness
+
+`docs/nashir_v1_openapi.yaml` being the current OpenAPI contract authority is a
+location-and-identity control only.
+
+That authority location is resolved, but it does **not** mean Auth/RBAC/OpenAPI
+alignment is ready.
+
+This gate does not define or modify OpenAPI.
+
+Any future OpenAPI change that affects authentication schemes, workspace
+scoping, permission expectations, or related error semantics requires an
+Auth/RBAC/Workspace Identity alignment gate first.
+
+### Drift Risk vs Prerequisite Design Risk
+
+Contract drift risk is the risk that a backend repository later redefines or
+diverges from the `henter36/nashir` contract authorities.
+
+Prerequisite design sequencing risk is the risk of defining or modifying
+OpenAPI authentication schemes, workspace scoping, or permission expectations
+before Auth/RBAC/Workspace Identity is established or aligned.
+
+These are separate controls.
+
 Generated clients remain blocked.
 
 Backend blockers remain deferred.
@@ -252,4 +277,3 @@ This gate does not authorize SQL migration execution.
 | Backend implementation blockers | Deferred |
 | SQL migration execution blockers | Deferred |
 | Recommended next gate | Backend Repository Creation Action Gate |
-
