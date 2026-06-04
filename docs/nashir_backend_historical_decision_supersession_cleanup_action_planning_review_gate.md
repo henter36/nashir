@@ -15,7 +15,7 @@
 | Contract authority | `henter36/nashir` remains the docs/contracts/governance authority |
 | OpenAPI authority location | `docs/nashir_v1_openapi.yaml` |
 | OpenAPI/Auth/RBAC/Workspace Identity alignment | PENDING ALIGNMENT |
-| Gate execution boundary | Review-only; must NOT modify docs/nashir_backend_home_decision.md, stale historical documents, or henter36/nashir-backend |
+| Gate execution boundary | Review-only; must NOT modify `docs/nashir_backend_home_decision.md`, stale historical documents, or `henter36/nashir-backend` |
 
 ---
 
@@ -28,11 +28,11 @@ This gate reviews the Backend Historical Decision Supersession Cleanup Action
 Planning Gate and decides whether Nashir may proceed to a later explicit cleanup
 action gate.
 
-This review gate must NOT modify docs/nashir_backend_home_decision.md.
+This review gate must NOT modify `docs/nashir_backend_home_decision.md`.
 
 This review gate must NOT modify stale historical documents.
 
-This review gate must NOT modify henter36/nashir-backend.
+This review gate must NOT modify `henter36/nashir-backend`.
 
 This review gate does not authorize backend implementation.
 
@@ -116,7 +116,7 @@ Correct current backend repository state:
 
 - `henter36/nashir-backend` exists.
 - `henter36/nashir-backend` is private.
-- `henter36/nashir-backend` default branch is main.
+- `henter36/nashir-backend` default branch is `main`.
 - `henter36/nashir-backend` has first commit:
   `1d6b897 docs: bootstrap nashir backend governance files`.
 - The first commit is governance-files-only.
@@ -158,7 +158,7 @@ statements that may imply:
 - `nashir-backend` remains deferred
 - future backend governance/planning docs may belong under `marketing-os/docs`
 
-This review gate must NOT modify docs/nashir_backend_home_decision.md.
+This review gate must NOT modify `docs/nashir_backend_home_decision.md`.
 
 This review gate must NOT modify stale historical documents.
 
@@ -206,9 +206,9 @@ This review gate does not authorize SQL contract changes.
 | Premature cleanup execution | This review could be misread as permission to edit `docs/nashir_backend_home_decision.md`. | The next gate may authorize actual documentation-only cleanup action. |
 | Historical rewrite risk | Cleanup could rewrite historical decisions instead of adding a notice. | Preserve Superseded-by notice strategy and historical decision meaning. |
 | Target scope creep | Cleanup could expand to medium/low-risk stale references too early. | Keep `docs/nashir_backend_home_decision.md` as the primary target unless later gates expand scope. |
-| Backend repository modification | Cleanup review could be misread as permission to touch `henter36/nashir-backend`. | This review gate must NOT modify henter36/nashir-backend. |
+| Backend repository modification | Cleanup review could be misread as permission to touch `henter36/nashir-backend`. | This review gate must NOT modify `henter36/nashir-backend`. |
 | Contract drift risk | Downstream repositories could redefine, fork, or diverge from `henter36/nashir` contract authorities. | Preserve `henter36/nashir` as contract authority. |
-| Prerequisite sequencing risk | The API Contract/OpenAPI could be defined or finalized before establishing the Auth/RBAC/Workspace Identity design. | Preserve PENDING ALIGNMENT until a later explicit Auth/RBAC/OpenAPI alignment gate. |
+| Prerequisite sequencing risk | The API Contract/OpenAPI could be defined or finalized before establishing the Auth/RBAC/Workspace Identity design. The authority location itself can be resolved, but alignment readiness remains PENDING ALIGNMENT and must be tracked separately. | Preserve PENDING ALIGNMENT until a later explicit Auth/RBAC/OpenAPI alignment gate. |
 | Active downstream synchronization misuse | OpenAPI authority location could be mistaken for permission to sync backend implementation, clients, routes, permissions, runtime, migrations, or deployment decisions. | Block active downstream synchronization authority usage while alignment remains PENDING ALIGNMENT. |
 
 ---
@@ -301,5 +301,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|review-only|Superseded-by|nashir_backend_home_decision|1d6b897|governance-files-only|PENDING ALIGNMENT|active downstream synchronization authority|does not authorize|must NOT modify docs/nashir_backend_home_decision|must NOT modify henter36/nashir-backend" docs/nashir_backend_historical_decision_supersession_cleanup_action_planning_review_gate.md
+grep -E -n "default branch is `main`|must NOT modify `docs/nashir_backend_home_decision.md`|must NOT modify `henter36/nashir-backend`|Prerequisite sequencing risk|authority location itself can be resolved|alignment readiness remains PENDING ALIGNMENT|Decision:|Recommended Next Gate|review-only|1d6b897|governance-files-only" docs/nashir_backend_historical_decision_supersession_cleanup_action_planning_review_gate.md
 ```
