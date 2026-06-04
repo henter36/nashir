@@ -149,10 +149,7 @@ sequencing risk.
 Contract drift risk: downstream repositories must not redefine, fork, or diverge
 from `henter36/nashir` contract authorities.
 
-Prerequisite sequencing risk: The API Contract/OpenAPI could be defined or
-finalized before establishing the Auth/RBAC/Workspace Identity design. The
-authority location itself can be resolved, but alignment readiness remains
-PENDING ALIGNMENT and must be tracked separately.
+Prerequisite sequencing risk: Defining or finalizing the API Contract/OpenAPI before establishing the Auth/RBAC/Workspace Identity design violates the required design sequence. The Auth/RBAC/Workspace Identity design must be established first to ensure the OpenAPI contract accurately reflects authentication, workspace scoping, permission expectations, and related error semantics. The OpenAPI authority location itself can be resolved, but alignment readiness remains PENDING ALIGNMENT and must be tracked separately.
 
 This action gate does not authorize OpenAPI edits.
 
@@ -272,6 +269,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "Status note:|Superseded-by|1d6b897|henter36/nashir-backend|does not authorize backend implementation|production readiness|pilot readiness" docs/nashir_backend_home_decision.md
-grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|Superseded-by notice applied|PENDING ALIGNMENT|active downstream synchronization authority|does not authorize|Do NOT modify `henter36/nashir-backend`|1d6b897" docs/nashir_backend_historical_decision_supersession_cleanup_action_gate.md
+grep -E -n "Prerequisite sequencing risk|violates the required design sequence|must be established first|authority location itself can be resolved|PENDING ALIGNMENT|Decision:|Recommended Next Gate|does not authorize|1d6b897" docs/nashir_backend_historical_decision_supersession_cleanup_action_gate.md
 ```
