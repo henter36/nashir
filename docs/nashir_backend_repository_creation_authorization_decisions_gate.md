@@ -304,10 +304,10 @@ SQL migration execution remains blocked.
 
 | Contract control | Status | Notes |
 |---|---|---|
-| OpenAPI source of truth | RESOLVED | `docs/nashir_v1_openapi.yaml` remains the API contract authority |
+| OpenAPI source of truth | RESOLVED | `docs/nashir_v1_openapi.yaml` remains the API contract authority; this resolves authority location only and does not resolve Auth/RBAC/Workspace Identity alignment readiness |
 | SQL migration draft source of truth | RESOLVED | SQL schema gates and `.sql.md` drafts remain persistence contract authority |
 | Auth/RBAC/Workspace Identity source of truth | RESOLVED | Auth/RBAC/Workspace Identity gates remain authority for workspace identity, roles, permissions, and guards |
-| Auth/RBAC/Workspace Identity before OpenAPI | STILL PENDING | Lifecycle rule must be preserved before defining/modifying OpenAPI |
+| Auth/RBAC/Workspace Identity before OpenAPI | STILL PENDING | Establishing the Auth/RBAC/Workspace Identity design before defining or modifying the API Contract/OpenAPI, ensuring that the OpenAPI contract accurately reflects authentication schemes, workspace scoping, and permission expectations, remains incomplete |
 | Authentication schemes | STILL PENDING | Must be represented consistently in OpenAPI and future backend auth |
 | Workspace scoping | STILL PENDING | Must be represented consistently in OpenAPI and future backend routes |
 | Permission expectations | STILL PENDING | Must be represented consistently in OpenAPI and future backend guards |
