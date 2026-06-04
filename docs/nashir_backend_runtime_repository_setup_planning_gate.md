@@ -268,5 +268,5 @@ deployment, or tests are added.
 ```bash
 git status --short
 git diff --stat
-grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|planning-only|Runtime Repository Setup Planning Review Gate|TypeScript|Node.js|Fastify|pnpm|Zod|PostgreSQL|node-postgres|pg|DEFERRED|BLOCKED|PENDING ALIGNMENT|active downstream synchronization authority|does not authorize|must NOT modify `henter36/nashir-backend`|package.json|pnpm-lock|package files|TypeScript config|source files|tests|API routes|SQL migrations|deployment config" docs/nashir_backend_runtime_repository_setup_planning_gate.md
+grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|planning-only|Runtime Repository Setup Planning Review Gate|TypeScript|Node.js|Fastify|pnpm|Zod|PostgreSQL|node-postgres|pg|DEFERRED|BLOCKED|PENDING ALIGNMENT|active downstream synchronization authority|does not authorize|must NOT modify \`henter36/nashir-backend\`|package.json|pnpm-lock|package files|TypeScript config|source files|tests|API routes|SQL migrations|deployment config" docs/nashir_backend_runtime_repository_setup_planning_gate.md
 ```
