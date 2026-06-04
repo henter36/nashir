@@ -230,10 +230,10 @@ These items block execution, not empty governed repository creation.
 
 | Contract control | Status | Notes |
 |---|---|---|
-| OpenAPI source of truth | RESOLVED | `docs/nashir_v1_openapi.yaml` remains the API contract authority; this resolves authority location only and does not resolve Auth/RBAC/Workspace Identity alignment readiness |
+| OpenAPI authority location | RESOLVED | `docs/nashir_v1_openapi.yaml` remains the current API contract authority; this resolves authority location only and does not resolve Auth/RBAC/Workspace Identity alignment readiness |
 | SQL migration draft source of truth | RESOLVED | SQL schema gates and `.sql.md` drafts remain persistence contract authority |
 | Auth/RBAC/Workspace Identity source of truth | RESOLVED | Auth/RBAC/Workspace Identity gates remain authority for workspace identity, roles, permissions, and guards |
-| Auth/RBAC/Workspace Identity before OpenAPI | STILL PENDING | Establishing the Auth/RBAC/Workspace Identity design before defining or modifying the API Contract/OpenAPI, ensuring that the OpenAPI contract accurately reflects authentication schemes, workspace scoping, and permission expectations, remains incomplete |
+| OpenAPI/Auth/RBAC alignment readiness | PENDING ALIGNMENT | Auth/RBAC/Workspace Identity design must be established before defining or modifying the API Contract/OpenAPI, ensuring that OpenAPI accurately reflects authentication schemes, workspace scoping, and permission expectations |
 | Authentication schemes | STILL PENDING | Must be represented consistently in OpenAPI and future backend auth |
 | Workspace scoping | STILL PENDING | Must be represented consistently in OpenAPI and future backend routes |
 | Permission expectations | STILL PENDING | Must be represented consistently in OpenAPI and future backend guards |
@@ -309,6 +309,7 @@ SQL migration execution remains blocked.
 | Migration runner introduced too early | HIGH | Migration execution decisions remain blocked |
 | Database config leakage | CRITICAL | Database config remains a blocked execution prerequisite |
 | Secrets leakage | CRITICAL | Secrets model and environment/secrets config remain blocked execution prerequisites |
+| OpenAPI defined before Auth/RBAC/Workspace Identity | HIGH | Defining or modifying the OpenAPI contract before establishing Auth/RBAC/Workspace Identity can produce incorrect authentication schemes, workspace scoping, and permission expectations |
 | OpenAPI/SQL/Auth/RBAC contract drift | HIGH | Contract sync workflow must be decided before creation authorization and fully defined before implementation |
 | Execution readiness falsely implied | CRITICAL | This gate does not imply backend or migration readiness |
 
