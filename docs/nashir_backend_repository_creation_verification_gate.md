@@ -319,5 +319,4 @@ The following commands were used to verify the repository-only creation result:
 - `gh repo view henter36/nashir-backend --json nameWithOwner,visibility,isPrivate,url,defaultBranchRef`
 - `git status --short`
 - `git diff --stat`
-- `grep -n "GO / NO-GO\\|Decision:\\|Recommended Next Gate\\|repository-only\\|size: 0\\|PENDING ALIGNMENT\\|does not authorize" docs/nashir_backend_repository_creation_verification_gate.md`
-
+- `grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|repository-only|size: 0|PENDING ALIGNMENT|does not authorize" docs/nashir_backend_repository_creation_verification_gate.md`
