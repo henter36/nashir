@@ -251,7 +251,7 @@ No authorization model is implemented in tooling or repository settings here.
 | OpenAPI source of truth | `docs/nashir_v1_openapi.yaml` remains API contract authority until a later contract ownership gate changes it |
 | SQL migration draft contract source of truth | SQL schema gates and `docs/migration_contracts/*.sql.md` remain persistence contract authority; `.sql.md` drafts remain non-executable |
 | Auth/RBAC/Workspace Identity source of truth | Auth/RBAC/Workspace Identity gates remain authority for workspace identity, roles, permissions, and guards |
-| OpenAPI alignment with Auth/RBAC/Workspace Identity design | Future authorization must verify OpenAPI reflects Auth/RBAC/Workspace Identity design before backend implementation |
+| OpenAPI alignment with Auth/RBAC/Workspace Identity design | Establish the Auth/RBAC/Workspace Identity design before defining or modifying the API Contract/OpenAPI, ensuring that the OpenAPI contract accurately reflects authentication schemes, workspace scoping, and permission expectations |
 | Authentication schemes | Future sync review must verify OpenAPI security schemes match Auth/RBAC expectations |
 | Workspace scoping | Future sync review must verify workspace-scoped routes, identifiers, and tenant boundaries align with Auth/RBAC design |
 | Permission expectations | Future sync review must verify endpoint permissions and guard expectations are represented or linked clearly |
