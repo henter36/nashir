@@ -255,9 +255,16 @@ sequencing risk.
 Contract drift risk: downstream repositories must not redefine, fork, or diverge
 from `henter36/nashir` contract authorities.
 
-Prerequisite sequencing risk: OpenAPI changes affecting authentication schemes,
-workspace scoping, permission expectations, or related error semantics require a
-later explicit Auth/RBAC/OpenAPI alignment gate first.
+Prerequisite sequencing risk: The Auth/RBAC/Workspace Identity design must be
+established before defining or finalizing the OpenAPI contract, ensuring that
+the OpenAPI contract accurately reflects authentication schemes, workspace
+scoping, permission expectations, and related error semantics. This risk is
+separate from contract drift risk: downstream repositories must not redefine,
+fork, or diverge from henter36/nashir contract authorities. The authority
+location of the contract can be resolved as docs/nashir_v1_openapi.yaml, but its
+alignment and content readiness with dependent designs such as
+Auth/RBAC/Workspace Identity remain PENDING ALIGNMENT and must be tracked
+separately.
 
 This planning gate does not authorize OpenAPI edits.
 
@@ -325,5 +332,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|planning-only|Superseded-by|nashir_backend_home_decision|PENDING ALIGNMENT|active downstream synchronization authority|does not authorize|must not modify henter36/nashir-backend|first commit" docs/nashir_backend_historical_decision_supersession_cleanup_planning_gate.md
+grep -E -n "Prerequisite sequencing risk|contract drift risk|authority location|alignment and content readiness|PENDING ALIGNMENT|active downstream synchronization authority|Decision:|Recommended Next Gate|planning-only|does not authorize|first commit" docs/nashir_backend_historical_decision_supersession_cleanup_planning_gate.md
 ```
