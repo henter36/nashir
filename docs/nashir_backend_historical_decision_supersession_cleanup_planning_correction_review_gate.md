@@ -138,8 +138,7 @@ Review findings:
 - the correction gate does not modify `henter36/nashir-backend`
 - the correction gate does not authorize backend implementation or runtime work
 - the correction gate preserves OpenAPI/Auth/RBAC PENDING ALIGNMENT
-- the correction gate preserves the active downstream synchronization authority
-  block
+- the correction gate preserves the active downstream synchronization authority restriction
 
 ---
 
@@ -188,9 +187,13 @@ sequencing risk.
 Contract drift risk: downstream repositories must not redefine, fork, or diverge
 from `henter36/nashir` contract authorities.
 
-Prerequisite sequencing risk: Auth/RBAC/Workspace Identity must be established
-before defining or finalizing OpenAPI behavior affecting authentication schemes,
-workspace scoping, permission expectations, or related error semantics.
+Prerequisite sequencing risk: Distinguish between contract drift risk and the
+risk of defining or finalizing the API Contract/OpenAPI before establishing the
+prerequisite Auth/RBAC/Workspace Identity design. The OpenAPI contract must
+accurately reflect authentication schemes, workspace scoping, permission
+expectations, and related error semantics. The OpenAPI authority location itself
+can be resolved, but alignment readiness with Auth/RBAC/Workspace Identity
+remains PENDING ALIGNMENT and must be tracked separately.
 
 This review gate does not authorize OpenAPI edits.
 
@@ -209,7 +212,7 @@ This review gate does not authorize SQL contract changes.
 | Premature cleanup execution | This review could be misread as permission to edit stale documents. | The next gate may plan cleanup only; a later explicit action gate is required. |
 | Backend repository modification | This review could be misread as permission to touch the backend repository. | This review gate must NOT modify henter36/nashir-backend. |
 | Contract drift risk | Downstream repositories could redefine, fork, or diverge from `henter36/nashir` contract authorities. | Preserve `henter36/nashir` as contract authority. |
-| Prerequisite sequencing risk | OpenAPI behavior affecting authentication, workspace scoping, permissions, or errors could be finalized before Auth/RBAC/Workspace Identity. | Preserve PENDING ALIGNMENT until a later explicit alignment gate. |
+| Prerequisite sequencing risk | Risk: The API Contract/OpenAPI could be defined or finalized before establishing the Auth/RBAC/Workspace Identity design. The authority location itself can be resolved, but alignment readiness remains PENDING ALIGNMENT. | Mitigation: Preserve PENDING ALIGNMENT until a later explicit Auth/RBAC/OpenAPI alignment gate. |
 | Active downstream synchronization misuse | OpenAPI authority location could be mistaken for permission to sync backend implementation, clients, routes, permissions, runtime, migrations, or deployment decisions. | Block active downstream synchronization authority usage while alignment remains PENDING ALIGNMENT. |
 
 ---
@@ -282,5 +285,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|review-only|1d6b897|governance-files-only|no longer empty|PENDING ALIGNMENT|active downstream synchronization authority|does not authorize|must NOT modify docs/nashir_backend_home_decision|must NOT modify henter36/nashir-backend" docs/nashir_backend_historical_decision_supersession_cleanup_planning_correction_review_gate.md
+grep -E -n "active downstream synchronization authority restriction|Prerequisite sequencing risk|contract drift risk|authority location itself can be resolved|alignment readiness remains PENDING ALIGNMENT|Decision:|Recommended Next Gate|review-only|1d6b897|governance-files-only|does not authorize" docs/nashir_backend_historical_decision_supersession_cleanup_planning_correction_review_gate.md
 ```
