@@ -124,7 +124,13 @@ Identity alignment readiness is resolved.
 
 OpenAPI/Auth/RBAC/Workspace Identity alignment remains PENDING ALIGNMENT.
 
-While alignment readiness remains PENDING ALIGNMENT, the OpenAPI contract must not be used as an active downstream synchronization authority for backend implementation, generated clients, route implementation, permission enforcement, migration/runtime work, or deployment decisions.
+While the location of the contract authority is resolved, its alignment readiness remains PENDING ALIGNMENT
+with dependent designs, such as Auth/RBAC/Workspace Identity.
+Consequently, the OpenAPI contract must
+not be used as an active downstream synchronization authority for backend
+implementation, generated clients, route implementation, permission
+enforcement, migration/runtime work, or deployment decisions until
+alignment is established.
 
 Future gates must distinguish contract drift risk from prerequisite design
 sequencing risk.
