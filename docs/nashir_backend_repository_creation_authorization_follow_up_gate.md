@@ -250,7 +250,7 @@ These controls remain future requirements and are not implemented by this gate.
 | OpenAPI source of truth | RESOLVED | `docs/nashir_v1_openapi.yaml` remains the API contract authority |
 | SQL migration draft contract source of truth | RESOLVED | SQL schema gates and `.sql.md` drafts remain persistence contract authority |
 | Auth/RBAC/Workspace Identity source of truth | RESOLVED | Auth/RBAC/Workspace Identity gates remain authority for workspace identity, roles, permissions, and guards |
-| Auth/RBAC/Workspace Identity before OpenAPI | RESOLVED | Establish the Auth/RBAC/Workspace Identity design before defining or modifying the API Contract/OpenAPI |
+| Auth/RBAC/Workspace Identity before OpenAPI | RESOLVED | Establish the Auth/RBAC/Workspace Identity design before defining or modifying the API Contract/OpenAPI, ensuring that the OpenAPI contract accurately reflects authentication schemes, workspace scoping, and permission expectations |
 | Authentication schemes | STILL PENDING | Future OpenAPI sync must match security schemes and auth semantics |
 | Workspace scoping | STILL PENDING | Future OpenAPI sync must match tenant boundaries and workspace identifiers |
 | Permission expectations | STILL PENDING | Future OpenAPI sync must match endpoint permission and guard expectations |
