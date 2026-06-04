@@ -164,8 +164,17 @@ distinguish contract authority location from alignment readiness.
 Contract authority location: `docs/nashir_v1_openapi.yaml` is the current
 OpenAPI authority location.
 
-The authority location itself can be resolved even if alignment readiness with
-the Auth/RBAC/Workspace Identity design remains pending.
+The OpenAPI authority location is resolved as `docs/nashir_v1_openapi.yaml`, but
+this does not mean OpenAPI/Auth/RBAC/Workspace Identity alignment readiness is
+resolved. While alignment readiness remains PENDING ALIGNMENT, the contract must
+not be used as an active downstream synchronization authority for backend
+implementation, generated clients, route implementation, permission enforcement,
+or migration/runtime work. Future gates must distinguish contract drift risk
+from prerequisite design sequencing risk: downstream repositories must not
+diverge from `henter36/nashir` contract authorities, and OpenAPI changes
+affecting authentication schemes, workspace scoping, permission expectations, or
+related error semantics must wait for a later explicit Auth/RBAC/OpenAPI
+alignment gate.
 
 Alignment readiness: OpenAPI/Auth/RBAC/Workspace Identity remains PENDING
 ALIGNMENT unless a later explicit alignment gate changes it.
@@ -173,9 +182,9 @@ ALIGNMENT unless a later explicit alignment gate changes it.
 Contract drift risk: downstream repositories must not redefine, fork, or diverge
 from `henter36/nashir` contract authorities.
 
-Prerequisite sequencing risk: OpenAPI changes affecting authentication schemes,
-workspace scoping, permission expectations, or related error semantics require
-prior Auth/RBAC/Workspace Identity alignment.
+Prerequisite design sequencing risk: OpenAPI changes affecting authentication
+schemes, workspace scoping, permission expectations, or related error semantics
+require prior Auth/RBAC/Workspace Identity alignment.
 
 This review gate does not authorize OpenAPI edits.
 
@@ -191,9 +200,9 @@ This review gate does not authorize SQL contract changes.
 |---|---|---|
 | Accidental backend implementation | No backend implementation is authorized by the planning gate. | Backend implementation remains blocked. |
 | Accidental first commit | The planning gate identifies first commit risk and preserves the empty repository state. | A later explicit action gate is required before any first commit. |
-| Contract drift risk | Downstream repository content could redefine, fork, or diverge from `henter36/nashir` contract authorities. | Use only a planned pinned commit, tag, or approved snapshot reference model. |
-| Prerequisite sequencing risk | OpenAPI authentication schemes, workspace scoping, permission expectations, or related error semantics could be changed before Auth/RBAC/Workspace Identity alignment. | Require a later explicit Auth/RBAC/OpenAPI alignment gate before such changes. |
-| Authority location vs alignment readiness ambiguity | Readers could confuse resolved OpenAPI authority location with resolved alignment readiness. | State that `docs/nashir_v1_openapi.yaml` is the authority location while alignment remains PENDING ALIGNMENT. |
+| Contract drift risk | Risk: downstream repository content could redefine, fork, or diverge from `henter36/nashir` contract authorities. | Mitigation: use only a planned pinned commit, tag, or approved snapshot reference model. |
+| Prerequisite design sequencing risk | Risk: OpenAPI authentication schemes, workspace scoping, permission expectations, or related error semantics could be changed before Auth/RBAC/Workspace Identity alignment. | Mitigation: require a later explicit Auth/RBAC/OpenAPI alignment gate before such changes. |
+| Authority location vs active synchronization authority ambiguity | Risk: readers may confuse resolved authority location with permission to use the OpenAPI contract as an active downstream synchronization source while alignment is still pending. | Mitigation: preserve PENDING ALIGNMENT and block backend implementation, generated clients, route implementation, permission enforcement, and runtime synchronization until a later explicit alignment gate. |
 | Premature branch protection assumptions | Branch protection cannot be fully applied until a default branch exists. | Plan only until a default branch and explicit action gate exist. |
 | Premature dependency scanning assumptions | Dependency scanning expectations can be planned before package files exist. | Do not add package or dependency files in this gate. |
 
@@ -268,5 +277,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "GO / NO-GO|Decision:|Recommended Next Gate|review-only|PENDING ALIGNMENT|authority location itself can be resolved|Contract drift|Prerequisite sequencing|must NOT modify henter36/nashir-backend|first commit|does not authorize" docs/nashir_backend_repository_governance_bootstrap_review_gate.md
+grep -E -n "active downstream synchronization authority|PENDING ALIGNMENT|Contract drift risk|Prerequisite design sequencing risk|Authority location vs active synchronization authority ambiguity|Decision:|Recommended Next Gate|must NOT modify henter36/nashir-backend" docs/nashir_backend_repository_governance_bootstrap_review_gate.md
 ```
