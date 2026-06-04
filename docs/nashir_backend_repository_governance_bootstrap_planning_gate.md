@@ -193,7 +193,7 @@ This planning gate does not authorize Auth/RBAC changes.
 This planning gate does not authorize SQL contract changes.
 
 Any later governance bootstrap review must preserve the PENDING ALIGNMENT status
-unless a separate explicit alignment gate changes it.
+unless a separate explicit alignment gate changes it. Note that the authority location itself can be resolved even if alignment readiness with the Auth/RBAC/Workspace Identity design remains pending.
 
 ### Canonical Carry-Forward Rule
 
