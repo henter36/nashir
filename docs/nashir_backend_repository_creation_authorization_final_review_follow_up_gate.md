@@ -391,7 +391,7 @@ gate after the remaining prerequisites are resolved.
 | Inputs | Final review gate, prior follow-up review/gate, authorization review/gate, planning/setup gates, decision/review gates, boundary review, OpenAPI, Auth/RBAC/Workspace Identity, SQL schema, and draft migration contracts |
 | Outputs | Documentation-only follow-up gate classifying the final-review NO-GO blockers as still pending or deferred |
 | Remaining gaps | Repository name, owner/org, visibility, access model, branch protection, required reviewers, contract sync workflow, enum re-verification, PostgreSQL UUID verification, Draft 004 roles, runner, executable path, database config, secrets model, dry-run/parse tooling, and credential verification |
-| Decision required before next phase | Decide whether to perform a correction review gate or resolve prerequisites before any separate creation authorization gate |
+| Decision required before next phase | Proceed with the Correction Review Gate as the next step |
 | Recommended next gate | Backend Repository Creation Authorization Correction Review Gate |
 
 ---
