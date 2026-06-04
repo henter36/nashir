@@ -189,9 +189,7 @@ sequencing risk.
 Contract drift risk: downstream repositories must not redefine, fork, or diverge
 from `henter36/nashir` contract authorities.
 
-Prerequisite sequencing risk: OpenAPI changes affecting authentication schemes,
-workspace scoping, permission expectations, or related error semantics require a
-later explicit Auth/RBAC/OpenAPI alignment gate first.
+Prerequisite sequencing risk: The Auth/RBAC/Workspace Identity design must be established before defining or modifying the OpenAPI contract to ensure it accurately reflects authentication schemes, workspace scoping, permission expectations, and related error semantics, requiring a later explicit Auth/RBAC/OpenAPI alignment gate first.
 
 This planning gate does not authorize OpenAPI edits.
 
@@ -233,7 +231,7 @@ The following items are explicitly out of scope for this planning gate:
 | Accidental repository modification | Any change to `henter36/nashir-backend` would exceed this planning gate. | This planning gate must NOT modify henter36/nashir-backend. |
 | Governance scope creep | Candidate governance files could expand into workflows, config, package files, or source files. | Plan governance candidates only; execute nothing in this gate. |
 | Contract drift risk | Downstream repositories could redefine, fork, or diverge from `henter36/nashir` contract authorities. | Use only a pinned commit, tag, or approved snapshot reference model in later planning. |
-| Prerequisite sequencing risk | OpenAPI authentication schemes, workspace scoping, permission expectations, or related error semantics could change before Auth/RBAC/Workspace Identity alignment. | Require a later explicit Auth/RBAC/OpenAPI alignment gate first. |
+| Prerequisite sequencing risk | OpenAPI authentication schemes, workspace scoping, permission expectations, or related error semantics could be defined or modified before establishing the Auth/RBAC/Workspace Identity design. | Establish the Auth/RBAC/Workspace Identity design before defining or modifying the API Contract/OpenAPI, requiring a later explicit Auth/RBAC/OpenAPI alignment gate first. |
 | Active downstream synchronization misuse | Resolved OpenAPI authority location could be mistaken for permission to sync into backend implementation, generated clients, routes, permissions, runtime, migrations, or deployment decisions. | Preserve PENDING ALIGNMENT and block active downstream synchronization authority usage. |
 | Premature implementation readiness | Governance planning could be misread as production or pilot readiness. | This gate does not authorize production or pilot readiness. |
 
