@@ -212,8 +212,13 @@ The following conditions are the basis for a repository-only creation action:
 The identity and governance prerequisites are sufficiently resolved for a
 repository-only creation action.
 
-OpenAPI/Auth/RBAC alignment readiness remains pending and does not block
-creating the empty private repository.
+OpenAPI authority location is resolved by `docs/nashir_v1_openapi.yaml`.
+
+That authority location being resolved does **not** mean
+OpenAPI/Auth/RBAC/Workspace Identity alignment readiness is resolved.
+
+OpenAPI/Auth/RBAC alignment readiness remains `PENDING ALIGNMENT` and does not
+block creating the empty private repository.
 
 Generated clients remain blocked.
 
@@ -275,6 +280,14 @@ This repository-only action does not resolve OpenAPI/Auth/RBAC alignment.
 
 This repository-only action does not define or modify OpenAPI authentication
 schemes, workspace scoping, permission expectations, or related error semantics.
+
+Contract drift risk is the risk that the backend repository later redefines,
+forks, or diverges from the `henter36/nashir` contract authorities.
+
+Prerequisite design sequencing risk is the risk of defining or modifying
+OpenAPI authentication schemes, workspace scoping, permission expectations, or
+related error semantics before Auth/RBAC/Workspace Identity is established or
+aligned through a later gate.
 
 Any future OpenAPI change affecting those areas requires an
 Auth/RBAC/Workspace Identity alignment gate first.
@@ -346,8 +359,6 @@ This gate does not authorize production or pilot readiness.
 ---
 
 ## 13. Recommended Next Step
-
-**Backend Repository Creation Action Gate**
 
 **Explicit Repository-Only Creation Command for `henter36/nashir-backend`**
 
