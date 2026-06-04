@@ -265,7 +265,7 @@ Governance remains future work and does not support creation authorization yet.
 | OpenAPI source of truth | RESOLVED | `docs/nashir_v1_openapi.yaml` remains the API contract authority |
 | SQL migration draft source of truth | RESOLVED | SQL schema gates and `.sql.md` drafts remain persistence contract authority |
 | Auth/RBAC/Workspace Identity source of truth | RESOLVED | Auth/RBAC/Workspace Identity gates remain authority for workspace identity, roles, permissions, and guards |
-| Auth/RBAC/Workspace Identity before OpenAPI | STILL PENDING | Final review says the OpenAPI contract accurately reflecting auth schemes, workspace scoping, and permission expectations remains incomplete |
+| Auth/RBAC/Workspace Identity before OpenAPI | STILL PENDING | Establishing the Auth/RBAC/Workspace Identity design before defining the API Contract/OpenAPI, ensuring that the OpenAPI contract accurately reflects authentication schemes, workspace scoping, and permission expectations, remains incomplete |
 | Authentication schemes | STILL PENDING | Final review keeps security scheme alignment pending |
 | Workspace scoping | STILL PENDING | Final review keeps tenant boundary alignment pending |
 | Permission expectations | STILL PENDING | Final review keeps endpoint permission alignment pending |
