@@ -107,7 +107,7 @@ SQL Migration Execution Gate remains blocked.
 | `docs/nashir_backend_repository_creation_authorization_review_gate.md` | Authorization review source |
 | `docs/nashir_backend_repository_creation_authorization_planning_gate.md` | Authorization planning source |
 | `docs/nashir_backend_repository_creation_setup_review_gate.md` | Setup review source |
-| `docs/nashir_backend_repository_creation_review_setup_planning_gate.md` | Setup planning source |
+| `docs/nashir_backend_repository_creation_review_setup_planning_gate.md` | Review/setup planning gate source |
 | `docs/nashir_backend_repository_creation_decision_review_gate.md` | Creation decision review source |
 | `docs/nashir_backend_repository_creation_decision_gate.md` | Creation direction decision source |
 | `docs/nashir_backend_repository_creation_planning_review_gate.md` | Creation planning review source |
