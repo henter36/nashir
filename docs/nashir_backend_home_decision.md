@@ -12,6 +12,24 @@
 
 ---
 
+## Status Note
+
+Status note:
+
+Superseded-by:
+
+This document is a historical backend-home decision. Its backend repository
+status has been superseded by later backend repository creation, governance
+bootstrap, and verification gates. `henter36/nashir-backend` now exists as the
+designated private backend repository with governance-files-only first commit
+`1d6b897`. `henter36/nashir` remains the docs/contracts/governance authority.
+This notice does not authorize backend implementation, API routes, SQL
+migrations, migration runner setup, database config, environment/secrets config,
+ORM models, generated clients, package/dependency files, workflows/CI execution,
+deployment config, production readiness, or pilot readiness.
+
+---
+
 ## 1. Status and Scope
 
 This is a backend home decision document only.
