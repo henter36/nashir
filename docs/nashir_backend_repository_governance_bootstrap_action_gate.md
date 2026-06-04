@@ -218,7 +218,12 @@ not be used as an active downstream synchronization authority for backend
 implementation, generated clients, route implementation, permission enforcement,
 migration/runtime work, or deployment decisions.
 
-When tracking risks in this governance gate, we distinguish between contract drift risk and prerequisite sequencing risk. Contract drift risk means downstream repositories must not redefine, fork, or diverge from henter36/nashir contract authorities. Prerequisite sequencing risk means the Auth/RBAC/Workspace Identity design must be established before defining or modifying the API Contract/OpenAPI so the contract accurately reflects authentication schemes, workspace scoping, permission expectations, and related error semantics. The OpenAPI authority location can be resolved as docs/nashir_v1_openapi.yaml while alignment and content readiness remain PENDING ALIGNMENT until the prerequisite designs are finalized by a later explicit Auth/RBAC/OpenAPI alignment gate.
+When tracking risks in this governance gate, we distinguish between contract drift risk and prerequisite sequencing risk:
+
+- Contract drift risk: downstream repositories must not redefine, fork, or diverge from henter36/nashir contract authorities.
+- Prerequisite sequencing risk: the Auth/RBAC/Workspace Identity design must be established before defining or modifying the API Contract/OpenAPI so the contract accurately reflects authentication schemes, workspace scoping, permission expectations, and related error semantics.
+
+The OpenAPI authority location can be resolved as docs/nashir_v1_openapi.yaml while alignment and content readiness remain PENDING ALIGNMENT until the prerequisite designs are finalized by a later explicit Auth/RBAC/OpenAPI alignment gate.
 
 This gate does not authorize OpenAPI edits.
 
@@ -286,5 +291,5 @@ Run from the `henter36/nashir` working tree:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "Decision:|Recommended Next Step: Explicit Repository Governance Bootstrap Execution Command for henter36/nashir-backend, governance-files-only|governance-files-only|PENDING ALIGNMENT|contract drift risk|prerequisite sequencing risk|must NOT modify henter36/nashir-backend|must NOT create|first commit|does not authorize" docs/nashir_backend_repository_governance_bootstrap_action_gate.md
+grep -E -n "When tracking risks|Contract drift risk|Prerequisite sequencing risk|OpenAPI authority location can be resolved|Decision:|Recommended Next Step|governance-files-only|PENDING ALIGNMENT|must NOT modify henter36/nashir-backend|first commit|does not authorize" docs/nashir_backend_repository_governance_bootstrap_action_gate.md
 ```
