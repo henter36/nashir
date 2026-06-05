@@ -187,37 +187,35 @@ path is:
 
 ## 10. Explicit Non-Authorization Boundary
 
-This planning gate must NOT modify `henter36/nashir-backend`.
-This planning gate must NOT add backend implementation.
-This planning gate must NOT authorize product API routes.
-This planning gate must NOT authorize workspace-scoped routes.
-This planning gate must NOT authorize SQL migrations.
-This planning gate must NOT authorize migration runner setup.
-This planning gate must NOT authorize database config.
-This planning gate must NOT authorize environment/secrets config with real
-values.
-This planning gate must NOT authorize ORM.
-This planning gate must NOT authorize generated clients.
-This planning gate must NOT authorize deployment config.
-This planning gate must NOT authorize CI workflows.
-This planning gate must NOT authorize production readiness.
-This planning gate must NOT authorize pilot readiness.
-This planning gate must NOT change OpenAPI/Auth/RBAC/SQL contracts.
+This planning gate does not authorize, and must NOT modify or add, any of the
+following:
 
-This planning gate does not authorize backend implementation.
-This planning gate does not authorize product API routes.
-This planning gate does not authorize workspace-scoped routes.
-This planning gate does not authorize SQL migrations.
-This planning gate does not authorize migration runner setup.
-This planning gate does not authorize database config.
-This planning gate does not authorize environment/secrets config with real
-values.
-This planning gate does not authorize ORM.
-This planning gate does not authorize generated clients.
-This planning gate does not authorize deployment config.
-This planning gate does not authorize CI workflows.
-This planning gate does not authorize production readiness.
-This planning gate does not authorize pilot readiness.
+- `henter36/nashir-backend`
+- backend implementation
+- product API routes
+- workspace-scoped routes
+- business routes
+- controllers
+- services
+- repositories
+- database connection execution
+- SQL migrations
+- migration runner setup
+- database config
+- environment/secrets config with real values
+- ORM or query layer
+- auth implementation
+- generated clients
+- deployment config
+- CI workflows
+- production readiness
+- pilot readiness
+- OpenAPI/Auth/RBAC/SQL contract alignment or content readiness
+
+Authority clarification: Resolving the location or identity of the contract
+authority is permitted and already tracked separately, but alignment readiness
+remains PENDING ALIGNMENT and is not authorized for modification in this
+planning gate.
 
 ---
 
