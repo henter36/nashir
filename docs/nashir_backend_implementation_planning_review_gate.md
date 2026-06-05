@@ -188,7 +188,7 @@ following:
 - migration runner setup
 - database config
 - environment/secrets config with real values
-- ORM or query layer
+- ORM/query layer
 - auth implementation
 - generated clients
 - deployment config
