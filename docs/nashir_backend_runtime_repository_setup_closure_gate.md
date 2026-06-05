@@ -184,7 +184,8 @@ diverge from `henter36/nashir` contract authorities.
 Prerequisite sequencing risk: Defining or finalizing the API Contract/OpenAPI
 before establishing the Auth/RBAC/Workspace Identity design violates the
 required design sequence. The Auth/RBAC/Workspace Identity design must be
-established first.
+established first, ensuring that the OpenAPI contract accurately reflects
+authentication schemes, workspace scoping, and permission expectations.
 
 ---
 
