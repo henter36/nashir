@@ -254,5 +254,5 @@ Recommended Next Gate: Backend Runtime Repository Setup Closure Gate.
 ```bash
 git status --short
 git diff --stat
-grep -E -n 'GO / NO-GO|Decision:|Recommended Next Gate|review-only|Setup Closure Gate|7db0dd6|runtime skeleton|/health|PENDING ALIGNMENT|active downstream synchronization authority|DATABASE_URL|placeholder|real secrets|does not authorize|must NOT modify `henter36/nashir-backend`|product API routes|workspace-scoped routes|SQL migrations|migration runner|ORM|generated clients|deployment config|production|pilot' docs/nashir_backend_runtime_repository_setup_execution_review_gate.md
+grep -E -n 'GO / NO-GO|Decision:|Recommended Next Gate|review-only|Setup Closure Gate|7db0dd6|runtime skeleton|/health|PENDING ALIGNMENT|active downstream synchronization authority|DATABASE_URL|placeholder|real secrets|does not authorize|must NOT modify|product API routes|workspace-scoped routes|SQL migrations|migration runner|ORM|generated clients|deployment config|production|pilot' docs/nashir_backend_runtime_repository_setup_execution_review_gate.md
 ```
