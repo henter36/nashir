@@ -23,7 +23,7 @@ execution verification and execution review gates confirmed the
 repository-setup-only runtime skeleton in `henter36/nashir-backend`.
 
 This closure gate is documentation-only. This closure gate must NOT modify
-henter36/nashir-backend.
+`henter36/nashir-backend`.
 
 ---
 
@@ -250,7 +250,7 @@ SQL migrations, migration runner setup, database config, environment/secrets
 config with real values, ORM, generated clients, deployment config, CI
 workflows, production readiness, or pilot readiness.
 
-This closure gate must NOT modify henter36/nashir-backend.
+This closure gate must NOT modify `henter36/nashir-backend`.
 
 ---
 
@@ -265,5 +265,5 @@ Recommended Next Gate: Backend Implementation Planning Gate.
 ```bash
 git status --short
 git diff --stat
-grep -E -n 'GO / NO-GO|Decision:|Recommended Next Gate|sequence closed|Backend Implementation Planning Gate|7db0dd6|runtime skeleton|/health|DATABASE_URL|placeholder|PENDING ALIGNMENT|active downstream synchronization authority|DEFERRED|BLOCKED|does not authorize|must NOT modify henter36/nashir-backend|product API routes|workspace-scoped routes|SQL migrations|migration runner|ORM|generated clients|deployment config|production|pilot' docs/nashir_backend_runtime_repository_setup_closure_gate.md
+grep -E -n 'GO / NO-GO|Decision:|Recommended Next Gate|sequence closed|Backend Implementation Planning Gate|7db0dd6|runtime skeleton|/health|DATABASE_URL|placeholder|PENDING ALIGNMENT|active downstream synchronization authority|DEFERRED|BLOCKED|does not authorize|must NOT modify|product API routes|workspace-scoped routes|SQL migrations|migration runner|ORM|generated clients|deployment config|production|pilot' docs/nashir_backend_runtime_repository_setup_closure_gate.md
 ```
