@@ -247,6 +247,64 @@ Permission groups define logical authorization boundaries. Implementation uses d
 - `integration_credentials.manage` is V1 in concept but deferred until IntegrationCredential entity is implemented.
 - Any permission group not listed here (SSO, billing, SCIM, policy engine) is Post-V1.
 
+### Authoritative permission mapping decisions for alignment correction
+
+The approved 24 permission groups above remain the complete authoritative V1
+permission vocabulary unless a separately authorized Auth/RBAC amendment
+changes them. Canonical OpenAPI/backend codes use `nashir.` followed by the
+permission group exactly as written.
+
+The following direct mappings are established:
+
+| Operation action | Canonical permission code |
+|---|---|
+| Product read / manage | `nashir.products.read` / `nashir.products.manage` |
+| Asset read / manage, including link-product | `nashir.assets.read` / `nashir.assets.manage` |
+| Store profile read / update | `nashir.store_profile.read` / `nashir.store_profile.update` |
+| Content read | `nashir.content.read` |
+| Content create, update, submit-review, archive, or creator withdrawal | `nashir.content.manage` |
+| Content approve or reject | `nashir.content.approve` |
+
+No backend-local or OpenAPI-local permission may be invented. Permission
+mappings for workflow readiness, model routing, prompt governance, Creator
+Studio, or any other family without an approved permission group remain
+unresolved and require a follow-up Auth/RBAC decision. Their existing OpenAPI
+route families must be preserved pending that decision; their presence does not
+authorize implementation or generated clients.
+
+### Content authorization and unresolved route-family overlap
+
+The content authorization model is established independently of route-family
+selection:
+
+- `content.read` authorizes content item, draft, approval-history, and
+  preview-artifact reads.
+- `content.manage` authorizes content item/draft/preview-artifact creation and
+  updates, submit-review, archive, and creator withdrawal.
+- `content.approve` authorizes reviewer/admin/owner approval and rejection.
+- Self-approval remains forbidden; creator withdrawal and reviewer rejection
+  remain distinct actions.
+
+The `/workspaces/{workspaceId}/campaign-contents...` and
+`/workspaces/{workspaceId}/content-items.../drafts...` families overlap. Both
+families, V1 Core Content Studio CRUD, and preview-artifact capability must be
+preserved until a separately authorized route-family decision selects one
+authoritative model or clearly segregates their purposes. This unresolved
+overlap remains a blocking alignment item.
+
+### Operation-level non-disclosing policy
+
+Every protected workspace-scoped operation must explicitly represent:
+
+- `401` using `ErrorModel` for missing or invalid authentication
+- `403` using `ErrorModel` for an inactive member or insufficient permission
+- non-disclosing `404` using `ErrorModel` for a non-member, cross-workspace
+  access, invisible path workspace, missing resource, or missing nested parent
+- non-disclosing membership guard metadata
+
+This policy applies to list, create, read, update, delete/archive, and lifecycle
+operations. It does not authorize runtime guard or repository implementation.
+
 ---
 
 ## 8. Ownership and Access Rules by Entity
