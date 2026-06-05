@@ -32,7 +32,7 @@ This planning gate is documentation-only and planning-only. It must NOT modify
 
 | Input | Planning relevance |
 |---|---|
-| `docs/nashir_backend_implementation_planning_review_gate.md` | Selects this alignment-first planning path and keeps implementation blocked |
+| `docs/nashir_backend_implementation_planning_review_gate.md` | Selects this alignment-first planning path, keeps implementation blocked, and confirms Auth/RBAC/OpenAPI Alignment Planning Gate as the selected next path |
 | Previous decision | Decision: GO to Auth/RBAC/OpenAPI Alignment Planning Gate, review-only. |
 | Previous recommended next gate | Auth/RBAC/OpenAPI Alignment Planning Gate |
 | `docs/nashir_v1_openapi.yaml` | Resolved OpenAPI authority location; candidate operation, security, extension, and error surface to compare |
@@ -41,7 +41,6 @@ This planning gate is documentation-only and planning-only. It must NOT modify
 | `docs/nashir_api_contract_openapi_planning_gate.md` | API Contract/OpenAPI planning history; present and reviewed as a comparison input |
 | `docs/nashir_backend_runtime_repository_setup_closure_gate.md` | Confirms runtime-skeleton-only state and `/health` infrastructure boundary |
 | `docs/nashir_backend_implementation_planning_gate.md` | Defines blocked implementation areas and alignment-first sequencing |
-| `docs/nashir_backend_implementation_planning_review_gate.md` | Confirms Auth/RBAC/OpenAPI Alignment Planning Gate as the selected next path |
 
 These inputs are reviewed as alignment evidence only. Prior planning or review
 history does not replace a later operation-by-operation alignment decision.
