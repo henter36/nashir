@@ -357,6 +357,6 @@ credential response contradiction.
 ```bash
 git status --short
 git diff --stat
-grep -E -n 'GO / NO-GO|Decision:|Recommended Next Gate|alignment-only|NO-GO|PASS|WATCH|FAIL|DEFERRED|Auth/RBAC/OpenAPI Alignment Review Gate|Auth/RBAC/OpenAPI Alignment Correction Planning Gate|PENDING ALIGNMENT|active downstream synchronization authority|product API routes|workspace-scoped routes|route implementation|permission enforcement|generated clients|SQL migrations|migration runner|ORM/query layer|auth implementation|deployment config|production|pilot' docs/nashir_auth_rbac_openapi_alignment_gate.md
+grep -E -n 'GO / NO-GO|Decision:|Recommended Next Gate|alignment-only|NO-GO|PASS|WATCH|FAIL|DEFERRED|Auth/RBAC/OpenAPI Alignment Gate|Auth/RBAC/OpenAPI Alignment Correction Planning Gate|PENDING ALIGNMENT|active downstream synchronization authority|product API routes|workspace-scoped routes|route implementation|permission enforcement|generated clients|SQL migrations|migration runner|ORM/query layer|auth implementation|deployment config|production|pilot' docs/nashir_auth_rbac_openapi_alignment_gate.md
 git diff --check
 ```
