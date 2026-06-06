@@ -292,11 +292,11 @@ clients.
 The content authorization model is established independently of route-family
 selection:
 
-- `content.read` authorizes content item, draft, approval-history, and
+- `nashir.content.read` authorizes content item, draft, approval-history, and
   preview-artifact reads.
-- `content.manage` authorizes content item/draft/preview-artifact creation and
+- `nashir.content.manage` authorizes content item/draft/preview-artifact creation and
   updates, submit-review, archive, and creator withdrawal.
-- `content.approve` authorizes reviewer/admin/owner approval and rejection.
+- `nashir.content.approve` authorizes reviewer/admin/owner approval and rejection.
 - Self-approval remains forbidden; creator withdrawal and reviewer rejection
   remain distinct actions.
 
@@ -312,8 +312,9 @@ The preserved content route families are segregated as follows:
   compatibility aliases over the same underlying authoritative draft lifecycle;
   they must not create a second lifecycle, approval record model, permission
   model, or service implementation.
-- Both surfaces use the same canonical `content.read`, `content.manage`, and
-  `content.approve` authorization rules. Preview-artifact capability remains on
+- Both surfaces use the same canonical `nashir.content.read`,
+  `nashir.content.manage`, and `nashir.content.approve` authorization rules.
+  Preview-artifact capability remains on
   the Core Content Studio compatibility surface.
 
 This boundary preserves required V1 screen/API coverage without authorizing
@@ -349,9 +350,9 @@ operations. It does not authorize runtime guard or repository implementation.
 | `Asset` | Workspace-scoped | Active members with `assets.read` may read; editor/admin/owner may manage | Workspace | `assets.read` | HIGH — creative assets belong to workspace |
 | `Campaign` | Workspace-scoped | Active members with `campaigns.read` may read; editor/admin/owner may manage | Workspace | `campaigns.read` | HIGH — campaign strategy must not leak |
 | `CampaignBrief` | Workspace-scoped (child of Campaign) | Inherits Campaign access; `campaigns.read` required | Campaign → Workspace | `campaigns.read` | HIGH — brief contains audience/channel strategy |
-| `CampaignContentItem` | Workspace-scoped (child of Campaign) | Active members with `content.read` may read | Campaign → Workspace | `content.read` | HIGH — content items belong to campaign/workspace |
-| `ContentDraft` | Workspace-scoped (child of CampaignContentItem) | Active members with `content.read` may read; `content.manage` to write | CampaignContentItem → Workspace | `content.read` | HIGH — draft body is workspace-proprietary |
-| `ContentApproval` | Workspace-scoped (child of ContentDraft) | Reviewer/admin/owner may create; all active members may read decision | ContentDraft → Workspace | `content.approve` to create; `content.read` to view | MEDIUM — approval trail is workspace governance record |
+| `CampaignContentItem` | Workspace-scoped (child of Campaign) | Active members with `nashir.content.read` may read | Campaign → Workspace | `nashir.content.read` | HIGH — content items belong to campaign/workspace |
+| `ContentDraft` | Workspace-scoped (child of CampaignContentItem) | Active members with `nashir.content.read` may read; `nashir.content.manage` to write | CampaignContentItem → Workspace | `nashir.content.read` | HIGH — draft body is workspace-proprietary |
+| `ContentApproval` | Workspace-scoped (child of ContentDraft) | Reviewer/admin/owner may create; all active members may read decision | ContentDraft → Workspace | `nashir.content.approve` to create; `nashir.content.read` to view | MEDIUM — approval trail is workspace governance record |
 | `PublishingJob` | Workspace-scoped (child of Campaign) | Active members with `publishing.read` may read; publisher/admin/owner may manage | Campaign → Workspace | `publishing.read` | HIGH — publishing schedule must not leak |
 | `PublishingStatus` | Workspace-scoped (append-only child of PublishingJob) | Inherits PublishingJob access | PublishingJob → Workspace | `publishing.read` | MEDIUM — status trail should not cross workspace |
 | `AnalyticsSnapshot` | Workspace-scoped | Active members with `analytics.read` may read; subjects must be verified within workspace | Workspace | `analytics.read` | HIGH — analytics data must not cross workspace; sourceSummary required |
@@ -377,7 +378,7 @@ The following decisions define what the future API Contract/OpenAPI Gate must re
 | No credentials in responses | No operation may return raw secret values, vault references, creator handle raw values, or platform OAuth tokens in any response field |
 | No cross-workspace identifiers in list responses | List endpoints must not return resource IDs from outside the request workspace |
 | No generated client until OpenAPI is approved | Generated TypeScript types or client SDKs must not be produced until the API Contract/OpenAPI Gate is merged |
-| self-approval prevention | `content.approve` operation must enforce that the approver is not the creator of the content draft; this is a service-layer rule, not expressible in OpenAPI security objects; it must be documented in the operation description |
+| self-approval prevention | `nashir.content.approve` operation must enforce that the approver is not the creator of the content draft; this is a service-layer rule, not expressible in OpenAPI security objects; it must be documented in the operation description |
 
 ---
 
@@ -413,7 +414,7 @@ The following decisions define what the future API Contract/OpenAPI Gate must re
 - Credential vault-reference rule
 - AuditEvent append-only concept
 - Error behavior: 401 / 403 / 404 / 409 / 422
-- content.approve self-approval prevention rule
+- `nashir.content.approve` self-approval prevention rule
 - Analytics lineage requirement
 
 ### Extended V1 Considerations
