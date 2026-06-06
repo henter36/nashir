@@ -14,7 +14,7 @@ tags:
   - name: Assets
     description: Asset library metadata. Asset names and file names are display fields only; assetId is canonical.
   - name: Campaign Content
-    description: Campaign content drafts, review state, and preview metadata. Slice 2 does not execute AI, publish, schedule, upload binaries, or run external integrations.
+    description: V1 Core Content Studio compatibility surface for content-item CRUD, preview-artifact metadata, and compatibility lifecycle actions. Submit-review, approve, and reject are aliases over the authoritative ContentDraft lifecycle and must not create a second lifecycle, approval model, permission model, or service. Slice 2 does not execute AI, publish, schedule, upload binaries, or run external integrations.
   - name: AI Readiness
     description: Read-only readiness snapshot endpoints for AI operations. All results are advisory only and do not authorize or gate workflow execution. Slice 3 does not execute AI, trigger workflows, probe providers, create artifacts, or write audit records.
   - name: Creator Studio
@@ -36,7 +36,7 @@ tags:
   - name: CampaignContentItems
     description: Campaign content item records. Nested under a Campaign; also queryable workspace-wide for studio views.
   - name: ContentDrafts
-    description: Content draft records. Versioned draft body for a CampaignContentItem. Lifecycle state naming is deferred to the OpenAPI YAML review gate.
+    description: Authoritative content draft lifecycle records for a CampaignContentItem, including versioned draft bodies, submit-review, approve, reject, withdrawal, and approval-history behavior. The Campaign Content compatibility surface delegates lifecycle actions to this same underlying model.
   - name: ContentApprovals
     description: Content approval and rejection records. Human-initiated only. Self-approval is forbidden at the service layer.
   - name: PublishingJobs
@@ -737,7 +737,7 @@ paths:
       tags:
         - Campaign Content
       summary: Submit campaign content for review.
-      description: Moves draft or ready content toward review using campaignContentId identity. This is a review transition only and does not execute AI, publish, schedule, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
+      description: Compatibility alias over the authoritative ContentDraft submit-review lifecycle transition using campaignContentId identity; it must not create a second lifecycle or approval model. This is a review transition only and does not execute AI, publish, schedule, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/CampaignContentIdPath"
@@ -796,7 +796,7 @@ paths:
       tags:
         - Campaign Content
       summary: Approve campaign content review.
-      description: Moves in-review content to approved as a review decision only. This does not publish, schedule, execute AI, or approve asset rights automatically. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
+      description: Compatibility alias over the authoritative ContentDraft approval transition; it must use the same approval record, self-approval prevention, and nashir.content.approve permission model. This does not publish, schedule, execute AI, or approve asset rights automatically. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/CampaignContentIdPath"
@@ -855,7 +855,7 @@ paths:
       tags:
         - Campaign Content
       summary: Reject campaign content review.
-      description: Moves in-review content to rejected and captures review feedback. This is a review decision only and does not publish, schedule, execute AI, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
+      description: Compatibility alias over the authoritative ContentDraft rejection transition; it must use the same approval record and nashir.content.approve permission model. This is a review decision only and does not publish, schedule, execute AI, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/CampaignContentIdPath"
@@ -3107,7 +3107,7 @@ paths:
       tags:
         - CampaignContentItems
       summary: List campaign content items.
-      description: Lists CampaignContentItem records for a specific campaign. Requires content.read permission.
+      description: Lists CampaignContentItem records for a specific campaign. Requires nashir.content.read permission.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/CampaignIdPath"
@@ -3147,7 +3147,7 @@ paths:
       tags:
         - CampaignContentItems
       summary: Create campaign content item.
-      description: Creates a CampaignContentItem for a campaign. Requires content.manage permission. Emits audit event.
+      description: Creates a CampaignContentItem for a campaign. Requires nashir.content.manage permission. Emits audit event.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/CampaignIdPath"
@@ -3195,7 +3195,7 @@ paths:
       tags:
         - CampaignContentItems
       summary: List workspace content items.
-      description: Lists all CampaignContentItem records across the workspace. Supports Content Studio workspace-wide views without requiring a campaignId. Requires content.read permission.
+      description: Lists all CampaignContentItem records across the workspace. Supports Content Studio workspace-wide views without requiring a campaignId. Requires nashir.content.read permission.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
@@ -3627,7 +3627,7 @@ paths:
       tags:
         - ContentDrafts
       summary: List workspace content drafts.
-      description: Lists all ContentDraft records across the workspace. Supports pending-review dashboards and workspace-wide Content Studio views. Requires content.read permission.
+      description: Lists all ContentDraft records across the workspace. Supports pending-review dashboards and workspace-wide Content Studio views. Requires nashir.content.read permission.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
@@ -3666,7 +3666,7 @@ paths:
       tags:
         - ContentApprovals
       summary: List workspace content approvals.
-      description: Lists all ContentApproval records across the workspace. Supports approval history and governance views. Requires content.read permission.
+      description: Lists all ContentApproval records across the workspace. Supports approval history and governance views. Requires nashir.content.read permission.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
         - $ref: "#/components/parameters/LimitQuery"
