@@ -56,14 +56,14 @@ that permission qualification is not yet complete across all OpenAPI prose.
 The Auth/RBAC authority establishes security rules before or alongside OpenAPI
 reflection:
 
-- the original 24 core permission groups remain authoritative
+- The original 24 core permission groups remain authoritative.
 - Creator Studio, workflow readiness, model-routing, and prompt-governance
-  contract permission groups are explicitly established
-- canonical permission codes use the `nashir.` prefix
-- protected operations remain deny-by-default
-- the content surfaces share one authoritative draft lifecycle
-- non-disclosing 401/403/404 behavior is established
-- credential responses must not expose raw credentials or vault references
+  contract permission groups are explicitly established.
+- Canonical permission codes use the `nashir.` prefix.
+- Protected operations remain deny-by-default.
+- The content surfaces share one authoritative draft lifecycle.
+- Non-disclosing 401/403/404 behavior is established.
+- Credential responses must not expose raw credentials or vault references.
 
 The authority is sufficient for OpenAPI reflection. It does not authorize
 runtime implementation.
@@ -79,6 +79,12 @@ OpenAPI correctly reflects the authority in structural security metadata:
   `permissionGuard`
 - Creator Studio and deferred route-family mappings match Auth/RBAC authority
 - credential responses use `IntegrationCredentialSafeMetadata`
+
+All 90 total operations were reviewed. 89 operations are protected. The 1
+remaining unprotected operation is explicitly verified as intentionally public:
+`getHealth` at `GET /health`, the infrastructure health check only. No sensitive
+product, workspace, Creator Studio, Content Studio, credential, workflow,
+model-routing, prompt-governance, or publishing operation is unprotected.
 
 However, 40 operation descriptions still use unqualified permission-code prose,
 including examples such as `workspace.read`, `members.manage`,
@@ -135,8 +141,8 @@ has:
 
 - `x-membership-check: non-disclosing`
 - `nonDisclosingMembershipCheck` and `permissionGuard`
-- explicit 401, 403, and non-disclosing 404 responses
-- a canonical approved `x-permission`
+- Explicit 401, 403, and non-disclosing 404 responses.
+- A canonical approved `x-permission`.
 
 Runtime tenant-isolation and guard enforcement remain DEFERRED.
 
@@ -170,13 +176,13 @@ This re-review gate does not authorize, and must NOT modify or add:
 
 - `henter36/nashir-backend`, backend implementation, or SQL contracts
 - OpenAPI or Auth/RBAC authority documents
-- product API routes implementation or workspace-scoped route implementation
-- permission enforcement implementation or auth implementation
-- generated clients
-- SQL migrations, migration runner setup, database config, or ORM/query layer
-- environment/secrets config with real values
-- deployment config or CI workflows
-- production readiness or pilot readiness
+- Product API routes implementation or workspace-scoped route implementation.
+- Permission enforcement implementation or auth implementation.
+- Generated clients.
+- SQL migrations, migration runner setup, database config, or ORM/query layer.
+- Environment/secrets config with real values.
+- Deployment config or CI workflows.
+- Production readiness or pilot readiness.
 
 Alignment remains PENDING ALIGNMENT. This gate authorizes no downstream
 implementation or synchronization activity.
@@ -202,6 +208,9 @@ implementation or synchronization activity.
 - Creator Studio, Content Studio CRUD, and preview-artifact capabilities are
   preserved.
 - All protected-operation security metadata and error responses are aligned.
+- All 90 total operations were reviewed: 89 operations are protected, and the
+  1 remaining unprotected operation is intentionally public `getHealth` at
+  `GET /health`.
 - No runtime, generated-client, implementation, or deployment matter is
   authorized.
 
