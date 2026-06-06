@@ -195,7 +195,7 @@ Recommended Next Gate: Auth/RBAC/OpenAPI Alignment Re-Review Gate.
 ```bash
 git status --short
 git diff --stat
-ruby route-operation-and-required-capability-preservation-check
+ruby route-operation-and-required-capability-preservation-check.rb
 grep -E -n 'Decision:|Recommended Next Gate|Re-Review Gate|NO-GO|FAIL-02|FAIL-03|Creator Studio|Content Studio|preview-artifact|campaign-contents|content-items|nashir.content.read|nashir.content.manage|nashir.content.approve|62 paths|90 operations|WATCH|DEFERRED|does not authorize|must NOT modify|generated clients|SQL migrations|backend implementation|production|pilot' docs/nashir_auth_rbac_openapi_alignment_correction_follow_up_review_gate.md
 git diff --check
 ```
