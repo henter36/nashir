@@ -35,12 +35,23 @@
       "Read(.env)",
       "Read(.env.*)",
       "Read(**/secrets/**)",
-      "Read(**/*secret*)",
-      "Read(**/*credential*)",
       "Bash(git push *:main)",
       "Bash(git push *refs/heads/main)",
       "Bash(git push origin HEAD:main)",
-      "Bash(git push origin HEAD:refs/heads/main)"
+      "Bash(git push origin HEAD:refs/heads/main)",
+      "Bash(git push)",
+      "Bash(git push origin)",
+      "Bash(*prisma migrate *)",
+      "Bash(*knex migrate *)",
+      "Bash(*sequelize db:migrate *)",
+      "Bash(*supabase db push *)",
+      "Bash(*generate*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)"
     ]
   }
 }
