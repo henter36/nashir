@@ -67,6 +67,24 @@ Auth/RBAC authority establishes the security decisions that OpenAPI reflects:
 
 OpenAPI does not independently redefine these security rules.
 
+### Contract Authority and Alignment Boundary
+
+The OpenAPI authority location is resolved as `docs/nashir_v1_openapi.yaml`,
+and the Auth/RBAC/Workspace Identity authority location is resolved as
+`docs/nashir_auth_rbac_workspace_identity_gate.md`. Resolving an authority
+location is not the same as resolving alignment readiness or content readiness.
+Alignment readiness becomes reviewed for planning only after this final
+re-review confirms that FAIL-01 through FAIL-06 are RESOLVED.
+
+Contract drift risk: downstream repositories, generated clients, backend
+implementation, and future documentation must not redefine, fork, or diverge
+from `henter36/nashir` contract authorities.
+
+Prerequisite design sequencing risk: OpenAPI or implementation planning must
+not define authentication, workspace scoping, permission semantics,
+non-disclosing behavior, or content lifecycle rules before those expectations
+are established in the Auth/RBAC/Workspace Identity authority.
+
 ## 6. OpenAPI Reflection Final Review
 
 OpenAPI reflects Auth/RBAC authority:
@@ -191,6 +209,9 @@ This gate authorizes only the next planning gate.
 | Public sensitive operation | None; `getHealth` only is public | Preserve public-operation audit |
 | Tenant leakage | Contract policy aligned; runtime absent | Keep implementation and enforcement DEFERRED |
 | Credential exposure | Response contract safe; runtime absent | Keep storage and serialization DEFERRED |
+| Contract drift risk | Alignment is reviewed, but downstream artifacts do not become independent authorities | Prevent repositories, generated clients, backend implementation, and future docs from redefining or forking `henter36/nashir` authorities |
+| Prerequisite design sequencing risk | Auth/RBAC expectations were established before or alongside OpenAPI reflection | Do not let OpenAPI or implementation planning define security or content lifecycle rules first |
+| Authority location versus alignment/content readiness | Authority locations are resolved; readiness required this final review | Treat reviewed alignment as planning readiness only, not implementation or content readiness |
 | Premature implementation readiness | Planning-only GO | Preserve consolidated non-authorization boundary |
 
 ## 15. Final Review Findings
@@ -215,7 +236,10 @@ This gate authorizes only the next planning gate.
 Decision: GO to Backend Implementation Slice Planning Gate, review-only.
 
 All known Auth/RBAC/OpenAPI/Workspace Identity alignment blockers are closed for
-planning purposes. This decision does not authorize backend implementation.
+planning purposes. Even with this GO decision, this gate does not authorize
+backend implementation, generated clients, route implementation, permission
+enforcement implementation, SQL migrations, deployment config, production
+readiness, or pilot readiness.
 
 ## 17. Recommended Next Gate
 
