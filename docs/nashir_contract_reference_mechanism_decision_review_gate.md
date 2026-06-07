@@ -27,6 +27,7 @@ references, or backend implementation.
 | `docs/nashir_contract_reference_mechanism_decision_gate.md` | Selects and bounds the preferred future contract-reference mechanism |
 | `docs/nashir_backend_slice_0_contract_safe_infrastructure_validation_planning_review_gate.md` | Authorizes the mechanism decision path and confirms Slice 0 boundaries |
 | `docs/nashir_backend_slice_0_contract_safe_infrastructure_validation_planning_gate.md` | Defines candidate mechanisms and planned validation checks |
+| Naming clarification | The listed Slice 0 planning and planning review files are prior gate inputs. The Backend Slice 0 Contract-Safe Infrastructure Validation Action Planning Gate is the next recommended gate and has not yet been created as an input file. |
 | `docs/nashir_backend_runtime_repository_setup_closure_gate.md` | Confirms the minimal backend skeleton and `/health`-only route boundary |
 | `docs/nashir_v1_openapi.yaml` | OpenAPI authority in `henter36/nashir` |
 | `docs/nashir_auth_rbac_workspace_identity_gate.md` | Auth/RBAC/Workspace Identity authority |
