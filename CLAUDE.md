@@ -36,3 +36,53 @@ git status -sb
 git branch --show-current
 git log --oneline --decorate -5
 ```
+
+## Scope discipline
+
+Never use deprecated or experimental artifacts as source of truth.
+
+The `prototype/` directory in marketing-os is deprecated and must not be used for Nashir UX, API contracts, entities, or implementation logic.
+
+Do not introduce new product assumptions unless clearly marked as proposed and pending approval.
+
+Do not silently change terminology, permissions, statuses, route families, entity names, or lifecycle semantics.
+
+## Nashir functional source of truth
+
+Prioritize Nashir UI screens and approved gate documents.
+
+Current priority is controlled progression through gates, not fast implementation.
+
+Preserve:
+
+- Arabic-first experience
+- Mobile-first usability
+- Human-in-the-loop controls
+- Governance-first execution
+- Merchant-safe behavior
+- Cost control
+- Workspace/RBAC boundaries
+- Auditability and traceability
+
+## Review classification
+
+When reviewing a change, classify findings as:
+
+- Blocking
+- Important
+- Minor
+- Observation
+
+A Blocking issue means the PR/gate should not proceed.
+
+Always check for:
+
+- Authorization boundary violations
+- Product-source-of-truth drift
+- Contract drift vs. prerequisite design readiness, distinguishing the risk of contract drift from defining the API Contract/OpenAPI before Auth/RBAC/Workspace Identity designs are established
+- Authority location vs. alignment readiness, acknowledging that the authority location can be resolved even if alignment readiness with Auth/RBAC/Workspace Identity remains pending
+- Auth/RBAC/workspace-scope drift
+- OpenAPI/status/permission/status/error/lifecycle mismatch
+- SQL/schema/migration overreach
+- Generated-client or backend overreach
+- Security, privacy, audit, and operational risks
