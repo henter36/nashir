@@ -214,6 +214,6 @@ Recommended Next Gate: Contract Reference Mechanism Decision Review Gate.
 ```bash
 git status --short
 git diff --stat
-grep -E -n 'Decision:|Recommended Next Gate|Contract Reference Mechanism Decision Review Gate|decision-only|CI multi-repository checkout|git submodule|pinned contract artifact|manual local path|read-only contract reference|preferred mechanism|source of truth|henter36/nashir|henter36/nashir-backend|contract drift risk|auditability|pinning|versioning|CI feasibility|credential|copying|redefining|drift-detection|does not authorize|must NOT modify|validation scripts|CI workflows|git submodules|publish packages|artifacts|backend implementation|generated clients|SQL migrations|production|pilot' docs/nashir_contract_reference_mechanism_decision_gate.md
+grep -E -i -n 'Decision:|Recommended Next Gate|Contract Reference Mechanism Decision Review Gate|decision-only|CI multi-repository checkout|git submodule|pinned contract artifact|manual local path|read-only contract reference|preferred mechanism|source of truth|henter36/nashir|henter36/nashir-backend|contract drift risk|auditability|pinning|versioning|CI feasibility|credential|copying|redefining|drift-detection|does not authorize|must NOT modify|validation scripts|CI workflows|git submodules|publish packages|artifacts|backend implementation|generated clients|SQL migrations|production|pilot' docs/nashir_contract_reference_mechanism_decision_gate.md
 git diff --check
 ```
