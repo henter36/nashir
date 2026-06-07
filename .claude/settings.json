@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status -sb)",
+      "Bash(git branch --show-current)",
+      "Bash(git log --oneline --decorate -5)",
+      "Bash(git diff --stat)",
+      "Bash(git diff --check)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(sed *)",
+      "Bash(grep *)",
+      "Bash(find *)"
+    ],
+    "ask": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npm test)"
+    ],
+    "deny": [
+      "Bash(git push origin main)",
+      "Bash(git push * main)",
+      "Bash(prisma migrate *)",
+      "Bash(knex migrate *)",
+      "Bash(sequelize db:migrate *)",
+      "Bash(supabase db push *)",
+      "Bash(npm run generate *)",
+      "Bash(vercel --prod *)",
+      "Bash(fly deploy *)",
+      "Bash(railway up *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)",
+      "Read(**/*secret*)",
+      "Read(**/*credential*)"
+    ]
+  }
+}
