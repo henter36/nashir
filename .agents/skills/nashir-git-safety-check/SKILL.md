@@ -31,12 +31,16 @@ Do not touch:
 - API routes
 - SQL migrations
 - migration runner
+- database-applied changes
 - ORM/query layer
 - generated clients
 - runtime env/secrets config
 - CI/CD deployment workflows
+- production or pilot readiness claims
 
 unless the current gate explicitly authorizes that class of change.
+
+Documentation-only gates must remain documentation-only. This skill does not authorize changes outside the approved gate boundary.
 
 ## Before final response
 
