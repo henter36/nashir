@@ -7,7 +7,11 @@
       "Bash(git log --oneline --decorate -5)",
       "Bash(git diff --stat)",
       "Bash(git diff --check)",
-      "Bash(ls *)"
+      "Bash(ls *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git show)",
+      "Bash(git show *)"
     ],
     "ask": [
       "Bash(git add *)",
@@ -46,7 +50,10 @@
       "Read(**/*.pem)",
       "Read(**/*.key)",
       "Read(**/*.p12)",
-      "Read(**/*.pfx)"
+      "Read(**/*.pfx)",
+      "Bash(*drizzle-kit *)",
+      "Bash(*netlify deploy*)",
+      "Read(**/.npmrc)"
     ]
   }
 }
