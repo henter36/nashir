@@ -24,8 +24,8 @@ Check:
 5. Whether Nashir screens remain the functional source of truth.
 6. Whether marketing-os is used only as backend/governance/infrastructure reference.
 7. Whether deprecated prototype artifacts are avoided.
-8. Whether Auth/RBAC/workspace boundaries are preserved.
-9. Whether OpenAPI status, permission, error, and lifecycle semantics remain aligned.
+8. Whether Auth/RBAC/Workspace Identity designs are established before defining the API Contract/OpenAPI, explicitly distinguishing this prerequisite-readiness risk from contract drift risk.
+9. Whether the OpenAPI contract accurately reflects authentication schemes, workspace scoping, permission expectations, status, error, and lifecycle semantics, while acknowledging that the authority location itself can still be resolved even if alignment readiness remains pending.
 10. Whether the recommended next gate is narrower than implementation unless implementation is explicitly authorized.
 
 ## Finding levels

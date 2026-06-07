@@ -103,8 +103,10 @@ Always check for:
 
 - Authorization boundary violations
 - Product-source-of-truth drift
+- Contract drift vs. prerequisite design readiness, distinguishing the risk of contract drift from defining the API Contract/OpenAPI before Auth/RBAC/Workspace Identity designs are established
+- Authority location vs. alignment readiness, acknowledging that the authority location can be resolved even if alignment readiness with Auth/RBAC/Workspace Identity remains pending
 - Auth/RBAC/workspace-scope drift
-- OpenAPI/status/permission mismatch
+- OpenAPI/status/permission/status/error/lifecycle mismatch
 - SQL/schema/migration overreach
 - Generated-client or backend overreach
 - Security, privacy, audit, and operational risks
