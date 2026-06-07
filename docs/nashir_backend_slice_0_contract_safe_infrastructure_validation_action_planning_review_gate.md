@@ -237,6 +237,7 @@ Validation Action Gate decision that touches or selects:
 ```bash
 git status --short
 git diff --stat
-grep -E -i -n 'PR #175|documentation-only|validation-only|non-product|candidate backend files|exact backend file allowlist|CI remains optional|No pinned|/health remains the only backend route|source of truth|copy|redefine|fork|silently diverge|planning only|implementation reliance|unresolved execution decisions|Decision:|CONDITIONAL GO|review-only|Ask the user directly|does not authorize|must NOT modify|validation scripts|package scripts|CI workflows|executable contract references|generated clients|SQL migrations|backend implementation|production|pilot' docs/nashir_backend_slice_0_contract_safe_infrastructure_validation_action_planning_review_gate.md
+# Strip the verification section itself to prevent the grep pattern from matching its own text
+sed '/## 15\. Verification Commands/,$d' docs/nashir_backend_slice_0_contract_safe_infrastructure_validation_action_planning_review_gate.md | grep -E -i -n 'PR #175|documentation-only|validation-only|non-product|candidate backend files|exact backend file allowlist|CI remains optional|No pinned|/health remains the only backend route|source of truth|copy|redefine|fork|silently diverge|planning only|implementation reliance|unresolved execution decisions|Decision:|CONDITIONAL GO|review-only|Ask the user directly|does not authorize|must NOT modify|validation scripts|package scripts|CI workflows|executable contract references|generated clients|SQL migrations|backend implementation|production|pilot'
 git diff --check
 ```
