@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status -sb)",
+      "Bash(git branch --show-current)",
+      "Bash(git log --oneline --decorate -5)",
+      "Bash(git diff --stat)",
+      "Bash(git diff --check)",
+      "Bash(ls *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git show)",
+      "Bash(git show *)"
+    ],
+    "ask": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npm test)",
+      "Bash(cat *)",
+      "Bash(sed *)",
+      "Bash(grep *)",
+      "Bash(find *)"
+    ],
+    "deny": [
+      "Bash(git push)",
+      "Bash(git push origin)",
+      "Bash(git push origin main)",
+      "Bash(git push * main)",
+      "Bash(git push *:main)",
+      "Bash(git push *refs/heads/main)",
+      "Bash(git push origin HEAD:main)",
+      "Bash(git push origin HEAD:refs/heads/main)",
+      "Bash(*prisma migrate *)",
+      "Bash(*knex migrate *)",
+      "Bash(*sequelize db:migrate *)",
+      "Bash(*supabase db push *)",
+      "Bash(*generate*)",
+      "Bash(vercel --prod *)",
+      "Bash(fly deploy *)",
+      "Bash(railway up *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Bash(*drizzle-kit *)",
+      "Bash(*netlify deploy*)",
+      "Read(**/.npmrc)"
+    ]
+  }
+}
