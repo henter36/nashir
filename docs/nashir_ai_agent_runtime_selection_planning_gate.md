@@ -343,6 +343,6 @@ Do not open implementation, dependency, PoC, OpenAPI YAML, or backend runtime wo
 ```bash
 git status --short
 git diff --stat
-sed '/## .*Verification/,$d' docs/nashir_ai_agent_runtime_selection_planning_gate.md | grep -E -n 'Decision:|Recommended Next Step|#179|documentation-only|NO-GO|Agent Runtime|NashirAgentRuntimeAdapter|Tool Registry|memory|Interrupt|approval|Mastra|LangGraph|PoC|failure modes|OpenAPI|MCP|RAG|publishing|Backend Slice 0|does not authorize|must NOT modify|runtime dependencies|backend implementation|provider calls|prompt execution|tool execution|connector execution|generated clients|SQL|migrations|CI workflows|production|pilot'
+sed '/## .*Verification/,$d' docs/nashir_ai_agent_runtime_selection_planning_gate.md | grep -E -i -n 'Decision:|Recommended Next Step|#179|documentation-only|NO-GO|Agent Runtime|NashirAgentRuntimeAdapter|Tool Registry|memory|Interrupt|approval|Mastra|LangGraph|PoC|failure modes|OpenAPI|MCP|RAG|publishing|Backend Slice 0|does not authorize|must NOT modify|runtime dependencies|backend implementation|provider calls|prompt execution|tool execution|connector execution|generated clients|SQL|migrations|CI workflows|production|pilot'
 git diff --check
 ```
