@@ -36,7 +36,11 @@
       "Read(.env.*)",
       "Read(**/secrets/**)",
       "Read(**/*secret*)",
-      "Read(**/*credential*)"
+      "Read(**/*credential*)",
+      "Bash(git push *:main)",
+      "Bash(git push *refs/heads/main)",
+      "Bash(git push origin HEAD:main)",
+      "Bash(git push origin HEAD:refs/heads/main)"
     ]
   }
 }
