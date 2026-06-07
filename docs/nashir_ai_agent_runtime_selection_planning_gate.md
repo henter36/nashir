@@ -9,4 +9,4 @@
 
 ## Purpose
 
-This gate records the future Nashir AI Agent Runtime path
+This gate records the future Nashir AI Agent Runtime path so it is considered at the correct AI Ops planning point. It
