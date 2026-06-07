@@ -132,8 +132,8 @@ validation command remain for the later action gate.
 | Authority provenance | Contract is read from the separately checked-out `henter36/nashir` source of truth at the approved pinned SHA |
 | Read-only contract reference | Validation does not write to or copy the authority contract |
 | YAML parse | `docs/nashir_v1_openapi.yaml` parses successfully |
-| Path inventory | OpenAPI contains exactly 62 paths |
-| Operation inventory | OpenAPI contains exactly 90 operations |
+| Path inventory | OpenAPI paths are structurally valid and match the approved pinned-authority baseline, currently 62 paths. Future authorized contract changes must update this baseline through review. |
+| Operation inventory | OpenAPI operations are structurally valid and match the approved pinned-authority baseline, currently 90 operations. Future authorized contract changes must update this baseline through review. |
 | Public operation | `getHealth` is the only intentionally public operation |
 | Backend route boundary | Backend exposes `/health` only |
 | Product route absence | No product API routes exist |
@@ -146,6 +146,7 @@ validation command remain for the later action gate.
 | Auth absence | No auth implementation exists |
 | Permission-enforcement absence | No permission enforcement implementation exists |
 | Independent authority-copy absence | No copied OpenAPI authority exists as an independent backend source of truth |
+| Auth/RBAC alignment | OpenAPI contract metadata reflects authentication schemes, workspace scoping, permission expectations, non-disclosing behavior, and lifecycle semantics established in the Auth/RBAC/Workspace Identity authority without redefining or implementing them. This check distinguishes contract drift risk from prerequisite design sequencing risk and distinguishes authority location resolution from alignment/content readiness. |
 
 Each check must have an exact command, deterministic pass/fail result, and
 reviewed failure message before the future action is authorized.
@@ -207,9 +208,9 @@ Before a future action gate may authorize implementation, it must:
 
 | Risk | Planning finding | Required future control |
 |---|---|---|
-| Contract drift risk | Backend validation, generated clients, runtime implementation, or downstream documentation could copy, fork, redefine, or silently diverge from `henter36/nashir` authorities | Use a separate read-only checkout pinned to an approved SHA with auditable drift-detection |
-| Prerequisite design sequencing risk | OpenAPI, backend routes, generated clients, or permission enforcement could define authentication, workspace scoping, permission expectations, non-disclosing behavior, or lifecycle semantics before Auth/RBAC/Workspace Identity authority establishes them | Validate against established authority without redefining semantics |
-| Authority location resolution versus alignment/content readiness | A resolved authority path and pin could be mistaken for reviewed alignment/content readiness or implementation reliance | Verify the separate reviewed readiness state before implementation reliance |
+| Contract drift risk | Backend validation, generated clients, runtime implementation, or downstream documentation must not copy, fork, redefine, or silently diverge from `henter36/nashir` authorities | Use a separate read-only checkout pinned to an approved SHA with auditable drift-detection |
+| Prerequisite design sequencing risk | Validation or later implementation must not define authentication schemes, workspace scoping, permission expectations, non-disclosing behavior, or lifecycle semantics before or independently from the Auth/RBAC/Workspace Identity authority | Validate against established authority without redefining or implementing semantics |
+| Authority location resolution versus alignment/content readiness | The authority location may be resolved while alignment/content readiness remains a separate reviewed state | Verify alignment/content readiness before implementation reliance |
 | CI credential/access risk | Cross-repository checkout requires access to `henter36/nashir` | Use least-privilege, read-only credentials and prevent authority writes |
 | Pinned SHA staleness risk | A reviewed pin could become stale while remaining technically valid | Define an auditable pin-review and update process without floating references |
 | Backend implementation creep risk | Infrastructure validation could expand into product/runtime behavior | Enforce the exact file allowlist and validation-only checks |
