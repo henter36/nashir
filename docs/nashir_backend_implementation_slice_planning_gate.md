@@ -143,7 +143,9 @@ artifacts.
 
 The next review gate must keep `/health` as the only backend route and decide
 whether the proposed validation-only scope is narrow enough for a later
-explicit action gate.
+explicit action gate. It may also plan how `henter36/nashir-backend` resolves
+the OpenAPI authority from `henter36/nashir` for read-only validation, but it
+must not select or implement that mechanism without a later explicit gate.
 
 Options B and C remain blocked until their auth, permission, tenant isolation,
 database, migration, repository/service, and testing prerequisites are planned
@@ -154,8 +156,17 @@ and reviewed.
 Before any implementation action gate, Option A requires:
 
 - exact validation-tooling scope and file-change allowlist
-- confirmation that validation reads `docs/nashir_v1_openapi.yaml` from the
-  authority repository without copying or redefining it
+- decision planning for the mechanism that resolves
+  `docs/nashir_v1_openapi.yaml` from the `henter36/nashir` authority repository
+  into `henter36/nashir-backend` validation
+- evaluation of CI multi-repository checkout, git submodule, pinned contract
+  artifact/package, and other explicit read-only contract reference models
+- confirmation that any future contract reference is pinned, auditable, and
+  drift-detectable
+- prohibition on copying the OpenAPI file into `henter36/nashir-backend` as an
+  independent source of truth
+- confirmation that this planning gate does not select or implement the
+  contract-reference mechanism
 - contract drift check design and expected failure behavior
 - route inventory invariants for 62 paths, 90 operations, 89 protected
   operations, and `getHealth` only public
@@ -186,13 +197,23 @@ The Backend Implementation Slice Planning Review Gate may:
 - review proposed OpenAPI parsing and invariant checks
 - review route inventory, public-operation, permission-metadata, and contract
   drift validation plans
+- plan and compare contract-reference validation mechanics, including CI
+  multi-repository checkout, git submodule, pinned contract artifact/package,
+  and other explicit read-only contract reference models
+- require any proposed future reference to be pinned, auditable, and
+  drift-detectable without copying the OpenAPI file into
+  `henter36/nashir-backend` as an independent authority
 - review placeholder-only config validation planning
 - review test strategy and a possible later action-gate file allowlist
 - confirm that `/health` remains the only route
 - reject or narrow any item that risks implementation creep
 
-The next gate remains planning/review-only. It may not execute Option A or
-authorize Options B or C.
+The next gate remains planning/review-only. It may not execute Option A, select
+or implement a contract-reference mechanism, or authorize Options B or C. It
+must not add backend implementation, generated clients, product/workspace
+routes, permission enforcement implementation, SQL migrations, database config,
+deployment config, or CI workflows unless a later gate explicitly authorizes
+them.
 
 ## 10. Explicit Non-Authorization Boundary
 
@@ -216,7 +237,9 @@ change is authorized by this gate.
 
 | Risk | Planning finding | Control |
 |---|---|---|
-| Contract drift risk | Backend or validation tooling could copy, redefine, fork, or diverge from `henter36/nashir` authorities | Plan read-only authority validation and reject copied contract authority |
+| Contract drift risk | Downstream repositories, backend validation tools, generated clients, or runtime implementations could redefine, fork, copy-and-diverge, or silently drift from `henter36/nashir` contract authorities | Plan a pinned, auditable, drift-detectable read-only reference and prohibit copied independent contract authority |
+| Prerequisite design sequencing risk | OpenAPI, generated clients, backend routes, or permission enforcement could define authentication, workspace scoping, permission semantics, non-disclosing behavior, or content lifecycle rules before Auth/RBAC/Workspace Identity authority establishes them | Require all downstream planning to reflect the established Auth/RBAC/Workspace Identity authority and prohibit downstream invention |
+| Authority location versus alignment/content readiness | OpenAPI authority location is `docs/nashir_v1_openapi.yaml` in `henter36/nashir`, and Auth/RBAC authority location is `docs/nashir_auth_rbac_workspace_identity_gate.md`; resolving locations is distinct from readiness | Treat alignment as reviewed for planning after the final re-review while keeping implementation and content readiness separate and deferred |
 | Tenant isolation risk | Options B and C would introduce workspace behavior before runtime enforcement exists | Keep all workspace-scoped routes and membership behavior blocked |
 | Auth/permission sequencing risk | Route work could begin before auth and permission enforcement planning | Keep Options B and C blocked |
 | Database sequencing risk | A route slice could force premature database config, migrations, or query-layer choices | Keep database-backed work blocked |
