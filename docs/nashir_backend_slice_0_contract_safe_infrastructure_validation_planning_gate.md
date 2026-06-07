@@ -192,7 +192,7 @@ This planning gate does not authorize, and must NOT modify or add:
 | Contract drift risk | Backend validation could use a stale, copied, forked, or silently divergent contract | Require an explicit, read-only, pinned, auditable, drift-detectable authority reference |
 | Independent authority risk | A copied OpenAPI file could become a backend source of truth | Prohibit copied OpenAPI authority in `henter36/nashir-backend` |
 | Mechanism-selection creep | Comparing options could be mistaken for selecting or configuring one | Defer selection to a Contract Reference Mechanism Decision Gate |
-| Prerequisite design sequencing risk | Validation or later implementation could redefine Auth/RBAC expectations | Validate against authority without defining authentication, workspace scope, permissions, non-disclosure, or lifecycle rules |
+| Prerequisite design sequencing risk | Validation or later implementation could redefine Auth/RBAC expectations before prerequisite designs are established, even though the authority location itself is resolved. | Validate against the established authority only without implementing or redefining authentication, workspace scope, permissions, non-disclosure, or lifecycle rules, distinguishing authority resolution from design alignment readiness. |
 | Route creep risk | Validation planning could add product/workspace routes | Preserve `/health` as the only backend route |
 | Secret/config risk | Contract access could introduce credentials or real config | Require later explicit access/security planning; keep real secrets unauthorized |
 | CI/workflow risk | CI multi-repository checkout could be implemented prematurely | Keep CI workflows unauthorized |
