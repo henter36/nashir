@@ -32,6 +32,64 @@ Documentation-only gates must remain documentation-only.
 If a task is not clearly authorized by the latest approved gate, stop and
 report the boundary instead of guessing.
 
+## Safe build acceleration policy
+
+Nashir development should move faster only when the acceleration remains inside
+explicit governance boundaries.
+
+Safe acceleration is allowed by default for low-risk work when all of the
+following are true:
+
+- The change stays within one layer or one tightly coupled contract path.
+- The latest approved gate already establishes the decision or scope.
+- No new product assumption is introduced silently.
+- No security, RBAC, workspace, audit, data, deployment, or production boundary
+  is weakened.
+- The PR includes verification appropriate to the changed layer.
+
+Prefer medium-sized PRs over excessive micro-gates when the work is low-risk
+and internally coherent.
+
+Allowed acceleration examples:
+
+- Documentation boundary updates that clarify already accepted decisions.
+- UI-only alignment work that preserves the approved Nashir product UI source
+  of truth and does not add backend/runtime scope.
+- OpenAPI plus generated types only when explicitly authorized together and the
+  prerequisite Auth/RBAC/Workspace Identity design is already established.
+- Backend route behavior plus route tests inside an already approved route
+  family.
+- Drift checks, scope guards, and verification scripts that do not change
+  product/runtime behavior.
+
+Do not accelerate the following without a dedicated gate:
+
+- Auth, RBAC, workspace identity, or permission model changes.
+- SQL migrations, migration runner behavior, or database-applied changes.
+- Store/Product write routes or other mutating APIs.
+- ErrorModel, disclosure, status-code, or lifecycle semantics.
+- Agent runtime, tool execution, memory, approvals, or model routing.
+- Publishing integrations, provider integrations, billing, secrets, analytics
+  runtime, deployment, pilot, or production readiness.
+
+Use this rule when selecting PR scope:
+
+- Expand a PR when all changes are in the same layer or a single verified
+  contract path.
+- Split a PR when it crosses a risky boundary, changes authority, or combines
+  runtime, migration, UI, generated output, and deployment concerns.
+
+When Codex or Claude Code is asked to execute a step, provide a direct
+implementation prompt that includes:
+
+- Goal
+- Allowed files or layer
+- Explicit hard blocks
+- Verification commands
+- Expected PR title and scope summary
+
+Do not ask for another prompt when the execution step is clear.
+
 ## Git safety rules
 
 Before making changes, always run:
@@ -57,8 +115,8 @@ entity names, or lifecycle semantics.
 
 Prioritize Nashir UI screens and approved gate documents.
 
-Current priority is controlled progression through gates, not fast
-implementation.
+Current priority is safe accelerated progression through approved gates, not
+ungoverned fast implementation.
 
 Preserve:
 
