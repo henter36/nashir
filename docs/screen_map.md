@@ -2,7 +2,7 @@
 
 **Document Type:** Nashir Product Screen Map
 **Status:** V1 Scope Approved — Updated per PR #66 (Nashir V1 Scope Documentation Update Gate)
-**Scope:** React/Vite UI — 23 active screens
+**Scope:** React/Vite UI — exactly 23 active Arabic screens
 **Backend/API/Database/Auth:** Not implemented
 
 ## 1. Purpose
@@ -10,6 +10,8 @@
 This document defines the current approved screen map for the Nashir UI prototype.
 
 It is a UI stabilization reference only. It does not create API contracts, database schema, authorization rules, or production behavior.
+
+The only approved Nashir Product UI source is this repository. The approved surface is exactly the 23 Arabic screens registered in `src/App.jsx` and implemented by the 23 JSX page components in `src/pages`. `productIntelligence`, `creatorStudio`, and `contentReview` are intentional approved screens, not accidental or obsolete surfaces. Neither `marketing-os` nor `nashir-backend` owns an approved Nashir Product UI.
 
 ## 2. Global Constraints
 
