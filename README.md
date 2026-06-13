@@ -1,8 +1,8 @@
 # Nashir
 
-> **Repository status:** هذا المستودع هو المرجع الرئيسي المعتمد لواجهة وتجربة منتج Nashir. تمت إعادة التسمية إلى `nashir`. وهو ليس جاهزًا للإنتاج بعد.
+> **Repository status:** هذا المستودع هو المصدر الوحيد المعتمد لواجهة منتج Nashir. الواجهة المعتمدة هي 23 صفحة عربية نشطة فقط، معرفة في `src/App.jsx` ومنفذة في `src/pages`. وهو ليس جاهزًا للإنتاج بعد.
 >
-> **Repository status (English):** This repository is the approved Nashir product UI and journey reference. Repository renamed to `nashir`. It is not production-ready yet.
+> **Repository status (English):** This repository is the only approved Nashir Product UI source. The approved Product UI is exactly the 23 active Arabic screens defined in `src/App.jsx` and implemented in `src/pages`. It is not production-ready yet.
 
 واجهة React/Vite تجريبية لمنصة **ناشر** ضمن تصور Marketing OS.
 
@@ -30,6 +30,8 @@
 ## الشاشات الحالية المعتمدة (23 شاشة)
 
 تم اعتماد التصنيف الآتي في [Nashir V1 Scope Decision Gate](docs/nashir_v1_scope_decision_gate.md).
+
+لا توجد واجهة منتج Nashir معتمدة في `marketing-os` أو `nashir-backend`. الشاشات `productIntelligence` و`creatorStudio` و`contentReview` أجزاء مقصودة من قائمة الصفحات الـ23، وليست شاشات عرضية أو مهجورة.
 
 ### V1 Core — المسار الأساسي للتاجر
 

@@ -38,7 +38,7 @@ This gate reconciles what is currently built, what is documented, and what needs
 | `src/pages/` | 23 `.jsx` page files + 2 `.css` companions (CreatorStudioPage.css, ProductIntelligencePage.css); all 23 page components are imported and rendered in App.jsx; no orphaned page files |
 | `src/data/` | `creatorStudioFlowFixture.js`, `dashboardData.js`, `readinessFixture.js` — mock data fixtures; confirms Creator Studio has its own dedicated mock data |
 | `src/generated/` | `creator-studio-openapi-types/` — generated OpenAPI types specifically for Creator Studio; confirms Creator Studio has active development investment |
-| `src/App.dashboard.backup.jsx` | Backup file; not imported or active; does not affect scope |
+| `src/App.dashboard.backup.jsx` | Removed during Product UI source-of-truth cleanup; it was never imported or active |
 | `package.json` | `name: nashir`; scripts: `dev`, `build`, `lint`, `preview`, `generate:creator-studio-types` |
 
 ---
@@ -150,7 +150,7 @@ App.jsx defines 23 screens — all with `enabled: true`. The following table is 
 
 **No orphaned page files.** All 23 page components are actively imported and rendered in App.jsx.
 
-**Note on `src/App.dashboard.backup.jsx`:** A backup file; not imported; does not affect scope; should be cleaned up in a future housekeeping task.
+**Note on `src/App.dashboard.backup.jsx`:** Removed during Product UI source-of-truth cleanup; it was never imported or active.
 
 ---
 
@@ -237,7 +237,7 @@ TemplateEngine → WorkflowRuns → SystemAdmin → Secrets → ModelRouting →
 | Product Intelligence not in docs | `ProductIntelligencePage.jsx` is active with companion CSS and `onNavigate` prop linking to campaigns | Needs explicit V1 classification |
 | screen_map navigation groups lag App.jsx | screen_map grouping doesn't include productIntelligence, creatorStudio, contentReview | screen_map must be updated after scope decision |
 | No auth/API/database implementation | All screens are mock-only; any backend/productization gate must account for this | Explicitly documented; not a bug |
-| `src/App.dashboard.backup.jsx` | Inactive backup file in src root | Clean up in future housekeeping; not urgent |
+| `src/App.dashboard.backup.jsx` | Removed inactive backup file | Cleanup completed; do not restore |
 | `marketing-os` artifacts must not override scope | marketing-os has a different screen set and backend patterns | Confirmed: marketing-os is reference-only |
 
 ---
