@@ -99,7 +99,14 @@ paths:
       description: Lists product catalog records for a workspace. Product names are not identity; productId is canonical.
       parameters:
         - $ref: "#/components/parameters/WorkspaceIdPath"
-        - $ref: "#/components/parameters/LimitQuery"
+        - name: limit
+          in: query
+          required: true
+          description: Maximum number of product records to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
         - $ref: "#/components/parameters/CursorQuery"
         - $ref: "#/components/parameters/StatusQuery"
         - $ref: "#/components/parameters/UpdatedAfterQuery"
@@ -4716,32 +4723,31 @@ components:
     ProductResponse:
       type: object
       required:
-        - data
-        - warnings
+        - product
       properties:
-        data:
+        product:
           $ref: "#/components/schemas/Product"
-        warnings:
-          type: array
-          items:
-            $ref: "#/components/schemas/Warning"
     ProductListResponse:
       type: object
       required:
-        - data
-        - meta
-        - warnings
+        - products
+        - count
+        - hasMore
+        - nextCursor
       properties:
-        data:
+        products:
           type: array
           items:
             $ref: "#/components/schemas/Product"
-        meta:
-          $ref: "#/components/schemas/PaginationMeta"
-        warnings:
-          type: array
-          items:
-            $ref: "#/components/schemas/Warning"
+        count:
+          type: integer
+          minimum: 0
+        hasMore:
+          type: boolean
+        nextCursor:
+          type:
+            - string
+            - "null"
     AssetType:
       type: string
       enum:
