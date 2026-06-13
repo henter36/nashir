@@ -27,6 +27,37 @@ Documentation-only gates must remain documentation-only.
 
 If a task is not clearly authorized by the latest approved gate, stop and report the boundary instead of guessing.
 
+## Execution Bundle Policy
+
+Agents should default to the fastest safe path within the current authorization
+boundary.
+
+When work is already authorized and low-risk, agents may complete it in one
+execution PR with verification. Agents must not create documentation-only gates
+when current policy or an approved gate already authorizes the execution
+bundle.
+
+Allowed direct execution bundles:
+
+- Documentation clarification bundle
+- UI alignment bundle
+- Test hardening bundle
+- Contract verification bundle
+- Generated types verification bundle
+- Backend route test bundle
+
+Dedicated gates remain required for:
+
+- Auth/RBAC/Workspace Identity
+- SQL migrations / migration runner
+- New write routes or mutating APIs
+- ErrorModel / disclosure / status-code / lifecycle semantics
+- OpenAPI authority changes before identity/security prerequisites are
+  established
+- Agent runtime / tools / memory / approvals / model routing
+- Publishing / provider integrations / billing / secrets / analytics runtime
+- Deployment / pilot / production readiness
+
 ## Required Git safety checks
 
 Before making changes, inspect:
@@ -49,9 +80,8 @@ Do not silently change terminology, permissions, statuses, route families, entit
 
 ## Nashir functional source of truth
 
-Prioritize Nashir UI screens and approved gate documents.
-
-Current priority is controlled progression through gates, not fast implementation.
+Prioritize Nashir UI screens, approved gate documents, and the fastest safe
+path within the current authorization boundary.
 
 Preserve:
 
