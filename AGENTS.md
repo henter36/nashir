@@ -55,7 +55,8 @@ Allowed acceleration examples:
 - Documentation boundary updates that clarify already accepted decisions.
 - UI-only alignment work that preserves the approved Nashir product UI source
   of truth and does not add backend/runtime scope.
-- OpenAPI plus generated types only when explicitly authorized together.
+- OpenAPI plus generated types only when explicitly authorized together and the
+  prerequisite Auth/RBAC/Workspace Identity design is already established.
 - Backend route behavior plus route tests inside an already approved route
   family.
 - Drift checks, scope guards, and verification scripts that do not change
