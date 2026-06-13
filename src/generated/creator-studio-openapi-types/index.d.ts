@@ -199,7 +199,7 @@ export interface paths {
         put?: never;
         /**
          * Submit campaign content for review.
-         * @description Moves draft or ready content toward review using campaignContentId identity. This is a review transition only and does not execute AI, publish, schedule, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
+         * @description Compatibility alias over the authoritative ContentDraft submit-review lifecycle transition using campaignContentId identity; it must not create a second lifecycle or approval model. This is a review transition only and does not execute AI, publish, schedule, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
          */
         post: operations["submitCampaignContentReview"];
         delete?: never;
@@ -219,7 +219,7 @@ export interface paths {
         put?: never;
         /**
          * Approve campaign content review.
-         * @description Moves in-review content to approved as a review decision only. This does not publish, schedule, execute AI, or approve asset rights automatically. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
+         * @description Compatibility alias over the authoritative ContentDraft approval transition; it must use the same approval record, self-approval prevention, and nashir.content.approve permission model. This does not publish, schedule, execute AI, or approve asset rights automatically. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
          */
         post: operations["approveCampaignContent"];
         delete?: never;
@@ -239,7 +239,7 @@ export interface paths {
         put?: never;
         /**
          * Reject campaign content review.
-         * @description Moves in-review content to rejected and captures review feedback. This is a review decision only and does not publish, schedule, execute AI, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
+         * @description Compatibility alias over the authoritative ContentDraft rejection transition; it must use the same approval record and nashir.content.approve permission model. This is a review decision only and does not publish, schedule, execute AI, or upload assets. Clients should send Idempotency-Key and a current If-Match or X-Resource-Version value.
          */
         post: operations["rejectCampaignContent"];
         delete?: never;
@@ -592,6 +592,770 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspaces/{workspaceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get workspace.
+         * @description Returns workspace metadata for the authenticated member. Requires nashir.workspace.read permission.
+         */
+        get: operations["getWorkspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update workspace settings.
+         * @description Updates workspace-level settings. Requires nashir.workspace.update permission (admin or owner). workspaceId must not be supplied in the request body.
+         */
+        patch: operations["updateWorkspace"];
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get own membership.
+         * @description Returns the authenticated user's own WorkspaceMember record and role for this workspace. Requires nashir.workspace.read permission. Does not require nashir.members.manage; returns only the caller's own WorkspaceMember record.
+         */
+        get: operations["getMyMembership"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace members.
+         * @description Lists all WorkspaceMember records for the workspace. Requires nashir.workspace.read permission. Member list is not visible to non-members.
+         */
+        get: operations["listMembers"];
+        put?: never;
+        /**
+         * Invite member.
+         * @description Invites a new member to the workspace. Requires nashir.members.manage permission (admin or owner). Creates a WorkspaceMember with status invited. Emits audit event.
+         */
+        post: operations["inviteMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/members/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get member.
+         * @description Returns a WorkspaceMember record. Requires nashir.workspace.read permission. Any active member may read their own record; nashir.members.manage is required to read other members' records.
+         */
+        get: operations["getMember"];
+        put?: never;
+        post?: never;
+        /**
+         * Remove member.
+         * @description Removes a WorkspaceMember from the workspace. Requires nashir.members.manage permission (admin or owner). Emits audit event.
+         */
+        delete: operations["removeMember"];
+        options?: never;
+        head?: never;
+        /**
+         * Update member role.
+         * @description Updates the role of a WorkspaceMember. Requires nashir.members.manage permission (admin or owner). Emits audit event.
+         */
+        patch: operations["updateMemberRole"];
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/members/{memberId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend member.
+         * @description Suspends a WorkspaceMember. Status transitions from active to suspended. Requires nashir.members.manage permission. Returns 409 if member is already suspended. Emits audit event.
+         */
+        post: operations["suspendMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/members/{memberId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate member.
+         * @description Activates a suspended or invited WorkspaceMember. Status transitions to active. Requires nashir.members.manage permission. Returns 409 if member is already active. Emits audit event.
+         */
+        post: operations["activateMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/store-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get store profile.
+         * @description Returns the workspace's StoreProfile. One StoreProfile per workspace in V1. Requires nashir.store_profile.read permission.
+         */
+        get: operations["getStoreProfile"];
+        /**
+         * Upsert store profile.
+         * @description Creates or updates the workspace's StoreProfile. Requires nashir.store_profile.update permission (admin or owner). workspaceId must not be supplied in the request body. Emits audit event.
+         */
+        put: operations["upsertStoreProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/data-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List data sources.
+         * @description Lists DataSource records for the workspace. Requires nashir.data_sources.read permission.
+         */
+        get: operations["listDataSources"];
+        put?: never;
+        /**
+         * Create data source.
+         * @description Creates a DataSource record for the workspace. Requires nashir.data_sources.manage permission. No credentials are stored on this entity. Emits audit event.
+         */
+        post: operations["createDataSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/data-sources/{dataSourceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get data source.
+         * @description Returns a DataSource record. Requires nashir.data_sources.read permission. Returns 404 if not found in workspace.
+         */
+        get: operations["getDataSource"];
+        put?: never;
+        post?: never;
+        /**
+         * Remove data source.
+         * @description Removes a DataSource record. Requires nashir.data_sources.manage permission. Emits audit event.
+         */
+        delete: operations["removeDataSource"];
+        options?: never;
+        head?: never;
+        /**
+         * Update data source.
+         * @description Updates a DataSource record. Requires nashir.data_sources.manage permission. Emits audit event.
+         */
+        patch: operations["updateDataSource"];
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/channel-connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List channel connections.
+         * @description Lists ChannelConnection records for the workspace. No raw credentials are returned. Requires nashir.channel_connections.read permission.
+         */
+        get: operations["listChannelConnections"];
+        put?: never;
+        /**
+         * Create channel connection.
+         * @description Creates a ChannelConnection record. Requires nashir.channel_connections.manage permission (admin or owner). Raw credentials must not be supplied; use IntegrationCredentials for credential references. Emits audit event.
+         */
+        post: operations["createChannelConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/channel-connections/{channelConnectionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get channel connection.
+         * @description Returns a ChannelConnection record. No raw credentials are returned. Requires nashir.channel_connections.read permission.
+         */
+        get: operations["getChannelConnection"];
+        put?: never;
+        post?: never;
+        /**
+         * Remove channel connection.
+         * @description Removes a ChannelConnection record. Requires nashir.channel_connections.manage permission (admin or owner). Emits audit event.
+         */
+        delete: operations["removeChannelConnection"];
+        options?: never;
+        head?: never;
+        /**
+         * Update channel connection.
+         * @description Updates a ChannelConnection record. Requires nashir.channel_connections.manage permission (admin or owner). Emits audit event.
+         */
+        patch: operations["updateChannelConnection"];
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/integration-credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create integration credential reference.
+         * @description Creates a vault-backed credential reference for a workspace integration. Requires nashir.integration_credentials.manage permission (admin or owner). Raw secret values must not be supplied or returned; an opaque vault reference identifier may be accepted and stored but is never returned. Emits audit event.
+         */
+        post: operations["createIntegrationCredential"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/integration-credentials/{integrationCredentialId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke integration credential reference.
+         * @description Revokes and removes a vault-backed credential reference. Requires nashir.integration_credentials.manage permission (admin or owner). Emits audit event. Does not return the credential value.
+         */
+        delete: operations["revokeIntegrationCredential"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List campaigns.
+         * @description Lists Campaign records for the workspace. Requires nashir.campaigns.read permission.
+         */
+        get: operations["listCampaigns"];
+        put?: never;
+        /**
+         * Create campaign.
+         * @description Creates a Campaign record for the workspace. Requires nashir.campaigns.manage permission. Campaign lifecycle status naming is deferred to the OpenAPI YAML review gate. Emits audit event.
+         */
+        post: operations["createCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/campaigns/{campaignId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get campaign.
+         * @description Returns a Campaign record. Requires nashir.campaigns.read permission. Returns 404 if not found in workspace.
+         */
+        get: operations["getCampaign"];
+        put?: never;
+        post?: never;
+        /**
+         * Archive campaign.
+         * @description Archives a Campaign record. Soft-delete; campaign data is preserved but hidden from active views. Requires nashir.campaigns.manage permission. Emits audit event.
+         */
+        delete: operations["archiveCampaign"];
+        options?: never;
+        head?: never;
+        /**
+         * Update campaign.
+         * @description Updates a Campaign record. Requires nashir.campaigns.manage permission. Emits audit event.
+         */
+        patch: operations["updateCampaign"];
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/campaigns/{campaignId}/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get campaign brief.
+         * @description Returns the CampaignBrief for a campaign. One brief per campaign. Requires nashir.campaigns.read permission.
+         */
+        get: operations["getCampaignBrief"];
+        /**
+         * Upsert campaign brief.
+         * @description Creates or updates the CampaignBrief for a campaign. Requires nashir.campaigns.manage permission. Emits audit event.
+         */
+        put: operations["upsertCampaignBrief"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/campaigns/{campaignId}/content-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List campaign content items.
+         * @description Lists CampaignContentItem records for a specific campaign. Requires nashir.content.read permission.
+         */
+        get: operations["listCampaignContentItems"];
+        put?: never;
+        /**
+         * Create campaign content item.
+         * @description Creates a CampaignContentItem for a campaign. Requires nashir.content.manage permission. Emits audit event.
+         */
+        post: operations["createCampaignContentItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace content items.
+         * @description Lists all CampaignContentItem records across the workspace. Supports Content Studio workspace-wide views without requiring a campaignId. Requires nashir.content.read permission.
+         */
+        get: operations["listWorkspaceContentItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-items/{contentItemId}/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List content drafts for a content item.
+         * @description Lists ContentDraft records for a specific CampaignContentItem. Requires nashir.content.read permission.
+         */
+        get: operations["listContentItemDrafts"];
+        put?: never;
+        /**
+         * Create content draft.
+         * @description Creates a ContentDraft for a CampaignContentItem. Requires nashir.content.manage permission. ContentDraft lifecycle status naming is deferred to the OpenAPI YAML review gate. Emits audit event.
+         */
+        post: operations["createContentDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get content draft.
+         * @description Returns a ContentDraft record. Requires nashir.content.read permission. Returns 404 if not found in workspace.
+         */
+        get: operations["getContentDraft"];
+        put?: never;
+        post?: never;
+        /**
+         * Archive content draft.
+         * @description Archives a ContentDraft. Soft-delete; draft data is preserved. Requires nashir.content.manage permission. Emits audit event.
+         */
+        delete: operations["archiveContentDraft"];
+        options?: never;
+        head?: never;
+        /**
+         * Update content draft.
+         * @description Updates a ContentDraft body or language. Requires nashir.content.manage permission. Emits audit event.
+         */
+        patch: operations["updateContentDraft"];
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/submit-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit content draft for review.
+         * @description Submits a ContentDraft for human review. Transitions status to ready_for_review. Requires nashir.content.manage permission. Returns 409 if draft is already submitted or approved. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-draft submission. Emits audit event.
+         */
+        post: operations["submitContentDraftReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve content draft.
+         * @description Approves a ContentDraft. The decision (approved) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). Self-approval is forbidden at the service layer — the approver must not be the content creator (409 if attempted). Returns 409 if already decided. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-review decisions. Emits audit event. Creates a ContentApproval record.
+         */
+        post: operations["approveContentDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject content draft.
+         * @description Rejects a ContentDraft on governance grounds. The decision (rejected) is server-derived from this endpoint path; clients must not supply a decision field. Requires nashir.content.approve permission (reviewer, admin, or owner). This operation is for reviewer/admin/owner rejection only; creator self-withdrawal uses the /withdraw endpoint. Returns 409 if already decided. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-review decisions. Emits audit event with action content_draft.rejected_by_reviewer. Creates a ContentApproval record.
+         */
+        post: operations["rejectContentDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-items/{contentItemId}/drafts/{contentDraftId}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Withdraw content draft.
+         * @description Withdraws a ContentDraft submitted for review. Creator self-withdrawal only — the caller must be the draft's createdByUserId. Requires nashir.content.manage permission. This operation is semantically distinct from reviewer rejection; see /reject for governance rejection. Idempotency-Key protects retries after lost response. If-Match / X-Resource-Version protect against stale-state withdrawals. Emits audit event with action content_draft.withdrawn_by_creator. Returns 409 if draft is not in ready_for_review status.
+         */
+        post: operations["withdrawContentDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace content drafts.
+         * @description Lists all ContentDraft records across the workspace. Supports pending-review dashboards and workspace-wide Content Studio views. Requires nashir.content.read permission.
+         */
+        get: operations["listWorkspaceContentDrafts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/content-approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List workspace content approvals.
+         * @description Lists all ContentApproval records across the workspace. Supports approval history and governance views. Requires nashir.content.read permission.
+         */
+        get: operations["listWorkspaceContentApprovals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/publishing-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List publishing jobs.
+         * @description Lists PublishingJob records for the workspace. Requires nashir.publishing.read permission.
+         */
+        get: operations["listPublishingJobs"];
+        put?: never;
+        /**
+         * Create publishing job.
+         * @description Creates a PublishingJob record. Requires nashir.publishing.manage permission (publisher, admin, or owner). No real external publishing occurs in V1; simulated status is distinct from any future real publishing status. Emits audit event.
+         */
+        post: operations["createPublishingJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/publishing-jobs/{publishingJobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get publishing job.
+         * @description Returns a PublishingJob record. Requires nashir.publishing.read permission.
+         */
+        get: operations["getPublishingJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update publishing job.
+         * @description Updates a PublishingJob record before confirmation. Requires nashir.publishing.manage permission. Emits audit event.
+         */
+        patch: operations["updatePublishingJob"];
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/publishing-jobs/{publishingJobId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm publishing job.
+         * @description Confirms a scheduled PublishingJob. Human confirmation required. Requires nashir.publishing.manage permission (publisher, admin, or owner). Returns 409 if already confirmed or cancelled. Emits audit event.
+         */
+        post: operations["confirmPublishingJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/publishing-jobs/{publishingJobId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel publishing job.
+         * @description Cancels a PublishingJob. Requires nashir.publishing.manage permission. Returns 409 if already cancelled or completed. Emits audit event.
+         */
+        post: operations["cancelPublishingJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/publishing-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List publishing status records.
+         * @description Lists PublishingStatus records across all publishing jobs in the workspace. Append-only source; no client writes. Requires nashir.publishing.read permission.
+         */
+        get: operations["listPublishingStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/analytics-snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List analytics snapshots.
+         * @description Lists AnalyticsSnapshot records for the workspace. sourceSummary is required on every snapshot to distinguish real from mock or partial data. Requires nashir.analytics.read permission.
+         */
+        get: operations["listAnalyticsSnapshots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/analytics-snapshots/{analyticsSnapshotId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get analytics snapshot.
+         * @description Returns a single AnalyticsSnapshot record. sourceSummary field is required; status must be one of the approved enum values. Requires nashir.analytics.read permission.
+         */
+        get: operations["getAnalyticsSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/audit-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List audit events.
+         * @description Lists AuditEvent records for the workspace. Append-only source; no client writes or deletes. Requires nashir.audit_events.read permission (admin or owner only).
+         */
+        get: operations["listAuditEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -607,7 +1371,7 @@ export interface components {
             };
         };
         /** @enum {string} */
-        ErrorCode: "workspace.not_found" | "resource.not_found" | "validation.failed" | "permission.denied" | "conflict.version_mismatch" | "idempotency.conflict" | "rate_limit.exceeded" | "review.required" | "publishing.blocked" | "provider.not_ready" | "model_route.not_ready" | "prompt_template.not_approved" | "cost_policy.exceeded" | "creator_studio.session.not_found" | "creator_studio.session.expired" | "creator_studio.draft.not_found" | "creator_studio.draft.expired" | "creator_studio.draft.not_ready" | "creator_studio.transfer.not_found" | "creator_studio.transfer.expired" | "creator_studio.content.not_approved" | "creator_studio.content.archived_or_expired" | "creator_studio.workspace.mismatch" | "creator_studio.governance.blocked" | "creator_studio.consent.required" | "creator_studio.platform.not_connected" | "creator_studio.scheduling.duplicate_not_supported" | "creator_studio.override.invalid";
+        ErrorCode: "workspace.not_found" | "resource.not_found" | "validation.failed" | "permission.denied" | "conflict.version_mismatch" | "idempotency.conflict" | "rate_limit.exceeded" | "review.required" | "publishing.blocked" | "provider.not_ready" | "model_route.not_ready" | "prompt_template.not_approved" | "cost_policy.exceeded" | "creator_studio.session.not_found" | "creator_studio.session.expired" | "creator_studio.draft.not_found" | "creator_studio.draft.expired" | "creator_studio.draft.not_ready" | "creator_studio.transfer.not_found" | "creator_studio.transfer.expired" | "creator_studio.content.not_approved" | "creator_studio.content.archived_or_expired" | "creator_studio.workspace.mismatch" | "creator_studio.governance.blocked" | "creator_studio.consent.required" | "creator_studio.platform.not_connected" | "creator_studio.scheduling.duplicate_not_supported" | "creator_studio.override.invalid" | "workspace.member.not_found" | "workspace.member.already_active" | "workspace.member.already_suspended" | "workspace.member.self_action_forbidden" | "store_profile.not_found" | "data_source.not_found" | "channel_connection.not_found" | "integration_credential.not_found" | "campaign.not_found" | "campaign.archived" | "content_item.not_found" | "content_draft.not_found" | "content_approval.self_approval_forbidden" | "content_approval.already_decided" | "publishing_job.not_found" | "publishing_job.already_confirmed" | "publishing_job.already_cancelled" | "analytics_snapshot.not_found" | "audit_event.not_found";
         ErrorModel: {
             errorCode: components["schemas"]["ErrorCode"];
             message: string;
@@ -688,13 +1452,13 @@ export interface components {
             status?: components["schemas"]["ProductStatus"];
         };
         ProductResponse: {
-            data: components["schemas"]["Product"];
-            warnings: components["schemas"]["Warning"][];
+            product: components["schemas"]["Product"];
         };
         ProductListResponse: {
-            data: components["schemas"]["Product"][];
-            meta: components["schemas"]["PaginationMeta"];
-            warnings: components["schemas"]["Warning"][];
+            products: components["schemas"]["Product"][];
+            count: number;
+            hasMore: boolean;
+            nextCursor: string | null;
         };
         /** @enum {string} */
         AssetType: "image" | "video" | "document" | "audio" | "other";
@@ -1409,6 +2173,456 @@ export interface components {
             confidenceLabel?: string | null;
             dataSource?: string | null;
         };
+        /**
+         * @description Approved Campaign lifecycle status values. draft=created; generating=AI content in progress; review=under human review; ready=all content approved; scheduled=publishing date assigned; active=running; paused=temporarily halted; completed=ended; archived=soft-deleted.
+         * @enum {string}
+         */
+        CampaignStatus: "draft" | "generating" | "review" | "ready" | "scheduled" | "active" | "paused" | "completed" | "archived";
+        /**
+         * @description Approved ContentDraft lifecycle status values. draft=created, not submitted; ready_for_review=submitted for review; approved=approved by reviewer; rejected=rejected by reviewer or withdrawn by creator; archived=soft-deleted.
+         * @enum {string}
+         */
+        ContentDraftStatus: "draft" | "ready_for_review" | "approved" | "rejected" | "archived";
+        /**
+         * @description Approved CampaignContentItem status values. Reflects the current approval state of the item's active draft.
+         * @enum {string}
+         */
+        CampaignContentItemStatus: "draft" | "ready_for_review" | "approved" | "rejected" | "archived";
+        /**
+         * @description Approved PublishingJob lifecycle status values. simulated must remain explicitly distinct from any future real publishing status. No real external publishing occurs in V1.
+         * @enum {string}
+         */
+        PublishingJobStatus: "draft" | "scheduled" | "queued" | "simulated" | "failed" | "cancelled";
+        /** @enum {string} */
+        WorkspaceStatus: "active" | "inactive" | "suspended";
+        Workspace: {
+            id: string;
+            name: string;
+            status: components["schemas"]["WorkspaceStatus"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        WorkspaceUpdateRequest: {
+            name?: string;
+        };
+        WorkspaceResponse: {
+            data: components["schemas"]["Workspace"];
+        };
+        /**
+         * @description Approved WorkspaceMember status values. active = access allowed; invited = access denied until activated; suspended = access denied.
+         * @enum {string}
+         */
+        WorkspaceMemberStatus: "active" | "invited" | "suspended";
+        /** @enum {string} */
+        WorkspaceMemberRole: "owner" | "admin" | "editor" | "reviewer" | "publisher" | "analyst" | "viewer";
+        WorkspaceMember: {
+            id: string;
+            workspaceId: string;
+            userId: string;
+            role: components["schemas"]["WorkspaceMemberRole"];
+            status: components["schemas"]["WorkspaceMemberStatus"];
+            /** Format: date-time */
+            joinedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        WorkspaceMemberInviteRequest: {
+            /** Format: email */
+            email: string;
+            role: components["schemas"]["WorkspaceMemberRole"];
+        };
+        WorkspaceMemberUpdateRequest: {
+            role: components["schemas"]["WorkspaceMemberRole"];
+        };
+        WorkspaceMemberResponse: {
+            data: components["schemas"]["WorkspaceMember"];
+        };
+        WorkspaceMemberListResponse: {
+            data: components["schemas"]["WorkspaceMember"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        StoreProfile: {
+            id: string;
+            workspaceId: string;
+            storeName: string;
+            storeUrl?: string | null;
+            brandSummary?: string | null;
+            targetMarketSummary?: string | null;
+            defaultLanguage?: string | null;
+            /** @enum {string} */
+            status: "active" | "inactive";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StoreProfileUpsertRequest: {
+            storeName: string;
+            storeUrl?: string | null;
+            brandSummary?: string | null;
+            targetMarketSummary?: string | null;
+            defaultLanguage?: string | null;
+        };
+        StoreProfileResponse: {
+            data: components["schemas"]["StoreProfile"];
+        };
+        /** @enum {string} */
+        DataSourceStatus: "not_connected" | "connected" | "error" | "expired";
+        DataSource: {
+            id: string;
+            workspaceId: string;
+            type: string;
+            provider: string;
+            displayName: string;
+            connectionStatus: components["schemas"]["DataSourceStatus"];
+            lastSyncStatus?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        DataSourceCreateRequest: {
+            type: string;
+            provider: string;
+            displayName: string;
+        };
+        DataSourceUpdateRequest: {
+            displayName?: string;
+            connectionStatus?: components["schemas"]["DataSourceStatus"];
+        };
+        DataSourceResponse: {
+            data: components["schemas"]["DataSource"];
+        };
+        DataSourceListResponse: {
+            data: components["schemas"]["DataSource"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        /** @enum {string} */
+        ChannelConnectionStatus: "not_connected" | "connected" | "error" | "expired";
+        ChannelConnection: {
+            id: string;
+            workspaceId: string;
+            /** @description Optional reference to a DataSource. No raw credentials on this entity. */
+            dataSourceId?: string | null;
+            provider: string;
+            channelType: string;
+            displayName: string;
+            connectionStatus: components["schemas"]["ChannelConnectionStatus"];
+            capabilitySummary?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ChannelConnectionCreateRequest: {
+            dataSourceId?: string | null;
+            provider: string;
+            channelType: string;
+            displayName: string;
+        };
+        ChannelConnectionUpdateRequest: {
+            displayName?: string;
+            connectionStatus?: components["schemas"]["ChannelConnectionStatus"];
+            capabilitySummary?: string | null;
+        };
+        ChannelConnectionResponse: {
+            data: components["schemas"]["ChannelConnection"];
+        };
+        ChannelConnectionListResponse: {
+            data: components["schemas"]["ChannelConnection"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        /** @description Vault-backed credential reference. Raw secret values are never stored or returned. */
+        IntegrationCredential: {
+            id: string;
+            workspaceId: string;
+            /** @description Type of credential (e.g., api_key, oauth_token_ref). */
+            credentialType: string;
+            /** @description Opaque vault reference identifier. Not a raw secret value. */
+            vaultRef: string;
+            channelConnectionId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        IntegrationCredentialCreateRequest: {
+            credentialType: string;
+            /** @description Opaque vault reference identifier provided by the caller. Never a raw secret value. */
+            vaultRef: string;
+            channelConnectionId?: string | null;
+        };
+        /** @description Response contains only safe metadata. No raw secret value or vault reference is returned. */
+        IntegrationCredentialResponse: {
+            data: components["schemas"]["IntegrationCredentialSafeMetadata"];
+        };
+        /** @description Safe credential-reference metadata. Raw secret values and vault references are never returned. */
+        IntegrationCredentialSafeMetadata: {
+            id: string;
+            workspaceId: string;
+            credentialType: string;
+            channelConnectionId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        Campaign: {
+            id: string;
+            workspaceId: string;
+            name: string;
+            objective?: string | null;
+            primaryProductId?: string | null;
+            status?: components["schemas"]["CampaignStatus"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CampaignCreateRequest: {
+            name: string;
+            objective?: string | null;
+            primaryProductId?: string | null;
+        };
+        CampaignUpdateRequest: {
+            name?: string;
+            objective?: string | null;
+            primaryProductId?: string | null;
+        };
+        CampaignResponse: {
+            data: components["schemas"]["Campaign"];
+        };
+        CampaignListResponse: {
+            data: components["schemas"]["Campaign"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        CampaignBrief: {
+            id: string;
+            workspaceId: string;
+            campaignId: string;
+            objective?: string | null;
+            audienceSummary?: string | null;
+            channelSummary?: string | null;
+            tone?: string | null;
+            constraints?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CampaignBriefUpsertRequest: {
+            objective?: string | null;
+            audienceSummary?: string | null;
+            channelSummary?: string | null;
+            tone?: string | null;
+            constraints?: string | null;
+        };
+        CampaignBriefResponse: {
+            data: components["schemas"]["CampaignBrief"];
+        };
+        CampaignContentItem: {
+            id: string;
+            workspaceId: string;
+            campaignId: string;
+            contentType: string;
+            channel: string;
+            status?: components["schemas"]["CampaignContentItemStatus"];
+            currentDraftId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CampaignContentItemCreateRequest: {
+            contentType: string;
+            channel: string;
+        };
+        CampaignContentItemUpdateRequest: {
+            contentType?: string;
+            channel?: string;
+        };
+        CampaignContentItemResponse: {
+            data: components["schemas"]["CampaignContentItem"];
+        };
+        CampaignContentItemListResponse: {
+            data: components["schemas"]["CampaignContentItem"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        ContentDraft: {
+            id: string;
+            workspaceId: string;
+            campaignContentItemId: string;
+            body?: string | null;
+            language?: string | null;
+            version: number;
+            status?: components["schemas"]["ContentDraftStatus"];
+            createdByUserId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ContentDraftCreateRequest: {
+            body?: string | null;
+            language?: string | null;
+        };
+        ContentDraftUpdateRequest: {
+            body?: string | null;
+            language?: string | null;
+        };
+        ContentDraftResponse: {
+            data: components["schemas"]["ContentDraft"];
+        };
+        ContentDraftListResponse: {
+            data: components["schemas"]["ContentDraft"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        /** @enum {string} */
+        ContentApprovalDecision: "approved" | "rejected";
+        /** @description Immutable after creation. Self-approval is forbidden; approver must not be the content creator. */
+        ContentApproval: {
+            id: string;
+            workspaceId: string;
+            contentDraftId: string;
+            /** @description The user who made the approval decision. Self-approval is forbidden at the service layer. */
+            reviewerUserId: string;
+            decision: components["schemas"]["ContentApprovalDecision"];
+            note?: string | null;
+            /** @description Structured reason for rejection, if provided by the reviewer. Present only on rejected decisions. */
+            rejectionReason?: string | null;
+            /** @description Specific changes required before resubmission, if provided by the reviewer. Present only on rejected decisions. */
+            requiredChanges?: string[] | null;
+            /** Format: date-time */
+            decidedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Request body for approving a ContentDraft. The decision (approved) is server-derived from the /approve endpoint path. Clients must not supply a decision field. */
+        ContentApprovalApproveRequest: {
+            /** @description Optional reviewer note for the approval record. */
+            note?: string | null;
+        };
+        /** @description Request body for rejecting a ContentDraft. The decision (rejected) is server-derived from the /reject endpoint path; do not supply a decision field. */
+        ContentApprovalRejectRequest: {
+            /** @description Optional reviewer note for the rejection record. */
+            note?: string | null;
+            /** @description Optional structured reason for rejection. */
+            rejectionReason?: string | null;
+            /** @description Optional list of specific changes required before resubmission. */
+            requiredChanges?: string[];
+        };
+        ContentApprovalResponse: {
+            data: components["schemas"]["ContentApproval"];
+        };
+        ContentApprovalListResponse: {
+            data: components["schemas"]["ContentApproval"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        PublishingJob: {
+            id: string;
+            workspaceId: string;
+            campaignId: string;
+            campaignContentItemId?: string | null;
+            /** Format: date-time */
+            scheduledAt?: string | null;
+            status?: components["schemas"]["PublishingJobStatus"];
+            targetChannelConnectionId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        PublishingJobCreateRequest: {
+            campaignId: string;
+            campaignContentItemId?: string | null;
+            /** Format: date-time */
+            scheduledAt?: string | null;
+            targetChannelConnectionId?: string | null;
+        };
+        PublishingJobUpdateRequest: {
+            /** Format: date-time */
+            scheduledAt?: string | null;
+            targetChannelConnectionId?: string | null;
+        };
+        PublishingJobResponse: {
+            data: components["schemas"]["PublishingJob"];
+        };
+        PublishingJobListResponse: {
+            data: components["schemas"]["PublishingJob"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        PublishingStatusRecord: {
+            id: string;
+            workspaceId: string;
+            publishingJobId: string;
+            /** @description Status value at the time of this record. Append-only; no client writes. */
+            status: string;
+            statusMessage?: string | null;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PublishingStatusListResponse: {
+            data: components["schemas"]["PublishingStatusRecord"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        /**
+         * @description Approved AnalyticsSnapshot status values (PR
+         * @enum {string}
+         */
+        AnalyticsSnapshotStatus: "available" | "partial" | "stale" | "unavailable";
+        /** @enum {string} */
+        AnalyticsSnapshotSubjectType: "campaign" | "product" | "channel_connection";
+        AnalyticsSnapshot: {
+            id: string;
+            workspaceId: string;
+            status: components["schemas"]["AnalyticsSnapshotStatus"];
+            subjectType: components["schemas"]["AnalyticsSnapshotSubjectType"];
+            subjectId: string;
+            /** @description Metric data. Must not claim real production data unless sourceSummary confirms a real data source. */
+            metricSummary?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Required. Describes the data source and lineage. Must distinguish real data from mock, partial, or stale data. */
+            sourceSummary: string;
+            /** Format: date-time */
+            snapshotAt: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AnalyticsSnapshotResponse: {
+            data: components["schemas"]["AnalyticsSnapshot"];
+        };
+        AnalyticsSnapshotListResponse: {
+            data: components["schemas"]["AnalyticsSnapshot"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
+        /** @description Append-only audit trail record. Created by the server; no client writes. Cannot be modified or deleted after creation. */
+        AuditEvent: {
+            id: string;
+            workspaceId: string;
+            /** @description The user who triggered the action. Null for system-initiated events. */
+            actorUserId?: string | null;
+            /** @description The action performed. Uses dot notation (e.g., workspace.member.invited, content_draft.submitted_for_review). */
+            action: string;
+            /** @description The entity type that was acted upon. */
+            targetType: string;
+            /** @description The entity id that was acted upon. */
+            targetId: string;
+            /** @description Summary metadata for the event. Must not contain raw credentials or secret values. */
+            metadataSummary?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AuditEventListResponse: {
+            data: components["schemas"]["AuditEvent"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
     };
     responses: {
         /** @description Bad request. */
@@ -1549,6 +2763,34 @@ export interface components {
         DraftIdPath: string;
         /** @description Stable opaque Creator Studio transfer draft identifier. */
         TransferIdPath: string;
+        /** @description Stable opaque workspace member identifier. */
+        MemberIdPath: string;
+        /** @description Stable opaque data source identifier. */
+        DataSourceIdPath: string;
+        /** @description Stable opaque channel connection identifier. */
+        ChannelConnectionIdPath: string;
+        /** @description Stable opaque integration credential reference identifier. Does not contain or imply a raw secret value. */
+        IntegrationCredentialIdPath: string;
+        /** @description Stable opaque campaign identifier. */
+        CampaignIdPath: string;
+        /** @description Stable opaque publishing job identifier. */
+        PublishingJobIdPath: string;
+        /** @description Stable opaque analytics snapshot identifier. */
+        AnalyticsSnapshotIdPath: string;
+        /** @description Filter analytics snapshots by subject type. */
+        SubjectTypeQuery: "campaign" | "product" | "channel_connection";
+        /** @description Filter campaigns by status. */
+        CampaignStatusQuery: components["schemas"]["CampaignStatus"];
+        /** @description Filter content drafts by status. */
+        ContentDraftStatusQuery: components["schemas"]["ContentDraftStatus"];
+        /** @description Filter campaign content items by status. */
+        CampaignContentItemStatusQuery: components["schemas"]["CampaignContentItemStatus"];
+        /** @description Filter publishing jobs by status. */
+        PublishingJobStatusQuery: components["schemas"]["PublishingJobStatus"];
+        /** @description Stable opaque campaign content item identifier. */
+        ContentItemIdPath: string;
+        /** @description Stable opaque content draft identifier. */
+        ContentDraftIdPath: string;
     };
     requestBodies: never;
     headers: never;
@@ -1582,9 +2824,9 @@ export interface operations {
     };
     listProducts: {
         parameters: {
-            query?: {
-                /** @description Maximum number of records to return. */
-                limit?: components["parameters"]["LimitQuery"];
+            query: {
+                /** @description Maximum number of product records to return. */
+                limit: number;
                 /** @description Cursor for the next page. */
                 cursor?: components["parameters"]["CursorQuery"];
                 /** @description Optional resource status filter. */
@@ -1616,6 +2858,9 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             default: components["responses"]["DefaultError"];
         };
     };
@@ -1650,6 +2895,9 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             default: components["responses"]["DefaultError"];
@@ -1681,6 +2929,8 @@ export interface operations {
                     "application/json": components["schemas"]["ProductResponse"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["NotFound"];
             default: components["responses"]["DefaultError"];
         };
@@ -1720,6 +2970,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
@@ -1766,6 +3018,9 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             default: components["responses"]["DefaultError"];
         };
     };
@@ -1800,6 +3055,9 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             default: components["responses"]["DefaultError"];
@@ -1831,6 +3089,8 @@ export interface operations {
                     "application/json": components["schemas"]["AssetResponse"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["NotFound"];
             default: components["responses"]["DefaultError"];
         };
@@ -1870,6 +3130,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
@@ -1909,6 +3171,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
@@ -1953,6 +3217,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
             default: components["responses"]["DefaultError"];
         };
@@ -1990,6 +3255,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             500: components["responses"]["InternalServerError"];
@@ -2535,6 +3801,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             500: components["responses"]["InternalServerError"];
@@ -2883,6 +4150,1971 @@ export interface operations {
             404: components["responses"]["NotFound"];
             410: components["responses"]["Gone"];
             500: components["responses"]["InternalServerError"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getWorkspace: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workspace response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    updateWorkspace: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Workspace updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getMyMembership: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user membership response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listMembers: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Member list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    inviteMember: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceMemberInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Member invited. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getMember: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque workspace member identifier. */
+                memberId: components["parameters"]["MemberIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Member response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    removeMember: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque workspace member identifier. */
+                memberId: components["parameters"]["MemberIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Member removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    updateMemberRole: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque workspace member identifier. */
+                memberId: components["parameters"]["MemberIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceMemberUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Member updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    suspendMember: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque workspace member identifier. */
+                memberId: components["parameters"]["MemberIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Member suspended. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    activateMember: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque workspace member identifier. */
+                memberId: components["parameters"]["MemberIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Member activated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMemberResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getStoreProfile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Store profile response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreProfileResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    upsertStoreProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreProfileUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Store profile upserted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreProfileResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listDataSources: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Data source list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSourceListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    createDataSource: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataSourceCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Data source created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSourceResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getDataSource: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque data source identifier. */
+                dataSourceId: components["parameters"]["DataSourceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Data source response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSourceResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    removeDataSource: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque data source identifier. */
+                dataSourceId: components["parameters"]["DataSourceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Data source removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    updateDataSource: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque data source identifier. */
+                dataSourceId: components["parameters"]["DataSourceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataSourceUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Data source updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSourceResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listChannelConnections: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Channel connection list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelConnectionListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    createChannelConnection: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelConnectionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Channel connection created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelConnectionResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getChannelConnection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque channel connection identifier. */
+                channelConnectionId: components["parameters"]["ChannelConnectionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Channel connection response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelConnectionResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    removeChannelConnection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque channel connection identifier. */
+                channelConnectionId: components["parameters"]["ChannelConnectionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Channel connection removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    updateChannelConnection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque channel connection identifier. */
+                channelConnectionId: components["parameters"]["ChannelConnectionIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelConnectionUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Channel connection updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelConnectionResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    createIntegrationCredential: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntegrationCredentialCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Integration credential reference created. Response contains only safe metadata; no raw secret or vault reference is returned. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationCredentialResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    revokeIntegrationCredential: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque integration credential reference identifier. Does not contain or imply a raw secret value. */
+                integrationCredentialId: components["parameters"]["IntegrationCredentialIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Integration credential reference revoked. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listCampaigns: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+                /** @description Filter campaigns by status. */
+                status?: components["parameters"]["CampaignStatusQuery"];
+                /** @description Return resources updated after this timestamp. */
+                updatedAfter?: components["parameters"]["UpdatedAfterQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    createCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaign created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getCampaign: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign identifier. */
+                campaignId: components["parameters"]["CampaignIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    archiveCampaign: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign identifier. */
+                campaignId: components["parameters"]["CampaignIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign archived. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    updateCampaign: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign identifier. */
+                campaignId: components["parameters"]["CampaignIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaign updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getCampaignBrief: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign identifier. */
+                campaignId: components["parameters"]["CampaignIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign brief response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignBriefResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    upsertCampaignBrief: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign identifier. */
+                campaignId: components["parameters"]["CampaignIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignBriefUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaign brief upserted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignBriefResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listCampaignContentItems: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+                /** @description Filter campaign content items by status. */
+                status?: components["parameters"]["CampaignContentItemStatusQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign identifier. */
+                campaignId: components["parameters"]["CampaignIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign content item list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignContentItemListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    createCampaignContentItem: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign identifier. */
+                campaignId: components["parameters"]["CampaignIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignContentItemCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaign content item created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignContentItemResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listWorkspaceContentItems: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+                /** @description Filter campaign content items by status. */
+                status?: components["parameters"]["CampaignContentItemStatusQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workspace content item list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignContentItemListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listContentItemDrafts: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+                /** @description Filter content drafts by status. */
+                status?: components["parameters"]["ContentDraftStatusQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Content draft list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentDraftListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    createContentDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentDraftCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Content draft created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentDraftResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getContentDraft: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+                /** @description Stable opaque content draft identifier. */
+                contentDraftId: components["parameters"]["ContentDraftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Content draft response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentDraftResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    archiveContentDraft: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+                /** @description Stable opaque content draft identifier. */
+                contentDraftId: components["parameters"]["ContentDraftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Content draft archived. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    updateContentDraft: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+                /** @description Stable opaque content draft identifier. */
+                contentDraftId: components["parameters"]["ContentDraftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentDraftUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Content draft updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentDraftResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    submitContentDraftReview: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional concurrency token. PUT operations require either If-Match or X-Resource-Version. */
+                "If-Match"?: components["parameters"]["IfMatchHeader"];
+                /** @description Optional resource version. PUT operations require either If-Match or X-Resource-Version. */
+                "X-Resource-Version"?: components["parameters"]["ResourceVersionHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+                /** @description Stable opaque content draft identifier. */
+                contentDraftId: components["parameters"]["ContentDraftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Content draft submitted for review. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentDraftResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    approveContentDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional concurrency token. PUT operations require either If-Match or X-Resource-Version. */
+                "If-Match"?: components["parameters"]["IfMatchHeader"];
+                /** @description Optional resource version. PUT operations require either If-Match or X-Resource-Version. */
+                "X-Resource-Version"?: components["parameters"]["ResourceVersionHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+                /** @description Stable opaque content draft identifier. */
+                contentDraftId: components["parameters"]["ContentDraftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ContentApprovalApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description Content draft approved. ContentApproval record created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentApprovalResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    rejectContentDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional concurrency token. PUT operations require either If-Match or X-Resource-Version. */
+                "If-Match"?: components["parameters"]["IfMatchHeader"];
+                /** @description Optional resource version. PUT operations require either If-Match or X-Resource-Version. */
+                "X-Resource-Version"?: components["parameters"]["ResourceVersionHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+                /** @description Stable opaque content draft identifier. */
+                contentDraftId: components["parameters"]["ContentDraftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ContentApprovalRejectRequest"];
+            };
+        };
+        responses: {
+            /** @description Content draft rejected. ContentApproval record created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentApprovalResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    withdrawContentDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional concurrency token. PUT operations require either If-Match or X-Resource-Version. */
+                "If-Match"?: components["parameters"]["IfMatchHeader"];
+                /** @description Optional resource version. PUT operations require either If-Match or X-Resource-Version. */
+                "X-Resource-Version"?: components["parameters"]["ResourceVersionHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque campaign content item identifier. */
+                contentItemId: components["parameters"]["ContentItemIdPath"];
+                /** @description Stable opaque content draft identifier. */
+                contentDraftId: components["parameters"]["ContentDraftIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Content draft withdrawn. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentDraftResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listWorkspaceContentDrafts: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+                /** @description Filter content drafts by status. */
+                status?: components["parameters"]["ContentDraftStatusQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workspace content draft list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentDraftListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listWorkspaceContentApprovals: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workspace content approval list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentApprovalListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listPublishingJobs: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+                /** @description Filter publishing jobs by status. */
+                status?: components["parameters"]["PublishingJobStatusQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publishing job list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishingJobListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    createPublishingJob: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required for POST create/link operations to prevent duplicate writes. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKeyHeader"];
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishingJobCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Publishing job created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishingJobResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getPublishingJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque publishing job identifier. */
+                publishingJobId: components["parameters"]["PublishingJobIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publishing job response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishingJobResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    updatePublishingJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque publishing job identifier. */
+                publishingJobId: components["parameters"]["PublishingJobIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishingJobUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Publishing job updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishingJobResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    confirmPublishingJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque publishing job identifier. */
+                publishingJobId: components["parameters"]["PublishingJobIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publishing job confirmed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishingJobResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    cancelPublishingJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque publishing job identifier. */
+                publishingJobId: components["parameters"]["PublishingJobIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publishing job cancelled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishingJobResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listPublishingStatus: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publishing status list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishingStatusListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listAnalyticsSnapshots: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+                /** @description Filter analytics snapshots by subject type. */
+                subjectType?: components["parameters"]["SubjectTypeQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Analytics snapshot list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsSnapshotListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    getAnalyticsSnapshot: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+                /** @description Stable opaque analytics snapshot identifier. */
+                analyticsSnapshotId: components["parameters"]["AnalyticsSnapshotIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Analytics snapshot response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsSnapshotResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["DefaultError"];
+        };
+    };
+    listAuditEvents: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of records to return. */
+                limit?: components["parameters"]["LimitQuery"];
+                /** @description Cursor for the next page. */
+                cursor?: components["parameters"]["CursorQuery"];
+            };
+            header?: {
+                /** @description Optional client request tracking identifier. */
+                "X-Request-Id"?: components["parameters"]["RequestIdHeader"];
+            };
+            path: {
+                /** @description Stable opaque workspace identifier. */
+                workspaceId: components["parameters"]["WorkspaceIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit event list response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditEventListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["NotFound"];
             default: components["responses"]["DefaultError"];
         };
     };
