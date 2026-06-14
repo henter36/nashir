@@ -48,7 +48,8 @@
 - `DashboardPage.jsx` monolith split into 12 named section sub-components + 4 support modules
 - All React state, `useEffect` event listeners (9 events), and `useMemo` / computed values remain in the orchestrator
 - All props signatures preserved; App.jsx import unchanged (`"./pages/DashboardPage.jsx"` with explicit extension)
-- No routing logic, no Zustand store changes, no utility file changes, no CSS file changes
+- No routing logic, no Zustand store changes, no utility file changes
+- Dashboard CSS was relocated into `src/pages/DashboardPage/styles.js`; no CSS architecture or framework changes (no Tailwind, no CSS modules, no PostCSS additions)
 
 ### What did NOT change
 - `App.jsx` — untouched

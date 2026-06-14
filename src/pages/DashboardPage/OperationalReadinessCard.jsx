@@ -2,14 +2,14 @@ import { Store } from "lucide-react";
 import { CardHeader, InfoRow } from "./components.jsx";
 
 export default function OperationalReadinessCard({
-  avgReadiness,
-  latestStrategicPlan,
-  products,
-  campaignList,
-  assets,
-  unconfirmedAssets,
-  onOpenStoreSetup,
-  onOpenDataSources,
+  avgReadiness = 0,
+  latestStrategicPlan = null,
+  products = [],
+  campaignList = [],
+  assets = [],
+  unconfirmedAssets = 0,
+  onOpenStoreSetup = () => {},
+  onOpenDataSources = () => {},
 }) {
   const readinessItems = [
     [

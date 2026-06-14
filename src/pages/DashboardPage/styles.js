@@ -224,6 +224,19 @@ export const styles = `
   font-weight: 900;
 }
 
+.prototype-data-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #854d0e;
+  grid-column: 1 / -1;
+}
+
 .kpi-card {
   height: 88px;
   padding: 12px;

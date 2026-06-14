@@ -1,4 +1,4 @@
-export default function KpiGrid({ kpis, period }) {
+export default function KpiGrid({ kpis = [], period = "" }) {
   return (
     <section className="kpi-grid">
       {kpis.map((item) => {

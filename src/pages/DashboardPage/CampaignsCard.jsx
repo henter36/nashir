@@ -1,8 +1,8 @@
 import { ImageIcon, Megaphone } from "lucide-react";
 import { CardHeader, Status } from "./components.jsx";
-import { formatCampaignStatus, getCampaignProductName } from "./helpers.js";
+import { formatCampaignStatus, getCampaignProductName, normalizePercent } from "./helpers.js";
 
-export default function CampaignsCard({ recentCampaigns, onOpenCampaigns }) {
+export default function CampaignsCard({ recentCampaigns = [], onOpenCampaigns = () => {} }) {
   return (
     <article className="card campaigns-card">
       <CardHeader
@@ -38,9 +38,9 @@ export default function CampaignsCard({ recentCampaigns, onOpenCampaigns }) {
 
             <div className="readiness-cell">
               <i>
-                <b style={{ width: `${campaign.readiness}%` }} />
+                <b style={{ width: `${normalizePercent(campaign.readiness)}%` }} />
               </i>
-              <small>{campaign.readiness}%</small>
+              <small>{normalizePercent(campaign.readiness)}%</small>
             </div>
 
             <span className="channel-pill">{campaign.channel || campaign.channels?.[0] || "عام"}</span>

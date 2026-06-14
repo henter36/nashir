@@ -1,7 +1,7 @@
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { CardHeader } from "./components.jsx";
 
-export default function PrioritiesCard({ priorities }) {
+export default function PrioritiesCard({ priorities = [] }) {
   return (
     <article className="card next-action-card">
       <CardHeader

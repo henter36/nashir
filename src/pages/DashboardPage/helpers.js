@@ -2,8 +2,8 @@ export function strategicPlanNextAction(plan) {
   return plan?.planJson?.nextAction || "راجع آخر خطة استراتيجية محفوظة قبل إنشاء حملة.";
 }
 
-export function getCampaignProductName(campaign = {}) {
-  return campaign.productSnapshot?.name || campaign.product || "منتج غير محدد";
+export function getCampaignProductName(campaign) {
+  return campaign?.productSnapshot?.name || campaign?.product || "منتج غير محدد";
 }
 
 export function formatCampaignStatus(status) {
@@ -13,5 +13,10 @@ export function formatCampaignStatus(status) {
     draft: "مسودة",
     approved: "معتمدة",
   };
-  return map[status] || status;
+  return map[status] || "حالة غير معروفة";
+}
+
+export function normalizePercent(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 0;
 }

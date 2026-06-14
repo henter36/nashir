@@ -2,7 +2,7 @@ import { BarChart3 } from "lucide-react";
 import { CardHeader, Mini } from "./components.jsx";
 import { formatCompactNumber } from "../../utils/campaignAnalyticsStore.js";
 
-export default function PerformanceCard({ summary, activities, onOpenAnalytics }) {
+export default function PerformanceCard({ summary = {}, activities = [], onOpenAnalytics = () => {} }) {
   return (
     <article className="card small-card">
       <CardHeader

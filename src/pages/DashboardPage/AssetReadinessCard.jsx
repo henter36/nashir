@@ -1,7 +1,7 @@
 import { FolderOpen } from "lucide-react";
 import { CardHeader } from "./components.jsx";
 
-export default function AssetReadinessCard({ assetMetrics, onOpenAssets }) {
+export default function AssetReadinessCard({ assetMetrics = [], onOpenAssets = () => {} }) {
   return (
     <article className="card small-card">
       <CardHeader

@@ -1,7 +1,7 @@
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { CardHeader } from "./components.jsx";
 
-export default function QuickActionsCard({ quickActions }) {
+export default function QuickActionsCard({ quickActions = [] }) {
   return (
     <section className="quick-actions-card">
       <CardHeader

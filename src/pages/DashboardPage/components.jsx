@@ -16,11 +16,11 @@ export function CardHeader({ title, description, icon: Icon, action }) {
         <h2>{title}</h2>
         <p>{description}</p>
       </div>
-      {action || (
+      {action ?? (Icon ? (
         <div className="header-icon">
           <Icon size={20} />
         </div>
-      )}
+      ) : null)}
     </div>
   );
 }

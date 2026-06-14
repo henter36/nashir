@@ -2,14 +2,14 @@ import { Layers } from "lucide-react";
 import { CardHeader, Mini } from "./components.jsx";
 
 export default function PublishingCard({
-  channelSetSize,
-  campaignListLength,
-  avgReadiness,
-  readyContent,
-  contentItemsCount,
-  needsReviewContent,
-  onOpenPublishingQueue,
-  onOpenMultiPlatform,
+  channelSetSize = 0,
+  campaignListLength = 0,
+  avgReadiness = 0,
+  readyContent = 0,
+  contentItemsCount = 0,
+  needsReviewContent = 0,
+  onOpenPublishingQueue = () => {},
+  onOpenMultiPlatform = () => {},
 }) {
   return (
     <article className="card small-card">

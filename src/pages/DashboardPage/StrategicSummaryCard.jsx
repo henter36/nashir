@@ -1,7 +1,7 @@
 import { Sparkles } from "lucide-react";
 import { CardHeader, Mini } from "./components.jsx";
 
-export default function StrategicSummaryCard({ strategicSummary, latestStrategicPlan }) {
+export default function StrategicSummaryCard({ strategicSummary = {}, latestStrategicPlan = null }) {
   return (
     <article className="card strategic-summary-card">
       <CardHeader

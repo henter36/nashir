@@ -2,7 +2,7 @@ import { Plus, Sparkles } from "lucide-react";
 
 const periodLabels = ["اليوم", "آخر 7 أيام", "هذا الشهر"];
 
-export default function DashboardHero({ period, onPeriodChange, onCreateCampaign }) {
+export default function DashboardHero({ period = "آخر 7 أيام", onPeriodChange = () => {}, onCreateCampaign = () => {} }) {
   return (
     <section className="hero">
       <div>
