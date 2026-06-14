@@ -1,6 +1,6 @@
 import { CircleAlert } from "lucide-react";
-import { SelectField, Info } from "./components.jsx";
-import { getDefaultTrigger, getOptionLabel } from "./helpers.js";
+import { SelectField, TriggerInfoRows } from "./components.jsx";
+import { getDefaultTrigger } from "./helpers.js";
 import {
   TRIGGER_TYPES,
   TRIGGER_START_WHEN_OPTIONS,
@@ -62,13 +62,7 @@ export default function WorkflowTriggerPanel({ trigger, onChange, editable = fal
             />
           </>
         ) : (
-          <>
-            <Info label="نوع المشغل" value={getOptionLabel(TRIGGER_TYPES, safeTrigger.type)} />
-            <Info label="متى يبدأ المسار؟" value={getOptionLabel(TRIGGER_START_WHEN_OPTIONS, safeTrigger.startWhen) || safeTrigger.startWhen || "—"} />
-            <Info label="شرط البدء" value={getOptionLabel(START_CONDITIONS, safeTrigger.startCondition)} />
-            <Info label="مصدر الحدث" value={getOptionLabel(EVENT_SOURCES, safeTrigger.eventSource)} />
-            <Info label="سياسة تحديث المسار" value={getOptionLabel(TRIGGER_UPDATE_POLICIES, safeTrigger.updatePolicy) || "غير محددة"} />
-          </>
+          <TriggerInfoRows trigger={safeTrigger} />
         )}
       </div>
 

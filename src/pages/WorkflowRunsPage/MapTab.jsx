@@ -1,11 +1,6 @@
 import { CircleAlert } from "lucide-react";
-import { Info } from "./components.jsx";
+import { TriggerInfoRows } from "./components.jsx";
 import {
-  TRIGGER_TYPES,
-  TRIGGER_START_WHEN_OPTIONS,
-  START_CONDITIONS,
-  EVENT_SOURCES,
-  TRIGGER_UPDATE_POLICIES,
   VISIBILITY,
   OUTPUT_TYPE_OPTIONS,
   OUTPUT_FORMATS,
@@ -26,6 +21,7 @@ import {
 import ModelRoutingSummary from "./ModelRoutingSummary.jsx";
 
 export default function MapTab({ workflowDraft, readinessContext }) {
+  const trigger = getWorkflowTrigger(workflowDraft);
   return (
     <section className="enhanced-map-layout">
       <article className="map-card">
@@ -54,11 +50,7 @@ export default function MapTab({ workflowDraft, readinessContext }) {
           <div className="flow-trigger-card flow-trigger-card-wide">
             <strong>ما الذي يبدأ المسار؟</strong>
             <div className="trigger-info-grid trigger-info-grid-wide">
-              <Info label="نوع المشغل" value={getOptionLabel(TRIGGER_TYPES, getWorkflowTrigger(workflowDraft).type)} />
-              <Info label="متى يبدأ المسار؟" value={getOptionLabel(TRIGGER_START_WHEN_OPTIONS, getWorkflowTrigger(workflowDraft).startWhen) || getWorkflowTrigger(workflowDraft).startWhen || "—"} />
-              <Info label="شرط البدء" value={getOptionLabel(START_CONDITIONS, getWorkflowTrigger(workflowDraft).startCondition)} />
-              <Info label="مصدر الحدث" value={getOptionLabel(EVENT_SOURCES, getWorkflowTrigger(workflowDraft).eventSource)} />
-              <Info label="سياسة التحديث" value={getOptionLabel(TRIGGER_UPDATE_POLICIES, getWorkflowTrigger(workflowDraft).updatePolicy) || "غير محددة"} />
+              <TriggerInfoRows trigger={trigger} updatePolicyLabel="سياسة التحديث" />
             </div>
             <p>هذا المشغل يوضح متى يبدأ المسار، ولا يتضمن إعداد النماذج أو مصادر البيانات. ولا ينفذ أي تشغيل فعلي داخل النموذج.</p>
           </div>

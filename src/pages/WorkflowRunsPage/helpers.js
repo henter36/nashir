@@ -25,7 +25,7 @@ export function getModelRouteSummary(processor) {
 }
 
 export function getModelRouteWarnings(step, route) {
-  if (!route) return [];
+  if (!step || !route) return [];
   const warnings = [];
   if (route.blockAutoPublish) warnings.push("النشر التلقائي غير مسموح لهذا المسار");
   if (route.humanReviewRequired) warnings.push("تلزم مراجعة بشرية قبل قبول المخرج");
@@ -53,6 +53,7 @@ export function inferDomainForField(field) {
 }
 
 export function normalizeInputRefs(step) {
+  if (!step) return [];
   if (step.inputRefs && Array.isArray(step.inputRefs) && step.inputRefs.length > 0) {
     return step.inputRefs;
   }
@@ -182,6 +183,7 @@ export function getCostLimitLabel(route, costRow) {
 
 export function buildStepReadiness(step, context) {
   const { modelRoutes = [], costRows = [], promptRegistry = [], workflowDraft = null } = context || {};
+  if (!step) return { status: "blocked", score: 0, checks: [], warnings: [], blockedReasons: [], route: null, primaryModel: null, fallbackModels: [], costRow: null, prompt: null, staticRoute: null };
   const refs = normalizeInputRefs(step);
   const checks = [];
   const warnings = [];
@@ -257,9 +259,9 @@ export function cloneTemplate(template) {
     triggerScreen: source.triggerScreen,
     triggerAction: source.triggerAction,
     trigger: getDefaultTrigger(source),
-    inputSources: [...source.inputSources],
-    outputsTo: [...source.outputsTo],
-    steps: source.steps.map((step) => ({
+    inputSources: [...(source?.inputSources || [])],
+    outputsTo: [...(source?.outputsTo || [])],
+    steps: (source?.steps || []).map((step) => ({
       ...step,
       inputFrom: [...(step.inputFrom || [])],
       inputRefs: normalizeInputRefs(step),

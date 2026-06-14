@@ -25,7 +25,7 @@ import StepReadinessPanel from "./StepReadinessPanel.jsx";
 import ModelRoutingSummary from "./ModelRoutingSummary.jsx";
 
 export default function StepEditor({ step, index, onChange, onChangeInputs, onDelete, readinessContext }) {
-  const promptRegistry = readinessContext.promptRegistry || [];
+  const promptRegistry = readinessContext?.promptRegistry || [];
   const inputDomain = step.inputDomain || inferInputDomain(step);
   const [fieldToAdd, setFieldToAdd] = useState("");
   const selectedInputRefs = normalizeInputRefs(step);

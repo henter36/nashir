@@ -1,3 +1,12 @@
+import { getOptionLabel } from "./helpers.js";
+import {
+  TRIGGER_TYPES,
+  TRIGGER_START_WHEN_OPTIONS,
+  START_CONDITIONS,
+  EVENT_SOURCES,
+  TRIGGER_UPDATE_POLICIES,
+} from "./constants.js";
+
 export function Info({ label, value }) {
   return (
     <div className="info-row">
@@ -56,5 +65,28 @@ export function ContractKpi({ title, value }) {
       <span>{title}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+export function ReadinessNotesList({ className, title, items, emptyText }) {
+  return (
+    <div className={`readiness-notes ${className}`}>
+      <strong>{title}</strong>
+      {items.length
+        ? items.map((item) => <span key={item}>{item}</span>)
+        : emptyText ? <span>{emptyText}</span> : null}
+    </div>
+  );
+}
+
+export function TriggerInfoRows({ trigger, updatePolicyLabel = "سياسة تحديث المسار" }) {
+  return (
+    <>
+      <Info label="نوع المشغل" value={getOptionLabel(TRIGGER_TYPES, trigger?.type)} />
+      <Info label="متى يبدأ المسار؟" value={getOptionLabel(TRIGGER_START_WHEN_OPTIONS, trigger?.startWhen) || trigger?.startWhen || "—"} />
+      <Info label="شرط البدء" value={getOptionLabel(START_CONDITIONS, trigger?.startCondition)} />
+      <Info label="مصدر الحدث" value={getOptionLabel(EVENT_SOURCES, trigger?.eventSource)} />
+      <Info label={updatePolicyLabel} value={getOptionLabel(TRIGGER_UPDATE_POLICIES, trigger?.updatePolicy) || "غير محددة"} />
+    </>
   );
 }

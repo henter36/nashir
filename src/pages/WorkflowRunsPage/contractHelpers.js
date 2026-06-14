@@ -53,6 +53,7 @@ export function getRetentionPolicy(step) {
 }
 
 export function getContractRiskFlags(step) {
+  if (!step) return [];
   const risks = [];
 
   if (step.visibility === "customer_visible" && !step.reviewRequired) {

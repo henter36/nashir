@@ -112,7 +112,7 @@ export default function RunsTab({
       <article className="run-timeline-card">
         <h2>Step Timeline</h2>
         <div className="run-timeline">
-          {selectedRun.steps.map(([id, label, duration, status]) => (
+          {(selectedRun.steps || []).map(([id, label, duration, status]) => (
             <div key={`${selectedRun.id}-${id}`} className={`run-step ${status}`}>
               <div className="run-dot" />
               <div>

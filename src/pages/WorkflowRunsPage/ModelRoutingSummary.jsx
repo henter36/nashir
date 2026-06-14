@@ -7,7 +7,7 @@ import {
 } from "./helpers.js";
 
 export default function ModelRoutingSummary({ step, readinessContext = {}, compact = false }) {
-  if (step.processorType !== "model_call") return null;
+  if (!step || step.processorType !== "model_call") return null;
 
   const readiness = buildStepReadiness(step, readinessContext);
   const route = getModelRouteSummary(step.processor);
