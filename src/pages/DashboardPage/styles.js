@@ -225,16 +225,24 @@ export const styles = `
 }
 
 .prototype-data-note {
+  background: #fff;
+  border: 1px solid #e4e7df;
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(24, 38, 18, 0.028);
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #fefce8;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  padding: 10px 14px;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: #4d5f4a;
   font-size: 12px;
-  color: #854d0e;
-  grid-column: 1 / -1;
+  line-height: 1.7;
+  font-weight: 800;
+}
+
+.prototype-data-note svg {
+  color: #176b2c;
+  flex: 0 0 auto;
 }
 
 .kpi-card {
