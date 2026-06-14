@@ -149,11 +149,12 @@ Step 4  refactor: split campaign wizard page
 Step 5  refactor: split secrets and keys page
 Step 6  refactor: split prompt governance page
 Step 7  refactor: split model routing page
-Step 8  refactor: split settings and store setup pages
-Step 9  chore: add error boundary infrastructure
-Step 10 test: add baseline smoke tests
-Step 11 chore: add prettier formatting guard
-Step 12 docs: decide router migration boundary
+Step 8  refactor: split settings page
+Step 9  refactor: split store setup page
+Step 10 chore: add error boundary infrastructure
+Step 11 test: add baseline smoke tests
+Step 12 chore: add prettier formatting guard
+Step 13 docs: decide router migration boundary
 ```
 
 ### Sequencing Rationale
@@ -162,13 +163,14 @@ Step 12 docs: decide router migration boundary
   page and the smallest of the pages requiring structural split. It provides the
   lowest-risk pattern to validate the split convention before tackling larger
   files.
-- **Steps 3–8 largest-to-smallest within each session.** `WorkflowRunsPage`
+- **Steps 3–9 largest-to-smallest within each session.** `WorkflowRunsPage`
   (4 971 lines) and `CampaignWizardPage` (3 557 lines) are the highest priority
-  after the pattern is established.
-- **Steps 9–11 after splits are stable.** Error boundary, smoke tests, and
+  after the pattern is established. `SettingsPage` and `StoreSetupPage` are split
+  into separate PRs (Steps 8–9) to keep each PR independently reviewable.
+- **Steps 10–12 after splits are stable.** Error boundary, smoke tests, and
   Prettier are infrastructure that should wrap a stable file tree, not one still
   being reorganized.
-- **Step 12 as a documentation gate, not code.** The router migration is a
+- **Step 13 as a documentation gate, not code.** The router migration is a
   significant architectural decision. Its gate document should be written after
   the split sequence is complete and the current component boundary inventory
   is accurate.
@@ -190,7 +192,33 @@ Every split PR must:
 
 ---
 
-## 5. Risk Review
+## 5. Deferred Large Page Backlog
+
+The near-term execution sequence (Steps 2–9) covers eight pages selected for
+priority splitting. The following pages from the size snapshot are large enough
+to warrant splitting but are not included in the near-term sequence. They are
+deferred, not forgotten.
+
+| Page file | Lines | Status |
+|---|---|---|
+| `CostMonitorPage.jsx` | 1 754 | Deferred — future PR or separately approved sequence |
+| `SystemAdminPage.jsx` | 1 676 | Deferred — future PR or separately approved sequence |
+| `PublishingQueuePage.jsx` | 1 519 | Deferred — future PR or separately approved sequence |
+| `MultiPlatformPage.jsx` | 1 482 | Deferred — future PR or separately approved sequence |
+| `ContentReviewPreviewUnifiedPage.jsx` | 1 384 | Deferred — future PR or separately approved sequence |
+| `CampaignsUnifiedPage.jsx` | 1 266 | Deferred — future PR or separately approved sequence |
+| `AssetLibraryPage.jsx` | 1 264 | Deferred — future PR or separately approved sequence |
+| `ContentStudioPage.jsx` | 1 166 | Deferred — future PR or separately approved sequence |
+| `DataSourcesHubPage.jsx` | 1 015 | Deferred — future PR or separately approved sequence |
+| `AnalyticsUnifiedPage.jsx` | 1 000 | Deferred — future PR or separately approved sequence |
+
+Each deferred page must be handled in its own future PR and must not be bundled
+with any other large page. No multiple-large-page split PR is authorized, whether
+within the near-term sequence or the deferred backlog.
+
+---
+
+## 6. Risk Review
 
 ### R1 — Splitting too many pages in one PR
 
@@ -208,7 +236,7 @@ is out of scope.
 assumption that each split PR is independently verifiable. A route change also
 requires updating `App.jsx`, breaking the single-page-per-PR constraint.
 
-**Mitigation:** Navigation model is explicitly frozen until Step 12. The router
+**Mitigation:** Navigation model is explicitly frozen until Step 13. The router
 boundary decision gate must precede any routing code.
 
 ### R3 — Introducing new state architecture before page split
@@ -217,7 +245,7 @@ boundary decision gate must precede any routing code.
 state wiring must be duplicated or restructured again after splitting, producing
 two large-blast-radius PRs instead of one.
 
-**Mitigation:** All state architecture work is deferred until after Step 8. Each
+**Mitigation:** All state architecture work is deferred until after Step 9. Each
 split PR may only extract sub-components; it may not introduce new state
 primitives.
 
@@ -226,7 +254,7 @@ primitives.
 **Risk:** Smoke tests written against monolithic page files will need to be
 rewritten when those files are split into sub-components, creating churn.
 
-**Mitigation:** Steps 9–11 are sequenced after Step 8. Smoke tests target the
+**Mitigation:** Steps 10–12 are sequenced after Step 9. Smoke tests target the
 page shell export, not internal sub-components, to reduce future churn even if
 further splitting occurs.
 
@@ -252,12 +280,12 @@ constraints. Any diff touching these files is a hard block on the split PR.
 
 ---
 
-## 6. Decision
+## 7. Decision
 
 ```
 GO:    Documentation-only sequencing gate is complete.
 GO:    DashboardPage split is the next authorized implementation PR after this gate merges.
-GO:    Split sequence Steps 2–12 as defined above.
+GO:    Split sequence Steps 2–13 as defined above.
 
 NO-GO: React Router, Zustand, TypeScript, i18n, Storybook, Husky, or broad
        styling rewrite in any split PR.
