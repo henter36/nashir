@@ -32,12 +32,12 @@ export default function TestTab({
               }))
             }
           >
-            <option>Store Setup</option>
-            <option>Campaign Wizard</option>
-            <option>Asset Library</option>
-            <option>Content Studio</option>
-            <option>Review</option>
-            <option>Analytics</option>
+            <option value="Store Setup">إعداد المتجر</option>
+            <option value="Campaign Wizard">معالج الحملة</option>
+            <option value="Asset Library">مكتبة الأصول</option>
+            <option value="Content Studio">استوديو المحتوى</option>
+            <option value="Review">المراجعة</option>
+            <option value="Analytics">التحليلات</option>
           </select>
         </label>
 
@@ -138,7 +138,7 @@ export default function TestTab({
                 <span>{getStepOutputName(step)}</span>
                 <span>{getOptionLabel(DESTINATION_OPTIONS, step.destination)}</span>
                 <span className={step.result === "passed" ? "sim-ok" : "sim-blocked"}>
-                  {step.result}
+                  {step.result === "passed" ? "نجح" : "محظور"}
                 </span>
               </div>
             ))}

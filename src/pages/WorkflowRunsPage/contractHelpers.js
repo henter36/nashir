@@ -21,7 +21,7 @@ export function getContractSchema(step) {
 
   return {
     ...base,
-    required: map[step.outputType] || base.required,
+    required: Array.from(new Set([...base.required, ...(map[step.outputType] || [])])),
   };
 }
 

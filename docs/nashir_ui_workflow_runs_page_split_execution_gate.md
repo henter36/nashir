@@ -23,7 +23,7 @@
 | `src/pages/WorkflowRunsPage.jsx` | Rewritten as slim orchestrator (~290 lines) |
 | `src/pages/WorkflowRunsPage/constants.js` | New — all module-level data constants (~490 lines) |
 | `src/pages/WorkflowRunsPage/helpers.js` | New — all pure helper functions (~185 lines) |
-| `src/pages/WorkflowRunsPage/styles.js` | New — exported CSS string (~840 lines) |
+| `src/pages/WorkflowRunsPage/styles.js` | New — exported CSS string (~1836 lines) |
 | `src/pages/WorkflowRunsPage/components.jsx` | New — Info, Status, SelectField, Toggle, ContractKpi |
 | `src/pages/WorkflowRunsPage/contractHelpers.js` | New — getContractSchema, getAllowedConsumers, isSensitiveOutput, getRetentionPolicy, getContractRiskFlags |
 | `src/pages/WorkflowRunsPage/ModelRoutingSummary.jsx` | New — model route badge component |

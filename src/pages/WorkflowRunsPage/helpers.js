@@ -142,6 +142,7 @@ export function getDefaultTrigger(template) {
   const type = getTriggerTypeForTemplate(template);
   return {
     type,
+    startWhen: "required_data_complete",
     startCondition: "required_data_complete",
     eventSource: "manual",
     updatePolicy: "",

@@ -55,7 +55,7 @@ export default function ContractsTab({ workflowDraft }) {
                 <Info label="وجهة المخرج" value={getOptionLabel(DESTINATION_OPTIONS, step.destination)} />
                 <Info label="مراجعة قبل النشر" value={step.reviewRequired ? "نعم" : "لا"} />
                 <Info label="يفتح مسارًا آخر" value={step.feedsNextWorkflow ? getWorkflowLabel(step.nextWorkflowType) : "لا"} />
-                <Info label="داخلي فقط" value={sensitive ? "نعم" : "لا"} />
+                <Info label="حساس أو داخلي فقط" value={sensitive ? "نعم" : "لا"} />
                 <Info label="مدة الاحتفاظ" value={getRetentionPolicy(step)} />
               </div>
 

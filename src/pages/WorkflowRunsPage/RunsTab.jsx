@@ -78,7 +78,7 @@ export default function RunsTab({
           </button>
           <button type="button" onClick={copySelectedRunId}>
             <FileSearch size={15} />
-            نسخ اسم التشغيل
+            نسخ معرف التشغيل
           </button>
         </div>
 
@@ -110,7 +110,7 @@ export default function RunsTab({
       </article>
 
       <article className="run-timeline-card">
-        <h2>Step Timeline</h2>
+        <h2>تسلسل الخطوات</h2>
         <div className="run-timeline">
           {(selectedRun.steps || []).map(([id, label, duration, status]) => (
             <div key={`${selectedRun.id}-${id}`} className={`run-step ${status}`}>

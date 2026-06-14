@@ -11,11 +11,11 @@ export default function ModelRoutingSummary({ step, readinessContext = {}, compa
 
   const readiness = buildStepReadiness(step, readinessContext);
   const route = getModelRouteSummary(step.processor);
-  const warnings = [
+  const warnings = Array.from(new Set([
     ...getModelRouteWarnings(step, route),
     ...readiness.warnings,
     ...readiness.blockedReasons,
-  ];
+  ]));
 
   if (!route) {
     return (

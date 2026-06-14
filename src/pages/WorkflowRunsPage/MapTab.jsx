@@ -93,7 +93,7 @@ export default function MapTab({ workflowDraft, readinessContext }) {
                 <div className="flow-cell processor">
                   <strong>{step.name}</strong>
                   <span>{processorLabel}</span>
-                  <small>{PROCESSOR_TYPES.find(([id]) => id === step.processorType)?.[1]}</small>
+                  <small>{PROCESSOR_TYPES.find(([id]) => id === step.processorType)?.[1] || step.processorType || "—"}</small>
                   <ModelRoutingSummary step={step} readinessContext={readinessContext} compact />
                 </div>
 

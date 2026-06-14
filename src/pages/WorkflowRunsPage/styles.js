@@ -568,6 +568,12 @@ export const styles = `
   gap: 8px;
 }
 
+@media (max-width: 760px) {
+  .trigger-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .output-designer {
   background: #fff;
 }

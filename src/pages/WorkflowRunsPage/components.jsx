@@ -73,7 +73,7 @@ export function ReadinessNotesList({ className, title, items, emptyText }) {
     <div className={`readiness-notes ${className}`}>
       <strong>{title}</strong>
       {items.length
-        ? items.map((item) => <span key={item}>{item}</span>)
+        ? items.map((item, idx) => <span key={`${item}-${idx}`}>{item}</span>)
         : emptyText ? <span>{emptyText}</span> : null}
     </div>
   );
