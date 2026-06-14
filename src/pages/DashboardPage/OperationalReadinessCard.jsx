@@ -1,5 +1,6 @@
 import { Store } from "lucide-react";
 import { CardHeader, InfoRow } from "./components.jsx";
+import { formatPlanStatus } from "./helpers.js";
 
 export default function OperationalReadinessCard({
   avgReadiness = 0,
@@ -14,9 +15,7 @@ export default function OperationalReadinessCard({
   const readinessItems = [
     [
       "الخطة الاستراتيجية",
-      latestStrategicPlan
-        ? (latestStrategicPlan.status === "ready_for_review" ? "جاهزة للمراجعة" : "مسودة")
-        : "لا توجد خطة استراتيجية محفوظة بعد",
+      formatPlanStatus(latestStrategicPlan),
       latestStrategicPlan ? "green" : "amber",
     ],
     [
