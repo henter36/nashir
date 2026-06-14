@@ -1,5 +1,14 @@
 const PRODUCT_LIMIT = 50;
 const REQUEST_TIMEOUT_MS = 30000;
+let _idSeq = 0;
+
+function trimTrailingSlashes(value) {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "/") {
+    end -= 1;
+  }
+  return value.slice(0, end);
+}
 const CREATE_FIELDS = [
   "name",
   "category",
@@ -17,7 +26,7 @@ function configuredValue(name) {
 }
 
 function apiConfig() {
-  const baseUrl = configuredValue("VITE_NASHIR_BACKEND_URL").replace(/\/+$/, "");
+  const baseUrl = trimTrailingSlashes(configuredValue("VITE_NASHIR_BACKEND_URL"));
   const workspaceId = configuredValue("VITE_NASHIR_WORKSPACE_ID");
   const accessToken = configuredValue("VITE_NASHIR_ACCESS_TOKEN");
 
@@ -110,7 +119,8 @@ export function updateProductRequestBody(input, original) {
 }
 
 export function createIdempotencyKey() {
-  return globalThis.crypto?.randomUUID?.() ?? `product-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  _idSeq += 1;
+  return globalThis.crypto?.randomUUID?.() ?? `product-${Date.now()}-${_idSeq}`;
 }
 
 export async function listProducts({ cursor = null } = {}) {

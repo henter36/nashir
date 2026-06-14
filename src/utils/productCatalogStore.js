@@ -1,5 +1,11 @@
 export const PRODUCT_CATALOG_KEY = "nashir_mock_product_catalog";
 
+let _productSeq = 0;
+function createFallbackProductId() {
+  _productSeq += 1;
+  return `p-${Date.now()}-${_productSeq}`;
+}
+
 function normalizedReadiness(product, backendProduct) {
   if (backendProduct) return null;
   if (product.readiness == null) return 35;
@@ -7,7 +13,7 @@ function normalizedReadiness(product, backendProduct) {
 }
 
 export function normalizeCatalogProduct(product = {}, source = "fallback") {
-  const id = product.productId || product.id || `p-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const id = product.productId || product.id || createFallbackProductId();
   const backendProduct = source === "backend";
 
   return {
