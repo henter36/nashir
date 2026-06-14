@@ -13,7 +13,9 @@ export function formatCampaignStatus(status) {
     draft: "مسودة",
     approved: "معتمدة",
   };
-  return map[status] || "حالة غير معروفة";
+  return Object.prototype.hasOwnProperty.call(map, status)
+    ? map[status]
+    : "حالة غير معروفة";
 }
 
 export function normalizePercent(value) {
