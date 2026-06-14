@@ -253,17 +253,17 @@ export function buildStepReadiness(step, context) {
 export function cloneTemplate(template) {
   const source = template || WORKFLOW_TEMPLATES[0];
   return {
-    workflowType: source.id,
-    name: source.name,
-    description: source.description,
-    triggerScreen: source.triggerScreen,
-    triggerAction: source.triggerAction,
+    workflowType: source?.id,
+    name: source?.name,
+    description: source?.description,
+    triggerScreen: source?.triggerScreen,
+    triggerAction: source?.triggerAction,
     trigger: getDefaultTrigger(source),
     inputSources: [...(source?.inputSources || [])],
     outputsTo: [...(source?.outputsTo || [])],
     steps: (source?.steps || []).map((step) => ({
       ...step,
-      inputFrom: [...(step.inputFrom || [])],
+      inputFrom: [...(step?.inputFrom || [])],
       inputRefs: normalizeInputRefs(step),
     })),
     policies: {
