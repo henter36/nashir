@@ -1,359 +1,237 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  Edit3,
-  ImageIcon,
-  Link2,
-  Package,
-  Plus,
-  Search,
-  Trash2,
-} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Edit3, ImageIcon, Package, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 
 import {
+  createIdempotencyKey,
+  createProduct,
+  createProductRequestBody,
+  getProduct,
+  getProductCatalogApiConfig,
+  listProducts,
+  ProductCatalogApiError,
+  updateProduct,
+  updateProductRequestBody,
+} from "../utils/productCatalogApi.js";
+import {
+  mergeBackendProducts,
+  normalizeCatalogProduct,
   readProductCatalog,
-  upsertProduct,
-  deleteProduct as deleteCatalogProduct,
 } from "../utils/productCatalogStore.js";
 
 const initialProducts = [
-  {
-    id: "p-001",
-    name: "عطر أرابيان أود",
-    category: "عطور",
-    price: "599",
-    currency: "SAR",
-    url: "https://store.example/products/oud",
-    readiness: 86,
-    status: "ready",
-    assets: 4,
-    source: "Store Setup",
-    flags: ["مناسب للهدايا", "يصلح للفيديو", "الأكثر مبيعًا"],
-    claims: ["لا تستخدم: الأفضل في السوق", "تجنب وعود الثبات الطويل دون دليل"],
-    description: "عطر فاخر مناسب للهدايا والمناسبات ويصلح لحملات إطلاق وعروض موسمية.",
-  },
-  {
-    id: "p-002",
-    name: "باقة هدايا فاخرة",
-    category: "هدايا",
-    price: "349",
-    currency: "SAR",
-    url: "https://store.example/products/gift",
-    readiness: 68,
-    status: "review",
-    assets: 2,
-    source: "Store Crawler",
-    flags: ["موسمي", "مناسب للهدايا"],
-    claims: ["تحتاج تأكيد توفر المخزون قبل الحملة"],
-    description: "باقة هدايا مهيأة للمناسبات وتحتاج مراجعة للأصول قبل استخدامها في الإعلانات.",
-  },
-  {
-    id: "p-003",
-    name: "كريم مرطب نيفيا",
-    category: "عناية",
-    price: "79",
-    currency: "SAR",
-    url: "https://store.example/products/cream",
-    readiness: 42,
-    status: "draft",
-    assets: 1,
-    source: "Manual",
-    flags: ["يحتاج شرحًا"],
-    claims: ["لا تستخدم ادعاءات علاجية أو طبية"],
-    description: "منتج عناية يومي يحتاج شرح الفوائد بدون ادعاءات علاجية.",
-  },
+  { id: "mock-001", name: "عطر أرابيان أود", category: "عطور", price: 599, status: "draft", description: "بيانات تجريبية محلية." },
+  { id: "mock-002", name: "باقة هدايا فاخرة", category: "هدايا", price: 349, status: "draft", description: "بيانات تجريبية محلية." },
 ];
 
-const statusMap = {
-  ready: ["جاهز للحملات", "green"],
-  review: ["يحتاج مراجعة", "amber"],
-  draft: ["ناقص البيانات", "slate"],
-  blocked: ["محظور مؤقتًا", "red"],
+const emptyDraft = {
+  name: "",
+  category: "",
+  price: "",
+  sku: "",
+  stockStatus: "unknown",
+  imageUrl: "",
+  videoUrl: "",
+  description: "",
 };
 
-const flagOptions = [
-  "موسمي",
-  "مخزون كبير",
-  "جديد",
-  "الأكثر مبيعًا",
-  "مناسب للهدايا",
-  "يحتاج شرحًا",
-  "يصلح للفيديو",
+const statusMap = {
+  draft: ["مسودة", "slate"],
+  active: ["نشط", "green"],
+  archived: ["مؤرشف", "amber"],
+};
+
+const stockOptions = [
+  ["unknown", "غير محدد"],
+  ["available", "متاح"],
+  ["limited", "محدود"],
+  ["out_of_stock", "نفد المخزون"],
 ];
 
-const categoryOptions = [
-  "عطور",
-  "عناية وجمال",
-  "أزياء",
-  "إكسسوارات",
-  "غذاء ومشروبات",
-  "إلكترونيات",
-  "منزل",
-  "هدايا",
-  "خدمات",
-  "أخرى",
-];
-
-function toggleValue(list, value) {
-  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
-}
-
-function hasUrl(value) {
-  if (!value || typeof value !== "string") return false;
-
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
+function errorNotice(error) {
+  if (error instanceof ProductCatalogApiError) {
+    const requestReference = error.requestId ? ` (مرجع: ${error.requestId})` : "";
+    return `${error.message}${requestReference}`;
   }
+  return "تعذر إكمال العملية. حاول مجددًا.";
 }
 
-function buildMarketingPriority(product = {}) {
-  const flags = product.flags || [];
-  const readiness = Number(product.readiness || 0);
-  const hasImage = hasUrl(product.imageUrl);
-  const hasVideo = hasUrl(product.videoUrl);
-  const gaps = [];
-
-  if (!String(product.description || "").trim()) gaps.push("وصف المنتج");
-  if (!hasImage) gaps.push("صورة المنتج");
-  if (!hasVideo && flags.includes("يصلح للفيديو")) gaps.push("فيديو قصير");
-  if (!String(product.price || "").trim()) gaps.push("السعر");
-
-  const videoReady = flags.includes("يصلح للفيديو") || hasVideo;
-  const giftReady = flags.includes("مناسب للهدايا") || flags.includes("موسمي");
-  const highPriority = readiness >= 80 || flags.includes("الأكثر مبيعًا") || videoReady || giftReady;
-  const mediumPriority = readiness >= 55 || flags.includes("جديد") || flags.includes("يحتاج شرحًا");
-
+function draftFromProduct(product) {
   return {
-    level: highPriority ? "مرتفعة" : mediumPriority ? "متوسطة" : "منخفضة",
-    reason: videoReady
-      ? "المنتج مناسب لمحتوى مرئي قصير ويمكن تحويله لحملة اختبارية."
-      : giftReady
-        ? "المنتج مناسب للمواسم والهدايا ويمكن اختباره في عروض اجتماعية."
-        : readiness >= 80
-          ? "جاهزية المنتج عالية مقارنة ببقية الكتالوج."
-          : "يحتاج استكمالًا قبل رفع أولوية التسويق.",
-    channel: videoReady ? "Instagram / TikTok" : giftReady ? "WhatsApp Business / Email" : "Instagram",
-    contentType: videoReady ? "فيديو قصير / Reels" : giftReady ? "منشور عرض أو رسالة مباشرة" : "منشور تعريفي",
-    gap: gaps.length ? gaps.join("، ") : "لا يوجد نقص واضح",
-  };
-}
-
-function buildLatestProductAnalysis(product = {}) {
-  const gaps = [];
-  if (!String(product.description || "").trim()) gaps.push("وصف مختصر");
-  if (!product.imageUrl) gaps.push("صورة المنتج");
-  if (!product.videoUrl) gaps.push("فيديو المنتج");
-  if (!String(product.price || "").trim()) gaps.push("السعر");
-
-  const readiness = Math.min(95, Math.max(Number(product.readiness || 35), gaps.length ? 55 : 82));
-  const notes = [
-    product.imageUrl ? "الصورة متاحة كبداية." : "الصورة غير مكتملة.",
-    product.videoUrl ? "الفيديو متاح لقنوات الفيديو." : "الفيديو اختياري لكنه مفيد للحملات.",
-    (product.flags || []).length ? `خصائص المنتج: ${(product.flags || []).slice(0, 2).join("، ")}` : "الخصائص تحتاج تحديدًا.",
-  ];
-
-  return {
-    hasAnalysis: Boolean(product.name || product.description || product.imageUrl || product.videoUrl),
-    readiness,
-    notes,
-    gaps,
+    name: product.name || "",
+    category: product.category || "",
+    price: product.price ?? "",
+    sku: product.sku || "",
+    stockStatus: product.stockStatus || "unknown",
+    imageUrl: product.imageUrl || "",
+    videoUrl: product.videoUrl || "",
+    description: product.description || "",
   };
 }
 
 export default function ProductCatalogPage() {
-  const [products, setProducts] = useState(() => readProductCatalog(initialProducts));
+  const config = useMemo(() => getProductCatalogApiConfig(), []);
+  const [mode, setMode] = useState(config.configured ? "backend" : "fallback");
+  const [products, setProducts] = useState(() => (config.configured ? [] : readProductCatalog(initialProducts)));
   const [query, setQuery] = useState("");
-  const [catalogNotice, setCatalogNotice] = useState("");
-  const [selectedId, setSelectedId] = useState(
-    () => readProductCatalog(initialProducts)[0]?.id || initialProducts[0].id
-  );
+  const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
-  const [draft, setDraft] = useState({
-    name: "",
-    category: categoryOptions[0],
-    price: "",
-    url: "",
-    imageUrl: "",
-    videoUrl: "",
-    description: "",
-    flags: [],
-  });
+  const [draft, setDraft] = useState(emptyDraft);
+  const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(config.configured);
+  const [saving, setSaving] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [pageCount, setPageCount] = useState(0);
+  const [conflict, setConflict] = useState(null);
+  const createIntent = useRef(null);
 
-  useEffect(() => {
-    const refreshProducts = () => {
-      const next = readProductCatalog(initialProducts);
-      setProducts(next);
-      setSelectedId((current) => current || next[0]?.id || initialProducts[0].id);
-    };
-
-    window.addEventListener("focus", refreshProducts);
-    window.addEventListener("storage", refreshProducts);
-    window.addEventListener("nashir-product-catalog-updated", refreshProducts);
-
-    return () => {
-      window.removeEventListener("focus", refreshProducts);
-      window.removeEventListener("storage", refreshProducts);
-      window.removeEventListener("nashir-product-catalog-updated", refreshProducts);
-    };
+  const applyFirstPage = useCallback((response) => {
+    const next = mergeBackendProducts([], response.products);
+    setProducts(next);
+    setHasMore(response.hasMore);
+    setNextCursor(response.nextCursor);
+    setPageCount(response.count);
+    setSelectedId((current) => (next.some((product) => product.id === current) ? current : next[0]?.id ?? null));
   }, []);
 
+  const loadFirstPage = useCallback(async () => {
+    if (!config.configured) return;
+    setLoading(true);
+    setNotice("");
+    try {
+      applyFirstPage(await listProducts());
+      setMode("backend");
+    } catch (error) {
+      setNotice(errorNotice(error));
+    } finally {
+      setLoading(false);
+    }
+  }, [applyFirstPage, config.configured]);
+
+  useEffect(() => {
+    loadFirstPage(); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [loadFirstPage]);
+
+  const selectedProduct = products.find((product) => product.id === selectedId) || products[0] || null;
   const filteredProducts = useMemo(() => {
-    return products.filter((product) =>
-      `${product.name} ${product.category} ${product.flags.join(" ")} ${product.source}`
-        .toLowerCase()
-        .includes(query.toLowerCase())
-    );
+    const needle = query.trim().toLowerCase();
+    if (!needle) return products;
+    return products.filter((product) => `${product.name} ${product.category} ${product.sku}`.toLowerCase().includes(needle));
   }, [products, query]);
 
-  const selectedProduct =
-    products.find((product) => product.id === selectedId) || products[0] || initialProducts[0];
-  const selectedMarketingPriority = buildMarketingPriority(selectedProduct);
-  const selectedAnalysis = buildLatestProductAnalysis(selectedProduct);
-
-  const stats = useMemo(() => {
-    return {
-      total: products.length,
-      ready: products.filter((product) => product.status === "ready").length,
-      review: products.filter((product) => product.status === "review").length,
-      assets: products.reduce((sum, product) => sum + product.assets, 0),
-    };
-  }, [products]);
+  const stats = useMemo(() => ({
+    loaded: products.length,
+    draft: products.filter((product) => product.status === "draft").length,
+    active: products.filter((product) => product.status === "active").length,
+    archived: products.filter((product) => product.status === "archived").length,
+  }), [products]);
 
   const resetDraft = () => {
-    setDraft({
-      name: "",
-      category: categoryOptions[0],
-      price: "",
-      url: "",
-      imageUrl: "",
-      videoUrl: "",
-      description: "",
-      flags: [],
-    });
+    setDraft(emptyDraft);
     setEditingId(null);
-  };
-
-  const addOrUpdateProduct = () => {
-    if (!draft.name.trim()) return;
-
-    if (editingId) {
-      const currentProduct = products.find((product) => product.id === editingId);
-      if (!currentProduct) return;
-
-      const next = upsertProduct(
-        {
-          ...currentProduct,
-          name: draft.name,
-          category: draft.category || categoryOptions[0],
-          price: draft.price || "غير محدد",
-          url: draft.url,
-          imageUrl: draft.imageUrl,
-          videoUrl: draft.videoUrl,
-          description: draft.description,
-          flags: draft.flags,
-          readiness: Math.max(currentProduct.readiness, 55),
-          status: currentProduct.status === "blocked" ? currentProduct.status : "review",
-        },
-        initialProducts
-      );
-
-      setProducts(next);
-      setSelectedId(editingId);
-      resetDraft();
-      return;
-    }
-
-    const product = {
-      id: `p-${Date.now()}`,
-      name: draft.name,
-      category: draft.category || categoryOptions[0],
-      price: draft.price || "غير محدد",
-      currency: "SAR",
-      url: draft.url,
-      imageUrl: draft.imageUrl,
-      videoUrl: draft.videoUrl,
-      readiness: 35,
-      status: "draft",
-      assets: 0,
-      source: "Manual",
-      flags: draft.flags.length ? draft.flags : ["جديد"],
-      claims: ["يحتاج مراجعة وصف المنتج قبل استخدامه في حملة"],
-      description: draft.description || "منتج جديد يحتاج استكمال التفاصيل قبل استخدامه في الحملات.",
-    };
-
-    const next = upsertProduct(product, initialProducts);
-    setProducts(next);
-    setSelectedId(product.id);
-    resetDraft();
+    setConflict(null);
+    createIntent.current = null;
   };
 
   const editProduct = (product) => {
+    if (mode !== "backend" || product.status === "archived") return;
     setEditingId(product.id);
     setSelectedId(product.id);
-    setDraft({
-      name: product.name,
-      category: categoryOptions.includes(product.category) ? product.category : "أخرى",
-      price: product.price,
-      url: product.url,
-      imageUrl: product.imageUrl,
-      videoUrl: product.videoUrl,
-      description: product.description,
-      flags: product.flags,
-    });
+    setDraft(draftFromProduct(product));
+    setConflict(null);
+    createIntent.current = null;
   };
 
-  const deleteProduct = (id) => {
-    if (products.length <= 1) return;
-    const next = deleteCatalogProduct(id, initialProducts);
-    setProducts(next);
-    if (selectedId === id) setSelectedId(next[0].id);
-    if (editingId === id) resetDraft();
+  const saveProduct = async () => {
+    if (!config.configured) {
+      setNotice("وضع fallback التجريبي للعرض فقط. يتطلب الحفظ إعداد backend وworkspace.");
+      return;
+    }
+    if (!draft.name.trim()) {
+      setNotice("اسم المنتج مطلوب.");
+      return;
+    }
+
+    setSaving(true);
+    setNotice("");
+    try {
+      if (editingId) {
+        const original = products.find((product) => product.id === editingId);
+        if (!original) {
+          setNotice("المنتج المحدد غير متاح.");
+          return;
+        }
+        const body = updateProductRequestBody(draft, original);
+        if (!Object.keys(body).length) {
+          setNotice("لا توجد تغييرات مسموحة للحفظ.");
+          return;
+        }
+        const saved = normalizeCatalogProduct(
+          await updateProduct(original.productId, original.version, body),
+          "backend"
+        );
+        setProducts((current) => current.map((product) => (product.id === saved.id ? saved : product)));
+        setSelectedId(saved.id);
+        setNotice("تم تحديث بيانات المنتج.");
+        resetDraft();
+        return;
+      }
+
+      const body = createProductRequestBody(draft);
+      const fingerprint = JSON.stringify(body);
+      if (createIntent.current?.fingerprint !== fingerprint) {
+        createIntent.current = { fingerprint, key: createIdempotencyKey() };
+      }
+      const saved = normalizeCatalogProduct(
+        await createProduct(body, createIntent.current.key),
+        "backend"
+      );
+      setProducts((current) => mergeBackendProducts([saved], current));
+      setSelectedId(saved.id);
+      setNotice("تمت إضافة المنتج.");
+      resetDraft();
+    } catch (error) {
+      if (editingId && error instanceof ProductCatalogApiError && error?.status === 409) {
+        setConflict({ draft: { ...draft }, productId: editingId });
+      }
+      setNotice(errorNotice(error));
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const pullFromStore = () => {
-    const crawled = [
-      {
-        id: `crawl-${Date.now()}-1`,
-        name: "منتج مكتشف من رابط المتجر",
-        category: "أخرى",
-        price: "199",
-        currency: "SAR",
-        url: "https://store.example/products/discovered",
-        readiness: 58,
-        status: "review",
-        assets: 2,
-        source: "Store Crawler",
-        flags: ["من رابط المتجر", "يحتاج مراجعة"],
-        claims: ["تأكد من حقوق الصور قبل استخدامها"],
-        description: "منتج تم سحبه كمحاكاة من رابط المتجر ويحتاج مراجعة قبل استخدامه.",
-      },
-      {
-        id: `crawl-${Date.now()}-2`,
-        name: "باقة موسمية مكتشفة",
-        category: "هدايا",
-        price: "299",
-        currency: "SAR",
-        url: "https://store.example/products/seasonal",
-        readiness: 62,
-        status: "review",
-        assets: 3,
-        source: "Store Crawler",
-        flags: ["موسمي", "مناسب للهدايا"],
-        claims: ["تأكد من توفر المخزون وسعر العرض"],
-        description: "باقة موسمية تم سحبها كمحاكاة من المتجر.",
-      },
-    ];
+  const refreshConflict = async () => {
+    if (!conflict) return;
+    setLoading(true);
+    try {
+      const refreshed = normalizeCatalogProduct(await getProduct(conflict.productId), "backend");
+      setProducts((current) => current.map((product) => (product.id === refreshed.id ? refreshed : product)));
+      setEditingId(refreshed.id);
+      setSelectedId(refreshed.id);
+      setDraft(conflict.draft);
+      setConflict(null);
+      setNotice("تم تحديث النسخة. راجع تعديلاتك ثم أعد الحفظ.");
+    } catch (error) {
+      setNotice(errorNotice(error));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    let next = products;
-    crawled.forEach((product) => {
-      next = upsertProduct(product, initialProducts);
-    });
-
-    setProducts(next);
-    setSelectedId(crawled[0].id);
+  const loadMore = async () => {
+    if (!nextCursor || loading) return;
+    setLoading(true);
+    try {
+      const response = await listProducts({ cursor: nextCursor });
+      setProducts((current) => mergeBackendProducts(current, response.products));
+      setHasMore(response.hasMore);
+      setNextCursor(response.nextCursor);
+      setPageCount(response.count);
+    } catch (error) {
+      setNotice(errorNotice(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -362,859 +240,129 @@ export default function ProductCatalogPage() {
 
       <section className="page-title">
         <div>
-          <div className="eyebrow">
-            <Package size={15} />
-            Product Catalog
-          </div>
+          <div className="eyebrow"><Package size={15} /> Product Catalog</div>
           <h1>كتالوج المنتجات</h1>
-          <p>
-            مركز المنتجات الذي تختار منه الحملات بدل إعادة إدخال المنتج في كل شاشة.
-            كتالوج المنتجات يعرّف المنتج ووسائطه لتستخدمها الحملات ومكتبة الأصول بوضوح.
-          </p>
+          <p>استهلاك محدود لمسارات المنتجات المقبولة مع الحفاظ على حدود الصلاحيات ومساحة العمل.</p>
+          <div className={`mode ${mode}`}>
+            {mode === "backend"
+              ? "بيانات backend ضمن مساحة العمل المحددة"
+              : "Fallback تجريبي منفصل: إعداد VITE_NASHIR_BACKEND_URL وVITE_NASHIR_WORKSPACE_ID مطلوب للتكامل"}
+          </div>
         </div>
-
         <div className="title-actions">
-          <button type="button" className="secondary-button" onClick={pullFromStore}>
-            <Link2 size={16} />
-            سحب من رابط المتجر
+          <button type="button" className="secondary-button" disabled title="Store runtime غير مصرح">
+            سحب من رابط المتجر (غير متاح)
           </button>
-          <button type="button" className="primary-button" onClick={addOrUpdateProduct}>
-            <Plus size={16} />
-            {editingId ? "حفظ التعديل" : "إضافة المنتج"}
+          <button type="button" className="secondary-button" onClick={loadFirstPage} disabled={!config.configured || loading}>
+            <RefreshCw size={16} /> تحديث
+          </button>
+          <button type="button" className="primary-button" onClick={saveProduct} disabled={saving || mode !== "backend"}>
+            <Plus size={16} /> {editingId ? "حفظ التعديل" : "إضافة المنتج"}
           </button>
         </div>
       </section>
 
-      <section className="screen-guidance-card">
-        <div><span>هدف الشاشة</span><strong>إدارة المنتجات وتحديد أولوية التسويق لكل منتج.</strong></div>
-        <div><span>المدخلات</span><strong>اسم المنتج، التصنيف، السعر، الصورة، الفيديو، الوصف.</strong></div>
-        <div><span>المخرجات</span><strong>جاهزية المنتج، أولوية تسويقية، سبب الترشيح.</strong></div>
-        <div><span>الإجراء التالي</span><strong>استكمال بيانات المنتج أو إنشاء حملة.</strong></div>
-        <div><span>ما لا يحدث هنا</span><strong>لا يتم استيراد منتجات من منصة خارجية فعليًا.</strong></div>
-      </section>
+      {notice ? <div className="notice">{notice}</div> : null}
+      {conflict ? (
+        <div className="notice conflict">
+          <span>توجد نسخة أحدث. تم الاحتفاظ بمسودتك؛ حدّث المنتج وراجع التغييرات قبل إعادة الحفظ.</span>
+          <button type="button" onClick={refreshConflict}>تحديث للمراجعة</button>
+        </div>
+      ) : null}
 
       <section className="stats-grid">
-        <Stat title="إجمالي المنتجات" value={stats.total} />
-        <Stat title="جاهزة للحملات" value={stats.ready} />
-        <Stat title="تحتاج مراجعة" value={stats.review} />
-        <Stat title="الأصول المرتبطة" value={stats.assets} />
+        <Stat title="المنتجات المحملة فقط" value={stats.loaded} />
+        <Stat title="مسودة ضمن المحمل" value={stats.draft} />
+        <Stat title="نشط ضمن المحمل" value={stats.active} />
+        <Stat title="مؤرشف ضمن المحمل" value={stats.archived} />
       </section>
 
       <section className="add-card">
-        <div className="field">
-          <span>اسم المنتج</span>
-          <input
-            value={draft.name}
-            onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
-            placeholder="مثال: عطر أرابيان أود"
-          />
-        </div>
-
-        <div className="field">
-          <span>التصنيف</span>
-          <select
-            value={draft.category}
-            onChange={(event) => setDraft((prev) => ({ ...prev, category: event.target.value }))}
-          >
-            {categoryOptions.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="field">
-          <span>السعر</span>
-          <input
-            value={draft.price}
-            onChange={(event) => setDraft((prev) => ({ ...prev, price: event.target.value }))}
-            placeholder="599"
-          />
-        </div>
-
-        <div className="field">
-          <span>رابط المنتج</span>
-          <input
-            value={draft.url}
-            onChange={(event) => setDraft((prev) => ({ ...prev, url: event.target.value }))}
-            placeholder="https://store.example/products/..."
-          />
-        </div>
-
-        <div className="field">
-          <span>إرفاق صورة</span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) setDraft((prev) => ({ ...prev, imageUrl: `إرفاق تجريبي: ${file.name}` }));
-            }}
-          />
-          <small>{draft.imageUrl || "إرفاق تجريبي داخل النموذج الأولي — لا يوجد رفع فعلي للملفات."}</small>
-        </div>
-
-        <div className="field">
-          <span>إرفاق فيديو</span>
-          <input
-            type="file"
-            accept="video/*"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) setDraft((prev) => ({ ...prev, videoUrl: `إرفاق تجريبي: ${file.name}` }));
-            }}
-          />
-          <small>{draft.videoUrl || "إرفاق تجريبي داخل النموذج الأولي — لا يوجد رفع فعلي للملفات."}</small>
-        </div>
-
-        <div className="field wide">
-          <span>وصف المنتج</span>
-          <textarea
-            value={draft.description}
-            onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
-            placeholder="اكتب وصف المنتج، فوائده، وما يميزه..."
-          />
-        </div>
-
-        <div className="field wide">
-          <span>خصائص المنتج</span>
-          <div className="flag-row">
-            {flagOptions.map((flag) => (
-              <button
-                key={flag}
-                type="button"
-                className={draft.flags.includes(flag) ? "selected" : ""}
-                onClick={() =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    flags: toggleValue(prev.flags, flag),
-                  }))
-                }
-              >
-                {flag}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {editingId ? (
-          <button type="button" className="secondary-button cancel-edit" onClick={resetDraft}>
-            إلغاء التعديل
-          </button>
-        ) : null}
+        {renderTextField({ label: "اسم المنتج", value: draft.name, onChange: (name) => setDraft((prev) => ({ ...prev, name })) })}
+        {renderTextField({ label: "التصنيف", value: draft.category, onChange: (category) => setDraft((prev) => ({ ...prev, category })) })}
+        {renderTextField({ label: "السعر", value: draft.price, type: "number", onChange: (value) => setDraft((prev) => ({ ...prev, price: value === "" ? "" : Number(value) })) })}
+        {renderTextField({ label: "SKU", value: draft.sku, onChange: (sku) => setDraft((prev) => ({ ...prev, sku })) })}
+        <label className="field"><span>حالة المخزون</span><select value={draft.stockStatus} onChange={(event) => setDraft((prev) => ({ ...prev, stockStatus: event.target.value }))}>{stockOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        {renderTextField({ label: "رابط الصورة", value: draft.imageUrl, onChange: (imageUrl) => setDraft((prev) => ({ ...prev, imageUrl })) })}
+        {renderTextField({ label: "رابط الفيديو", value: draft.videoUrl, onChange: (videoUrl) => setDraft((prev) => ({ ...prev, videoUrl })) })}
+        <label className="field wide"><span>الوصف</span><textarea value={draft.description} onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))} /></label>
+        {editingId ? <button type="button" className="secondary-button" onClick={resetDraft}>إلغاء التعديل</button> : null}
       </section>
 
       <section className="toolbar">
-        <div className="search">
-          <Search size={17} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="بحث في المنتجات..."
-          />
-        </div>
-        <span>{filteredProducts.length} منتج</span>
+        <div className="search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="بحث ضمن المنتجات المحملة فقط..." /></div>
+        <span>{filteredProducts.length} من {products.length} محمل | آخر صفحة: {pageCount}</span>
       </section>
 
       <section className="layout">
         <article className="table-card">
           <div className="table">
-            <div className="head">
-              <span>المنتج</span>
-              <span>الحالة</span>
-              <span>الجاهزية</span>
-              <span>التصنيف</span>
-              <span>الأصول</span>
-              <span>المصدر</span>
-              <span>إجراء</span>
-            </div>
-
+            <div className="head"><span>المنتج</span><span>الحالة</span><span>التصنيف</span><span>المخزون</span><span>المصدر</span><span>إجراء</span></div>
             {filteredProducts.map((product) => (
-              <button
-                type="button"
-                key={product.id}
-                className={`row ${selectedId === product.id ? "selected" : ""}`}
-                onClick={() => setSelectedId(product.id)}
-              >
-                <div className="product-main">
-                  <div className="thumb">
-                    <ImageIcon size={17} />
-                  </div>
-                  <div>
-                    <strong>{product.name}</strong>
-                    <small>{product.category} · {product.price} ر.س</small>
-                  </div>
-                </div>
-
+              <div key={product.id} className={`row ${selectedId === product.id ? "selected" : ""}`}>
+                <button type="button" className="product-main" onClick={() => setSelectedId(product.id)}><div className="thumb"><ImageIcon size={17} /></div><div><strong>{product.name}</strong><small>{product.price === "" ? "سعر غير متاح" : `${product.price} ر.س`}</small></div></button>
                 <Status value={product.status} />
-
-                <div className="progress">
-                  <i>
-                    <b style={{ width: `${product.readiness}%` }} />
-                  </i>
-                  <small>{product.readiness}%</small>
-                </div>
-
-                <span>{product.category}</span>
-                <span>{product.assets}</span>
-                <span className="source-pill">{product.source}</span>
-
+                <span>{product.category || "غير مصنف"}</span>
+                <span>{stockOptions.find(([value]) => value === product.stockStatus)?.[1] || "غير محدد"}</span>
+                <span className="source-pill">{product.dataSource === "backend" ? "Backend" : "Fallback mock"}</span>
                 <div className="actions">
-                  <span
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      editProduct(product);
-                    }}
-                  >
-                    <Edit3 size={14} />
-                    تعديل
-                  </span>
-
-                  <span
-                    className="danger"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      deleteProduct(product.id);
-                    }}
-                  >
-                    <Trash2 size={14} />
-                    حذف
-                  </span>
+                  <button type="button" disabled={product.status === "archived" || mode !== "backend"} onClick={(event) => { event.stopPropagation(); editProduct(product); }}><Edit3 size={14} /> تعديل</button>
+                  <button type="button" className="danger" disabled title="لا يوجد مسار حذف مصرح"><Trash2 size={14} /> حذف غير متاح</button>
                 </div>
-              </button>
-            ))}
-          </div>
-        </article>
-
-        <aside className="detail-card">
-          <div className="detail-icon">
-            <Package size={24} />
-          </div>
-
-          <h2>{selectedProduct.name}</h2>
-          <p>{selectedProduct.category} · {selectedProduct.price} ر.س</p>
-
-          <Info label="الرابط" value={selectedProduct.url || "غير محدد"} />
-          <Info label="التصنيف" value={selectedProduct.category} />
-          <Info label="صورة المنتج" value={hasUrl(selectedProduct.imageUrl) ? "صورة متاحة" : "غير محدد"} />
-          <Info label="فيديو المنتج" value={hasUrl(selectedProduct.videoUrl) ? "فيديو متاح" : "غير محدد"} />
-          <Info label="المصدر" value={selectedProduct.source} />
-          <Info label="الأصول المرتبطة" value={String(selectedProduct.assets)} />
-          <Info label="جاهزية الحملات" value={`${selectedProduct.readiness}%`} />
-
-          <div className="marketing-priority-card">
-            <h3>أولوية تسويقية</h3>
-            <p>هذه توصيات واجهية مشتقة من بيانات الإعداد الحالية، وليست تحليلًا إنتاجيًا.</p>
-            <Info label="مستوى الأولوية" value={selectedMarketingPriority.level} />
-            <Info label="سبب الترشيح" value={selectedMarketingPriority.reason} />
-            <Info label="القناة الأنسب" value={selectedMarketingPriority.channel} />
-            <Info label="نوع المحتوى المناسب" value={selectedMarketingPriority.contentType} />
-            <Info label="النقص المطلوب استكماله" value={selectedMarketingPriority.gap} />
-          </div>
-
-          <div className="marketing-priority-card">
-            <h3>آخر تحليل للمنتج</h3>
-            <p>هذا ملخص فقط. Product Analysis Studio يبقى مساحة التحليل الكاملة.</p>
-            {selectedAnalysis.hasAnalysis ? (
-              <>
-                <Info label="درجة جاهزية المنتج" value={`${selectedAnalysis.readiness}%`} />
-                <Info label="أهم الملاحظات" value={selectedAnalysis.notes.join(" ")} />
-                <Info label="نواقص المنتج" value={selectedAnalysis.gaps.length ? selectedAnalysis.gaps.join("، ") : "لا توجد نواقص واضحة"} />
-                <button type="button" className="secondary-button analysis-link" onClick={() => setCatalogNotice("فتح تحليل المنتج متاح من استوديو تحليل المنتج في التنقل.")}>
-                  فتح تحليل المنتج
-                </button>
-                <button type="button" className="secondary-button analysis-link" onClick={() => setCatalogNotice("عرض ملخص التحليل ظاهر هنا فقط؛ التقرير الكامل في استوديو تحليل المنتج.")}>
-                  عرض ملخص التحليل
-                </button>
-              </>
-            ) : (
-              <Info label="حالة التحليل" value="لم يتم تحليل المنتج بعد." />
-            )}
-            {catalogNotice ? <div className="catalog-analysis-notice">{catalogNotice}</div> : null}
-          </div>
-
-          <h3>خصائص المنتج</h3>
-          <div className="chips">
-            {(selectedProduct.flags || []).map((flag) => (
-              <span key={flag}>{flag}</span>
-            ))}
-          </div>
-
-          <h3>قيود الادعاءات</h3>
-          <div className="claim-list">
-            {(selectedProduct.claims || []).map((claim) => (
-              <div key={claim}>
-                <AlertTriangle size={15} />
-                {claim}
               </div>
             ))}
           </div>
+          {hasMore ? <button type="button" className="load-more" onClick={loadMore} disabled={loading}>تحميل المزيد</button> : null}
+        </article>
+
+        <aside className="detail-card">
+          {selectedProduct ? (
+            <>
+              <div className="detail-icon"><Package size={24} /></div>
+              <h2>{selectedProduct.name}</h2>
+              <Info label="المعرّف" value={selectedProduct.productId || "Fallback محلي"} />
+              <Info label="الحالة" value={statusMap[selectedProduct.status]?.[0] || "غير محدد"} />
+              <Info label="الإصدار" value={selectedProduct.version == null ? "غير متاح" : String(selectedProduct.version)} />
+              <Info label="آخر تحديث" value={selectedProduct.updatedAt || "غير متاح"} />
+              <Info label="الجاهزية" value="غير متاحة في هذا التكامل" />
+              <Info label="الأصول" value="غير متاحة في هذا التكامل" />
+              <Info label="المصدر/الخصائص/الادعاءات" value="UI-only أو غير متاحة؛ ليست بيانات backend محفوظة" />
+            </>
+          ) : <p>لا توجد منتجات محملة.</p>}
         </aside>
       </section>
     </main>
   );
 }
 
+function renderTextField({ label, value, onChange, type = "text" }) {
+  return <label className="field"><span>{label}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} /></label>;
+}
+
 function Stat({ title, value }) {
-  return (
-    <article className="stat">
-      <span>{title}</span>
-      <strong>{value}</strong>
-    </article>
-  );
+  return <article className="stat"><span>{title}</span><strong>{value}</strong></article>;
 }
 
 function Status({ value }) {
-  const [label, tone] = statusMap[value] || statusMap.draft;
+  const [label, tone] = statusMap[value] || ["غير محدد", "slate"];
   return <span className={`status ${tone}`}>{label}</span>;
 }
 
 function Info({ label, value }) {
-  return (
-    <div className="info">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
+  return <div className="info"><span>{label}</span><strong>{value}</strong></div>;
 }
 
 const styles = `
-.product-catalog-page {
-  min-height: calc(100vh - 80px);
-  padding: 24px;
-  background: #f7f8f4;
-  color: #1f241d;
-  font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
-}
-
-.page-title,
-.stat,
-.add-card,
-.toolbar,
-.table-card,
-.detail-card {
-  background: #fff;
-  border: 1px solid #e4e7df;
-  border-radius: 24px;
-  box-shadow: 0 8px 26px rgba(24, 38, 18, 0.035);
-}
-
-.page-title {
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.eyebrow {
-  width: fit-content;
-  min-height: 30px;
-  padding: 0 11px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #176b2c;
-  background: #eef7e9;
-  font-size: 12px;
-  font-weight: 900;
-  margin-bottom: 10px;
-}
-
-.page-title h1 {
-  margin: 0;
-  font-size: 34px;
-  letter-spacing: -0.04em;
-}
-
-.page-title p {
-  color: #6f746b;
-  line-height: 1.8;
-  margin: 7px 0 0;
-}
-
-.title-actions {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.primary-button,
-.secondary-button {
-  min-height: 42px;
-  border-radius: 16px;
-  padding: 0 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: inherit;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.primary-button {
-  border: 0;
-  background: #176b2c;
-  color: #fff;
-}
-
-.secondary-button {
-  border: 1px solid #e4e7df;
-  background: #fff;
-  color: #1f241d;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.stat {
-  padding: 16px;
-}
-
-.stat span {
-  display: block;
-  color: #6f746b;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.stat strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 30px;
-}
-
-.add-card {
-  padding: 16px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.field {
-  display: grid;
-  gap: 7px;
-}
-
-.field.wide {
-  grid-column: 1 / -1;
-}
-
-.field span {
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.field small {
-  color: #667085;
-  font-size: 11px;
-  line-height: 1.6;
-}
-
-.field input,
-.field select,
-.field textarea {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #e4e7df;
-  border-radius: 14px;
-  padding: 0 12px;
-  font-family: inherit;
-}
-
-.field input,
-.field select {
-  height: 42px;
-}
-
-.field textarea {
-  min-height: 90px;
-  padding: 12px;
-  line-height: 1.8;
-  resize: vertical;
-}
-
-.flag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.flag-row button {
-  border: 1px solid #e4e7df;
-  background: #fff;
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.flag-row button.selected {
-  color: #176b2c;
-  background: #eef7e9;
-  border-color: #176b2c;
-}
-
-.cancel-edit {
-  align-self: end;
-}
-
-.toolbar {
-  padding: 14px;
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-}
-
-.search {
-  height: 42px;
-  border: 1px solid #e4e7df;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  flex: 1;
-  color: #94a3b8;
-}
-
-.search input {
-  border: 0;
-  outline: 0;
-  background: transparent;
-  width: 100%;
-  font-family: inherit;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
-  gap: 16px;
-}
-
-.table-card,
-.detail-card {
-  padding: 18px;
-}
-
-.table {
-  border: 1px solid #e4e7df;
-  border-radius: 18px;
-  overflow: hidden;
-}
-
-.head,
-.row {
-  display: grid;
-  grid-template-columns: minmax(220px, 1.35fr) 0.8fr 0.8fr 0.65fr 0.45fr 0.7fr 1fr;
-  gap: 10px;
-  align-items: center;
-  padding: 13px 14px;
-}
-
-.head {
-  background: #f7f8f4;
-  color: #6f746b;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.row {
-  width: 100%;
-  border: 0;
-  border-top: 1px solid #e4e7df;
-  background: #fff;
-  text-align: right;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.row.selected {
-  background: #fbfdf9;
-}
-
-.product-main {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.thumb {
-  width: 42px;
-  height: 40px;
-  border-radius: 14px;
-  background: #eef7e9;
-  color: #176b2c;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-}
-
-.product-main strong {
-  display: block;
-}
-
-.product-main small {
-  display: block;
-  color: #6f746b;
-}
-
-.status {
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 900;
-  width: fit-content;
-}
-
-.status.green {
-  background: #f0fdf4;
-  color: #166534;
-}
-
-.status.amber {
-  background: #fffbeb;
-  color: #92400e;
-}
-
-.status.slate {
-  background: #f8fafc;
-  color: #475569;
-}
-
-.status.red {
-  background: #fef2f2;
-  color: #991b1b;
-}
-
-.progress {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-}
-
-.progress i {
-  width: 70px;
-  height: 7px;
-  background: #e4e7df;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress b {
-  height: 100%;
-  display: block;
-  background: #176b2c;
-}
-
-.progress small {
-  font-weight: 900;
-}
-
-.source-pill {
-  width: fit-content;
-  border: 1px solid #e4e7df;
-  border-radius: 999px;
-  padding: 5px 8px;
-  font-size: 10px;
-  font-weight: 900;
-}
-
-.actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.actions span {
-  border: 1px solid #e4e7df;
-  border-radius: 999px;
-  padding: 5px 8px;
-  font-size: 10px;
-  font-weight: 900;
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.actions .danger {
-  color: #991b1b;
-  background: #fef2f2;
-  border-color: #fecaca;
-}
-
-.detail-card h2 {
-  margin: 12px 0 0;
-}
-
-.detail-card p {
-  color: #6f746b;
-}
-
-.detail-icon {
-  width: 54px;
-  height: 54px;
-  background: #176b2c;
-  color: #fff;
-  border-radius: 18px;
-  display: grid;
-  place-items: center;
-}
-
-.info {
-  min-height: 42px;
-  border-bottom: 1px solid #e4e7df;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.info span {
-  color: #6f746b;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.detail-card h3 {
-  margin: 18px 0 10px;
-}
-
-.marketing-priority-card {
-  margin-top: 16px;
-  border: 1px solid #d9ead7;
-  background: #eef7e9;
-  border-radius: 18px;
-  padding: 12px;
-}
-
-.marketing-priority-card h3 {
-  margin-top: 0;
-}
-
-.marketing-priority-card p {
-  margin: 0 0 8px;
-  color: #52604c;
-  line-height: 1.7;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.marketing-priority-card .info {
-  border-bottom-color: #d9ead7;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.chips span {
-  border: 1px solid #e4e7df;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.claim-list {
-  display: grid;
-  gap: 8px;
-}
-
-.claim-list div {
-  border: 1px solid #fde68a;
-  background: #fff7e6;
-  color: #92400e;
-  border-radius: 14px;
-  padding: 10px;
-  display: flex;
-  gap: 7px;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.analysis-link {
-  width: 100%;
-  margin-top: 8px;
-}
-
-.catalog-analysis-notice {
-  border: 1px solid #d9ead7;
-  background: #f5fbf1;
-  color: #176b2c;
-  border-radius: 14px;
-  padding: 10px;
-  margin-top: 10px;
-  line-height: 1.7;
-  font-size: 12px;
-  font-weight: 850;
-}
-
-@media (max-width: 1100px) {
-  .stats-grid,
-  .add-card,
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .table {
-    overflow: auto;
-  }
-
-  .head,
-  .row {
-    min-width: 980px;
-  }
-}
-
-.screen-guidance-card {
-  background: #fff;
-  border: 1px solid #e4e7df;
-  border-radius: 24px;
-  box-shadow: 0 8px 26px rgba(24, 38, 18, 0.035);
-  padding: 14px;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.screen-guidance-card div {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 16px;
-  padding: 10px;
-}
-
-.screen-guidance-card span {
-  display: block;
-  color: #6f746b;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.screen-guidance-card strong {
-  display: block;
-  margin-top: 5px;
-  color: #1f241d;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-@media (max-width: 1100px) {
-  .screen-guidance-card { grid-template-columns: 1fr; }
-}
+.product-catalog-page{min-height:calc(100vh - 80px);padding:24px;background:#f7f8f4;color:#1f241d;font-family:Inter,"Segoe UI",Tahoma,Arial,sans-serif}
+.page-title,.stat,.add-card,.toolbar,.table-card,.detail-card,.notice{background:#fff;border:1px solid #e4e7df;border-radius:24px;box-shadow:0 8px 26px rgba(24,38,18,.035)}
+.page-title{padding:20px;display:flex;justify-content:space-between;gap:16px;margin-bottom:16px}.eyebrow{width:fit-content;padding:8px 11px;border-radius:999px;display:flex;gap:7px;color:#176b2c;background:#eef7e9;font-size:12px;font-weight:900}.page-title h1{margin:10px 0 0;font-size:34px}.page-title p{color:#6f746b}.mode{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:900}.mode.backend{background:#eef7e9;color:#176b2c}.mode.fallback{background:#fff7ed;color:#9a3412}
+.title-actions{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}.primary-button,.secondary-button,.load-more,.notice button{min-height:42px;border-radius:16px;padding:0 16px;font-family:inherit;font-weight:900;cursor:pointer}.primary-button{border:0;background:#176b2c;color:#fff}.secondary-button,.load-more,.notice button{border:1px solid #e4e7df;background:#fff;color:#1f241d}button:disabled{cursor:not-allowed;opacity:.55}
+.notice{padding:14px;margin-bottom:16px;color:#475569}.notice.conflict{border-color:#f59e0b;background:#fffbeb}.notice button{margin-inline-start:12px;min-height:34px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}.stat{padding:16px}.stat span{display:block;color:#6f746b;font-size:12px;font-weight:900}.stat strong{display:block;margin-top:8px;font-size:30px}
+.add-card{padding:16px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.field{display:grid;gap:7px}.field.wide{grid-column:1/-1}.field span{font-size:12px;font-weight:900}.field input,.field select,.field textarea{width:100%;box-sizing:border-box;border:1px solid #e4e7df;border-radius:14px;padding:0 12px;font-family:inherit}.field input,.field select{height:42px}.field textarea{min-height:90px;padding:12px}
+.toolbar{padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;gap:12px;align-items:center}.search{height:42px;border:1px solid #e4e7df;border-radius:999px;display:flex;align-items:center;gap:8px;padding:0 12px;flex:1;color:#94a3b8}.search input{border:0;outline:0;background:transparent;width:100%;font-family:inherit}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px}.table-card,.detail-card{padding:18px}.table{border:1px solid #e4e7df;border-radius:18px;overflow:hidden}.head,.row{display:grid;grid-template-columns:minmax(190px,1.4fr) .7fr .7fr .7fr .7fr 1fr;gap:10px;align-items:center;padding:13px 14px}.head{background:#f7f8f4;color:#6f746b;font-size:12px;font-weight:900}.row{width:100%;border:0;border-top:1px solid #e4e7df;background:#fff;text-align:right;font-family:inherit}.row.selected{background:#fbfdf9}.product-main{display:flex;align-items:center;gap:11px;border:0;background:transparent;padding:0;text-align:right;font-family:inherit;cursor:pointer}.thumb{width:42px;height:40px;border-radius:14px;background:#eef7e9;color:#176b2c;display:grid;place-items:center}.product-main strong,.product-main small{display:block}.product-main small{color:#6f746b}.status,.source-pill,.actions button{border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;width:fit-content}.status.green{background:#f0fdf4;color:#166534}.status.amber{background:#fffbeb;color:#92400e}.status.slate{background:#f8fafc;color:#475569}.source-pill,.actions button{border:1px solid #e4e7df}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{display:flex;gap:4px;align-items:center;background:#fff;font-family:inherit;cursor:pointer}.actions .danger{color:#991b1b;background:#fef2f2}.load-more{display:block;margin:16px auto 0}
+.detail-icon{width:54px;height:54px;background:#176b2c;color:#fff;border-radius:18px;display:grid;place-items:center}.info{min-height:46px;border-bottom:1px solid #e4e7df;display:flex;justify-content:space-between;align-items:center;gap:12px}.info span{color:#6f746b;font-size:12px;font-weight:900}.info strong{font-size:12px;text-align:left;word-break:break-word}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.stats-grid,.add-card{grid-template-columns:repeat(2,minmax(0,1fr))}.head,.row{grid-template-columns:1.4fr .7fr .7fr 1fr}.head span:nth-child(4),.head span:nth-child(5),.row>span:nth-child(4),.row>span:nth-child(5){display:none}}
+@media(max-width:720px){.product-catalog-page{padding:14px}.page-title{display:grid}.stats-grid,.add-card{grid-template-columns:1fr}.field.wide{grid-column:auto}.table{overflow-x:auto}.head,.row{min-width:820px}}
 `;

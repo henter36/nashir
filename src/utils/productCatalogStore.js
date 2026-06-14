@@ -1,39 +1,58 @@
 export const PRODUCT_CATALOG_KEY = "nashir_mock_product_catalog";
 
-function normalizeProduct(product = {}) {
-  const id = product.id || `p-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+let _productSeq = 0;
+function createFallbackProductId() {
+  _productSeq += 1;
+  return `p-${Date.now()}-${_productSeq}`;
+}
+
+function normalizedReadiness(product, backendProduct) {
+  if (backendProduct) return null;
+  if (product.readiness == null) return 35;
+  return Number(product.readiness);
+}
+
+export function normalizeCatalogProduct(product = {}, source = "fallback") {
+  const id = product.productId || product.id || createFallbackProductId();
+  const backendProduct = source === "backend";
 
   return {
-    ...product,
     id,
+    productId: product.productId || product.id || id,
+    workspaceId: product.workspaceId || null,
     name: product.name || "",
     category: product.category || "غير مصنف",
     imageUrl: product.imageUrl || "",
     videoUrl: product.videoUrl || "",
-    price: product.price || "غير محدد",
+    price: product.price ?? "",
+    sku: product.sku || "",
+    stockStatus: product.stockStatus || "unknown",
     currency: product.currency || "SAR",
     url: product.url || "",
-    readiness: Number.isFinite(Number(product.readiness)) ? Number(product.readiness) : 35,
     status: product.status || "draft",
-    assets: Number.isFinite(Number(product.assets)) ? Number(product.assets) : 0,
-    source: product.source || "Manual",
+    version: product.version ?? null,
+    createdAt: product.createdAt || null,
+    updatedAt: product.updatedAt || null,
+    dataSource: backendProduct ? "backend" : "fallback",
+    readiness: normalizedReadiness(product, backendProduct),
+    assets: backendProduct ? null : Number(product.assets) || 0,
+    source: backendProduct ? "غير متاح في عقد المنتجات" : product.source || "تجريبي",
     flags: Array.isArray(product.flags) ? product.flags : [],
     claims: Array.isArray(product.claims)
       ? product.claims
       : ["يحتاج مراجعة وصف المنتج قبل استخدامه في حملة"],
     description: product.description || "منتج يحتاج استكمال التفاصيل قبل استخدامه في الحملات.",
-    updatedAt: product.updatedAt || new Date().toISOString(),
   };
 }
 
 export function readProductCatalog(seed = []) {
-  if (typeof window === "undefined") return seed.map(normalizeProduct);
+  if (globalThis.window === undefined) return seed.map((item) => normalizeCatalogProduct(item));
 
   try {
-    const raw = window.localStorage.getItem(PRODUCT_CATALOG_KEY);
+    const raw = globalThis.window.localStorage.getItem(PRODUCT_CATALOG_KEY);
 
     if (!raw) {
-      const normalizedSeed = seed.map(normalizeProduct);
+      const normalizedSeed = seed.map((item) => normalizeCatalogProduct(item));
       writeProductCatalog(normalizedSeed);
       return normalizedSeed;
     }
@@ -42,23 +61,23 @@ export function readProductCatalog(seed = []) {
     const products = Array.isArray(parsed) ? parsed : parsed?.products;
 
     if (!Array.isArray(products) || !products.length) {
-      const normalizedSeed = seed.map(normalizeProduct);
+      const normalizedSeed = seed.map((item) => normalizeCatalogProduct(item));
       writeProductCatalog(normalizedSeed);
       return normalizedSeed;
     }
 
-    return products.map(normalizeProduct);
+    return products.map((item) => normalizeCatalogProduct(item));
   } catch {
-    return seed.map(normalizeProduct);
+    return seed.map((item) => normalizeCatalogProduct(item));
   }
 }
 
 export function writeProductCatalog(products = []) {
-  if (typeof window === "undefined") return products.map(normalizeProduct);
+  if (globalThis.window === undefined) return products.map((item) => normalizeCatalogProduct(item));
 
-  const normalized = products.map(normalizeProduct);
+  const normalized = products.map((item) => normalizeCatalogProduct(item));
 
-  window.localStorage.setItem(
+  globalThis.window.localStorage.setItem(
     PRODUCT_CATALOG_KEY,
     JSON.stringify({
       version: 1,
@@ -68,14 +87,14 @@ export function writeProductCatalog(products = []) {
     })
   );
 
-  window.dispatchEvent(new Event("nashir-product-catalog-updated"));
+  globalThis.window.dispatchEvent(new Event("nashir-product-catalog-updated"));
 
   return normalized;
 }
 
 export function upsertProduct(product, seed = []) {
   const current = readProductCatalog(seed);
-  const normalized = normalizeProduct(product);
+  const normalized = normalizeCatalogProduct(product);
   const exists = current.some((item) => item.id === normalized.id);
   const next = exists
     ? current.map((item) => (item.id === normalized.id ? normalized : item))
@@ -87,6 +106,17 @@ export function upsertProduct(product, seed = []) {
 export function deleteProduct(id, seed = []) {
   const current = readProductCatalog(seed);
   const next = current.filter((item) => item.id !== id);
+  return writeProductCatalog(next.length ? next : seed.map((item) => normalizeCatalogProduct(item)));
+}
 
-  return writeProductCatalog(next.length ? next : seed.map(normalizeProduct));
+export function normalizeBackendProducts(products = []) {
+  return products.map((product) => normalizeCatalogProduct(product, "backend"));
+}
+
+export function mergeBackendProducts(current = [], incoming = []) {
+  const merged = new Map(current.map((product) => [product.productId || product.id, product]));
+  normalizeBackendProducts(incoming).forEach((product) => {
+    merged.set(product.productId || product.id, product);
+  });
+  return [...merged.values()];
 }
