@@ -19,7 +19,13 @@ export const styles = `
 .map-card,
 .contract-card,
 .runs-card,
-.test-card {
+.test-card,
+.run-detail-card,
+.run-timeline-card,
+.run-warnings-card,
+.contracts-overview-card,
+.pipeline-reflection-card,
+.screen-guidance-card {
   background: #fff;
   border: 1px solid #e4e7df;
   border-radius: 24px;
@@ -182,7 +188,12 @@ export const styles = `
 .map-card,
 .contract-card,
 .runs-card,
-.test-card {
+.test-card,
+.run-detail-card,
+.run-timeline-card,
+.run-warnings-card,
+.contracts-overview-card,
+.pipeline-reflection-card {
   padding: 18px;
 }
 
@@ -193,6 +204,49 @@ export const styles = `
 .runs-card h2,
 .test-card h2 {
   margin: 0 0 14px;
+}
+
+.test-row strong, .test-row span, .test-row small,
+.run-step strong, .run-step span, .action-row strong, .action-row span,
+.dry-run-mode strong, .dry-run-mode span,
+.dry-result strong, .dry-result span, .dry-result p,
+.expected-card strong, .expected-card span, .expected-card small, .expected-card em,
+.reusable-output-list strong, .reusable-output-list span,
+.screen-guidance-card strong, .screen-guidance-card span {
+  display: block;
+}
+
+.test-row,
+.contract-kpi,
+.schema-preview,
+.allowed-consumers,
+.contract-risk-box,
+.contract-safe-box {
+  border: 1px solid #e4e7df;
+  background: #f7f8f4;
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.safe-preview,
+.run-error,
+.run-step,
+.warning-row,
+.action-row {
+  border: 1px solid #e4e7df;
+  background: #f7f8f4;
+  border-radius: 18px;
+  padding: 12px;
+}
+
+.dry-run-mode,
+.expected-card,
+.pipeline-step-card,
+.pipeline-support-card {
+  border: 1px solid #e4e7df;
+  background: #f7f8f4;
+  border-radius: 18px;
+  padding: 13px;
 }
 
 .template-list {
@@ -798,19 +852,6 @@ export const styles = `
   line-height: 1.8;
 }
 
-.test-row {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 16px;
-  padding: 12px;
-}
-
-.test-row strong,
-.test-row span,
-.test-row small {
-  display: block;
-}
-
 .test-row span {
   margin-top: 5px;
   line-height: 1.7;
@@ -878,16 +919,6 @@ export const styles = `
   align-items: start;
 }
 
-.run-detail-card,
-.run-timeline-card,
-.run-warnings-card {
-  background: #fff;
-  border: 1px solid #e4e7df;
-  border-radius: 24px;
-  padding: 18px;
-  box-shadow: 0 8px 26px rgba(24, 38, 18, 0.035);
-}
-
 .runs-count {
   width: fit-content;
   min-height: 30px;
@@ -947,14 +978,6 @@ export const styles = `
   gap: 10px;
 }
 
-.safe-preview,
-.run-error {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 18px;
-  padding: 12px;
-}
-
 .safe-preview strong,
 .safe-preview p,
 .run-error strong {
@@ -1000,10 +1023,6 @@ export const styles = `
 .run-step,
 .warning-row,
 .action-row {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 18px;
-  padding: 12px;
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr) auto;
   gap: 10px;
@@ -1035,13 +1054,6 @@ export const styles = `
   background: #dc2626;
 }
 
-.run-step strong,
-.run-step span,
-.action-row strong,
-.action-row span {
-  display: block;
-}
-
 .run-step span,
 .action-row span {
   color: #6f746b;
@@ -1071,14 +1083,6 @@ export const styles = `
   gap: 16px;
 }
 
-.contracts-overview-card {
-  background: #fff;
-  border: 1px solid #e4e7df;
-  border-radius: 24px;
-  padding: 18px;
-  box-shadow: 0 8px 26px rgba(24, 38, 18, 0.035);
-}
-
 .contracts-count {
   color: #176b2c;
   background: #eef7e9;
@@ -1094,13 +1098,6 @@ export const styles = `
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
-}
-
-.contract-kpi {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 16px;
-  padding: 12px;
 }
 
 .contract-kpi span {
@@ -1184,16 +1181,6 @@ export const styles = `
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-}
-
-.schema-preview,
-.allowed-consumers,
-.contract-risk-box,
-.contract-safe-box {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 16px;
-  padding: 12px;
 }
 
 .schema-preview strong,
@@ -1281,16 +1268,7 @@ export const styles = `
 }
 
 .dry-run-mode {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 18px;
-  padding: 13px;
   margin: 14px 0;
-}
-
-.dry-run-mode strong,
-.dry-run-mode span {
-  display: block;
 }
 
 .dry-run-mode span {
@@ -1303,12 +1281,6 @@ export const styles = `
   border: 1px solid;
   border-radius: 18px;
   padding: 14px;
-}
-
-.dry-result strong,
-.dry-result span,
-.dry-result p {
-  display: block;
 }
 
 .dry-result span,
@@ -1405,20 +1377,6 @@ export const styles = `
   gap: 12px;
 }
 
-.expected-card {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 18px;
-  padding: 13px;
-}
-
-.expected-card strong,
-.expected-card span,
-.expected-card small,
-.expected-card em {
-  display: block;
-}
-
 .expected-card span {
   margin-top: 5px;
 }
@@ -1476,11 +1434,6 @@ export const styles = `
 }
 
 .pipeline-reflection-card {
-  background: #fff;
-  border: 1px solid #e4e7df;
-  border-radius: 24px;
-  padding: 18px;
-  box-shadow: 0 8px 26px rgba(24, 38, 18, 0.035);
   margin-bottom: 16px;
 }
 
@@ -1499,14 +1452,6 @@ export const styles = `
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-top: 14px;
-}
-
-.pipeline-step-card,
-.pipeline-support-card {
-  border: 1px solid #e4e7df;
-  background: #f7f8f4;
-  border-radius: 18px;
-  padding: 13px;
 }
 
 .pipeline-step-head {
@@ -1587,11 +1532,6 @@ export const styles = `
   padding: 10px;
 }
 
-.reusable-output-list strong,
-.reusable-output-list span {
-  display: block;
-}
-
 .reusable-output-list span {
   margin-top: 4px;
   color: #52604c;
@@ -1609,10 +1549,6 @@ export const styles = `
 }
 
 .screen-guidance-card {
-  background: #fff;
-  border: 1px solid #e4e7df;
-  border-radius: 24px;
-  box-shadow: 0 8px 26px rgba(24, 38, 18, 0.035);
   padding: 14px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1625,11 +1561,6 @@ export const styles = `
   background: #f8faf5;
   border-radius: 16px;
   padding: 10px;
-}
-
-.screen-guidance-card strong,
-.screen-guidance-card span {
-  display: block;
 }
 
 .screen-guidance-card strong {
