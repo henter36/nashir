@@ -109,9 +109,7 @@ export default function ProductCatalogPage() {
   }, [applyFirstPage, config.configured]);
 
   useEffect(() => {
-    if (typeof globalThis.window === "undefined") return undefined;
-    const timer = globalThis.window.setTimeout(loadFirstPage, 0);
-    return () => globalThis.window.clearTimeout(timer);
+    loadFirstPage(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [loadFirstPage]);
 
   const selectedProduct = products.find((product) => product.id === selectedId) || products[0] || null;
@@ -159,7 +157,10 @@ export default function ProductCatalogPage() {
     try {
       if (editingId) {
         const original = products.find((product) => product.id === editingId);
-        if (!original) return;
+        if (!original) {
+          setNotice("المنتج المحدد غير متاح.");
+          return;
+        }
         const body = updateProductRequestBody(draft, original);
         if (!Object.keys(body).length) {
           setNotice("لا توجد تغييرات مسموحة للحفظ.");

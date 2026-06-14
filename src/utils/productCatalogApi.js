@@ -1,4 +1,5 @@
 const PRODUCT_LIMIT = 50;
+const REQUEST_TIMEOUT_MS = 30000;
 const CREATE_FIELDS = [
   "name",
   "category",
@@ -52,6 +53,10 @@ export class ProductCatalogApiError extends Error {
   }
 }
 
+function requireConfigured(config) {
+  if (!config.configured) throw new ProductCatalogApiError(0);
+}
+
 async function request(config, path, options = {}) {
   const headers = {
     Accept: "application/json",
@@ -60,11 +65,16 @@ async function request(config, path, options = {}) {
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (config.accessToken) headers.Authorization = `Bearer ${config.accessToken}`;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   let response;
   try {
-    response = await fetch(path, { ...options, headers });
+    response = await fetch(path, { ...options, headers, signal: controller.signal });
   } catch {
     throw new ProductCatalogApiError(0);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const payload = await response.json().catch(() => ({}));
@@ -124,6 +134,7 @@ export async function listProducts({ cursor = null } = {}) {
 
 export async function createProduct(body, idempotencyKey) {
   const config = apiConfig();
+  requireConfigured(config);
   const payload = await request(config, productPath(config), {
     method: "POST",
     headers: { "Idempotency-Key": idempotencyKey },
@@ -134,12 +145,17 @@ export async function createProduct(body, idempotencyKey) {
 
 export async function getProduct(productId) {
   const config = apiConfig();
+  requireConfigured(config);
   const payload = await request(config, productPath(config, productId));
   return payload.product;
 }
 
 export async function updateProduct(productId, version, body) {
   const config = apiConfig();
+  requireConfigured(config);
+  if (version === null || version === undefined || version === "") {
+    throw new ProductCatalogApiError(400);
+  }
   const payload = await request(config, productPath(config, productId), {
     method: "PUT",
     headers: { "If-Match": String(version) },

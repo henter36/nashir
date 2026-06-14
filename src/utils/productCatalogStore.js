@@ -6,7 +6,7 @@ export function normalizeCatalogProduct(product = {}, source = "fallback") {
 
   return {
     id,
-    productId: product.productId || null,
+    productId: product.productId || product.id || id,
     workspaceId: product.workspaceId || null,
     name: product.name || "",
     category: product.category || "غير مصنف",
@@ -22,9 +22,9 @@ export function normalizeCatalogProduct(product = {}, source = "fallback") {
     createdAt: product.createdAt || null,
     updatedAt: product.updatedAt || null,
     dataSource: backendProduct ? "backend" : "fallback",
-    readiness: backendProduct ? null : Number(product.readiness) || 35,
+    readiness: backendProduct ? null : (product.readiness != null ? Number(product.readiness) : 35),
     assets: backendProduct ? null : Number(product.assets) || 0,
-    source: backendProduct ? "غير متاح في عقد المنتجات" : product.source || "Mock",
+    source: backendProduct ? "غير متاح في عقد المنتجات" : product.source || "تجريبي",
     flags: Array.isArray(product.flags) ? product.flags : [],
     claims: Array.isArray(product.claims)
       ? product.claims
@@ -34,7 +34,7 @@ export function normalizeCatalogProduct(product = {}, source = "fallback") {
 }
 
 export function readProductCatalog(seed = []) {
-  if (typeof globalThis.window === "undefined") return seed.map((item) => normalizeCatalogProduct(item));
+  if (globalThis.window === undefined) return seed.map((item) => normalizeCatalogProduct(item));
 
   try {
     const raw = globalThis.window.localStorage.getItem(PRODUCT_CATALOG_KEY);
@@ -61,7 +61,7 @@ export function readProductCatalog(seed = []) {
 }
 
 export function writeProductCatalog(products = []) {
-  if (typeof globalThis.window === "undefined") return products.map((item) => normalizeCatalogProduct(item));
+  if (globalThis.window === undefined) return products.map((item) => normalizeCatalogProduct(item));
 
   const normalized = products.map((item) => normalizeCatalogProduct(item));
 
@@ -104,7 +104,7 @@ export function normalizeBackendProducts(products = []) {
 export function mergeBackendProducts(current = [], incoming = []) {
   const merged = new Map(current.map((product) => [product.productId || product.id, product]));
   normalizeBackendProducts(incoming).forEach((product) => {
-    merged.set(product.productId, product);
+    merged.set(product.productId || product.id, product);
   });
   return [...merged.values()];
 }
