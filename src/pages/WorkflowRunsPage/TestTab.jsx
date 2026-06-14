@@ -1,4 +1,5 @@
 import { PlayCircle, CircleAlert } from "lucide-react";
+import { CardHeader, EmptyRow } from "./components.jsx";
 import { DESTINATION_OPTIONS, OUTPUT_TYPE_OPTIONS, VISIBILITY } from "./constants.js";
 import { getStepOutputName, getOptionLabel } from "./helpers.js";
 
@@ -12,14 +13,7 @@ export default function TestTab({
   return (
     <section className="enhanced-test-layout">
       <article className="test-card">
-        <div className="card-header">
-          <div>
-            <h2>اختبار المسار</h2>
-            <p>
-              يوضح كيف سيتم فحص المسار قبل التشغيل الفعلي.
-            </p>
-          </div>
-        </div>
+        <CardHeader title="اختبار المسار" subtitle="يوضح كيف سيتم فحص المسار قبل التشغيل الفعلي." />
 
         <label className="field">
           <span>مصدر الاختبار</span>
@@ -66,12 +60,7 @@ export default function TestTab({
       </article>
 
       <article className="test-card">
-        <div className="card-header">
-          <div>
-            <h2>نتيجة الاختبار</h2>
-            <p>نتيجة التحقق من المدخلات والسياسات قبل التشغيل.</p>
-          </div>
-        </div>
+        <CardHeader title="نتيجة الاختبار" subtitle="نتيجة التحقق من المدخلات والسياسات قبل التشغيل." />
 
         {dryRunResult ? (
           <div
@@ -108,7 +97,7 @@ export default function TestTab({
             )}
           </div>
         ) : (
-          <p className="empty">لم يتم تنفيذ أي اختبار بعد.</p>
+          <EmptyRow text="لم يتم تنفيذ أي اختبار بعد." />
         )}
       </article>
 
@@ -144,7 +133,7 @@ export default function TestTab({
             ))}
           </div>
         ) : (
-          <p className="empty">شغّل اختبار المسار لرؤية فحص الخطوات.</p>
+          <EmptyRow text="شغّل اختبار المسار لرؤية فحص الخطوات." />
         )}
       </article>
 
@@ -163,7 +152,7 @@ export default function TestTab({
             ))}
           </div>
         ) : (
-          <p className="empty">لا توجد مخرجات متوقعة قبل تشغيل الاختبار.</p>
+          <EmptyRow text="لا توجد مخرجات متوقعة قبل تشغيل الاختبار." />
         )}
       </article>
 
@@ -179,7 +168,7 @@ export default function TestTab({
               </div>
             ))
           ) : (
-            <p className="empty">لم يتم تنفيذ أي اختبار بعد.</p>
+            <EmptyRow text="لم يتم تنفيذ أي اختبار بعد." />
           )}
         </div>
       </article>

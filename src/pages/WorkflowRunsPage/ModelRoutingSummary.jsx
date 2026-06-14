@@ -17,40 +17,37 @@ export default function ModelRoutingSummary({ step, readinessContext = {}, compa
     ...readiness.blockedReasons,
   ]));
 
-  if (!route) {
-    return (
-      <div className={`model-route-summary missing ${compact ? "compact" : ""}`}>
-        <div className="model-route-title">
-          <CircleAlert size={15} />
-          <strong>مسار النموذج</strong>
-        </div>
-        <p>لا يوجد مسار نموذج مطابق لهذه الخطوة. يجب ربطها قبل التشغيل عند التنفيذ.</p>
-      </div>
-    );
-  }
+  const statusClass = !route ? "missing" : warnings.length ? "has-warning" : "safe";
+  const TitleIcon = route ? GitBranch : CircleAlert;
 
   return (
-    <div className={`model-route-summary ${warnings.length ? "has-warning" : "safe"} ${compact ? "compact" : ""}`}>
+    <div className={`model-route-summary ${statusClass} ${compact ? "compact" : ""}`}>
       <div className="model-route-title">
-        <GitBranch size={15} />
+        <TitleIcon size={15} />
         <strong>مسار النموذج</strong>
       </div>
 
-      <div className="model-route-lines">
-        <span>المسار الأساسي: <b>{route.primaryModel}</b></span>
-        <span>المسار البديل: <b>{route.fallback.length ? route.fallback.join(" → ") : "لا يوجد"}</b></span>
-        <span>حد التكلفة: <b>{getCostLimitLabel(readiness.route, readiness.costRow) || `$${route.maxCostPerRun}`}</b></span>
-        <span>المراجعة: <b>{route.humanReviewRequired ? "مطلوبة" : "غير مطلوبة"}</b></span>
-      </div>
+      {route ? (
+        <>
+          <div className="model-route-lines">
+            <span>المسار الأساسي: <b>{route.primaryModel}</b></span>
+            <span>المسار البديل: <b>{route.fallback.length ? route.fallback.join(" → ") : "لا يوجد"}</b></span>
+            <span>حد التكلفة: <b>{getCostLimitLabel(readiness.route, readiness.costRow) || `$${route.maxCostPerRun}`}</b></span>
+            <span>المراجعة: <b>{route.humanReviewRequired ? "مطلوبة" : "غير مطلوبة"}</b></span>
+          </div>
 
-      {warnings.length ? (
-        <div className="model-route-warnings">
-          {warnings.map((warning) => (
-            <span key={warning}>{warning}</span>
-          ))}
-        </div>
+          {warnings.length ? (
+            <div className="model-route-warnings">
+              {warnings.map((warning) => (
+                <span key={warning}>{warning}</span>
+              ))}
+            </div>
+          ) : (
+            <p className="model-route-safe-note">المسار مرتبط ومحكوم كقراءة فقط من شاشة توجيه النماذج.</p>
+          )}
+        </>
       ) : (
-        <p className="model-route-safe-note">المسار مرتبط ومحكوم كقراءة فقط من شاشة توجيه النماذج.</p>
+        <p>لا يوجد مسار نموذج مطابق لهذه الخطوة. يجب ربطها قبل التشغيل عند التنفيذ.</p>
       )}
     </div>
   );

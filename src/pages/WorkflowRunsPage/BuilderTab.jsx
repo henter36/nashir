@@ -1,4 +1,4 @@
-import { Info } from "./components.jsx";
+import { Info, CardHeader, EmptyRow } from "./components.jsx";
 import { WORKFLOW_TEMPLATES, PROCESSOR_TYPES, PROCESSORS, DESTINATION_OPTIONS } from "./constants.js";
 import { getWorkflowTrigger, formatInputRefs, getStepOutputName, getOptionLabel } from "./helpers.js";
 import WorkflowTriggerPanel from "./WorkflowTriggerPanel.jsx";
@@ -38,15 +38,11 @@ export default function BuilderTab({
       </aside>
 
       <article className="steps-card">
-        <div className="card-header">
-          <div>
-            <h2>{workflowDraft.name}</h2>
-            <p>{workflowDraft.description}</p>
-          </div>
+        <CardHeader title={workflowDraft.name} subtitle={workflowDraft.description}>
           <button type="button" className="secondary-button" onClick={addStep}>
             + إضافة خطوة
           </button>
-        </div>
+        </CardHeader>
 
         <div className="workflow-meta">
           <Info label="نقطة البدء" value={workflowDraft.triggerScreen} />
@@ -103,7 +99,7 @@ export default function BuilderTab({
             readinessContext={readinessContext}
           />
         ) : (
-          <p className="empty">لا توجد خطوة محددة.</p>
+          <EmptyRow text="لا توجد خطوة محددة." />
         )}
       </aside>
     </section>

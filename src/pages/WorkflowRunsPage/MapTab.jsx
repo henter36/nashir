@@ -1,5 +1,5 @@
 import { CircleAlert } from "lucide-react";
-import { TriggerInfoRows } from "./components.jsx";
+import { TriggerInfoRows, CardHeader } from "./components.jsx";
 import {
   VISIBILITY,
   OUTPUT_TYPE_OPTIONS,
@@ -25,15 +25,10 @@ export default function MapTab({ workflowDraft, readinessContext }) {
   return (
     <section className="enhanced-map-layout">
       <article className="map-card">
-        <div className="card-header">
-          <div>
-            <h2>خريطة تدفق البيانات</h2>
-            <p>
-              توضح انتقال البيانات من المشغل إلى المدخلات ثم المعالجة والمخرج والصفحة المستهدفة والحقل المستهدف والمراجعة والمسار التالي.
-              هذا مصمم تدفق واجهي فقط. لا يتم تنفيذ المسارات أو استدعاء النماذج فعليًا في هذا النموذج.
-            </p>
-          </div>
-        </div>
+        <CardHeader
+          title="خريطة تدفق البيانات"
+          subtitle="توضح انتقال البيانات من المشغل إلى المدخلات ثم المعالجة والمخرج والصفحة المستهدفة والحقل المستهدف والمراجعة والمسار التالي. هذا مصمم تدفق واجهي فقط. لا يتم تنفيذ المسارات أو استدعاء النماذج فعليًا في هذا النموذج."
+        />
 
         <div className="flow-lanes flow-lanes-8">
           <div className="lane-title">ما الذي يبدأ المسار؟</div>

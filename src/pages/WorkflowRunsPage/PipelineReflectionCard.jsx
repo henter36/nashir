@@ -1,4 +1,4 @@
-import { Info } from "./components.jsx";
+import { Info, CardHeader } from "./components.jsx";
 import {
   DATA_PROCESSING_PIPELINE,
   PROCESSING_READINESS_CHECKS,
@@ -9,16 +9,12 @@ import {
 export default function PipelineReflectionCard() {
   return (
     <section className="pipeline-reflection-card">
-      <div className="card-header">
-        <div>
-          <h2>مسار معالجة البيانات</h2>
-          <p>
-            تشغيلات النظام هنا محاكاة واجهية. التنفيذ الحقيقي يحتاج Backend وQueue
-            وموصلات مصرح بها وتخزين أسرار آمن ومراجعة بشرية.
-          </p>
-        </div>
+      <CardHeader
+        title="مسار معالجة البيانات"
+        subtitle="تشغيلات النظام هنا محاكاة واجهية. التنفيذ الحقيقي يحتاج Backend وQueue وموصلات مصرح بها وتخزين أسرار آمن ومراجعة بشرية."
+      >
         <span className="prototype-pill">تصميم واجهي</span>
-      </div>
+      </CardHeader>
 
       <div className="pipeline-step-grid">
         {DATA_PROCESSING_PIPELINE.map((step, index) => (

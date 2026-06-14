@@ -29,7 +29,7 @@ export function getModelRouteWarnings(step, route) {
   const warnings = [];
   if (route.blockAutoPublish) warnings.push("النشر التلقائي غير مسموح لهذا المسار");
   if (route.humanReviewRequired) warnings.push("تلزم مراجعة بشرية قبل قبول المخرج");
-  if (parseFloat(route.maxCostPerRun) > 1) warnings.push(`حد التكلفة مرتفع: ${route.maxCostPerRun} USD`);
+  if (Number.parseFloat(route.maxCostPerRun) > 1) warnings.push(`حد التكلفة مرتفع: ${route.maxCostPerRun} USD`);
   if (step.visibility === "customer_visible" && route.blockAutoPublish)
     warnings.push("المخرج ظاهر للعميل ولكن يحتاج اعتمادًا");
   return warnings;

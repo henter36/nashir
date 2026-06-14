@@ -1,5 +1,5 @@
 import { CircleAlert } from "lucide-react";
-import { SelectField, TriggerInfoRows } from "./components.jsx";
+import { SelectField, TriggerInfoRows, SectionHead } from "./components.jsx";
 import { getDefaultTrigger } from "./helpers.js";
 import {
   TRIGGER_TYPES,
@@ -22,10 +22,7 @@ export default function WorkflowTriggerPanel({ trigger, onChange, editable = fal
 
   return (
     <section className="workflow-trigger-card">
-      <div className="io-designer-head">
-        <strong>مشغل المسار</strong>
-        <span>هذا المشغل يوضح متى يبدأ المسار</span>
-      </div>
+      <SectionHead title="مشغل المسار" subtitle="هذا المشغل يوضح متى يبدأ المسار" />
 
       <div className="trigger-info-grid">
         {editable ? (

@@ -79,6 +79,31 @@ export function ReadinessNotesList({ className, title, items, emptyText }) {
   );
 }
 
+export function CardHeader({ title, subtitle, children }) {
+  return (
+    <div className="card-header">
+      <div>
+        <h2>{title}</h2>
+        <p>{subtitle}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export function EmptyRow({ text }) {
+  return <p className="empty">{text}</p>;
+}
+
+export function SectionHead({ title, subtitle }) {
+  return (
+    <div className="io-designer-head">
+      <strong>{title}</strong>
+      <span>{subtitle}</span>
+    </div>
+  );
+}
+
 export function TriggerInfoRows({ trigger, updatePolicyLabel = "سياسة تحديث المسار" }) {
   return (
     <>

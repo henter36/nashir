@@ -1,5 +1,5 @@
 import { AlertTriangle, Clock3, RefreshCw, XCircle, ShieldCheck, FileSearch } from "lucide-react";
-import { Info, Status } from "./components.jsx";
+import { Info, Status, CardHeader, EmptyRow } from "./components.jsx";
 import { RUNS, STATUS_META } from "./constants.js";
 
 export default function RunsTab({
@@ -14,13 +14,12 @@ export default function RunsTab({
   return (
     <section className="runs-layout enhanced-runs-layout">
       <article className="runs-card">
-        <div className="card-header">
-          <div>
-            <h2>مراقبة التشغيلات</h2>
-            <p>تعرض حالات التشغيل والأخطاء والمراجعات المطلوبة كما يجب أن تظهر عند التنفيذ.</p>
-          </div>
+        <CardHeader
+          title="مراقبة التشغيلات"
+          subtitle="تعرض حالات التشغيل والأخطاء والمراجعات المطلوبة كما يجب أن تظهر عند التنفيذ."
+        >
           <span className="runs-count">{RUNS.length} تشغيلات</span>
-        </div>
+        </CardHeader>
 
         <div className="runs-list">
           {RUNS.map((run) => (
@@ -42,13 +41,12 @@ export default function RunsTab({
       </article>
 
       <article className="run-detail-card">
-        <div className="card-header">
-          <div>
-            <h2>{selectedRun.title}</h2>
-            <p>حالة التشغيل: {STATUS_META[selectedRun.status]?.[0] || selectedRun.status}</p>
-          </div>
+        <CardHeader
+          title={selectedRun.title}
+          subtitle={`حالة التشغيل: ${STATUS_META[selectedRun.status]?.[0] || selectedRun.status}`}
+        >
           <Status value={selectedRun.status} />
-        </div>
+        </CardHeader>
 
         <div className="run-info-grid">
           <Info label="نوع المسار" value={selectedRun.workflowType} />
@@ -137,7 +135,7 @@ export default function RunsTab({
               </div>
             ))
           ) : (
-            <p className="empty">لا توجد تحذيرات لهذا التشغيل.</p>
+            <EmptyRow text="لا توجد تحذيرات لهذا التشغيل." />
           )}
         </div>
 
@@ -153,7 +151,7 @@ export default function RunsTab({
               </div>
             ))
           ) : (
-            <p className="empty">لم يتم تنفيذ إجراء بعد.</p>
+            <EmptyRow text="لم يتم تنفيذ إجراء بعد." />
           )}
         </div>
       </article>

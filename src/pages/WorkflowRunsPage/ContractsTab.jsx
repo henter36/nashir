@@ -1,5 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
-import { Info, ContractKpi } from "./components.jsx";
+import { Info, ContractKpi, CardHeader } from "./components.jsx";
 import { VISIBILITY, OUTPUT_TYPE_OPTIONS, OUTPUT_FORMATS, DESTINATION_OPTIONS } from "./constants.js";
 import { getOptionLabel, getWorkflowLabel, getConsumerLabel } from "./helpers.js";
 import {
@@ -14,13 +14,9 @@ export default function ContractsTab({ workflowDraft }) {
   return (
     <section className="contracts-enhanced-layout">
       <article className="contracts-overview-card">
-        <div className="card-header">
-          <div>
-            <h2>ضوابط المخرجات</h2>
-            <p>تحدد قواعد الظهور والمراجعة قبل استخدام المخرجات أو نشرها.</p>
-          </div>
+        <CardHeader title="ضوابط المخرجات" subtitle="تحدد قواعد الظهور والمراجعة قبل استخدام المخرجات أو نشرها.">
           <span className="contracts-count">{workflowDraft.steps.length} عقود</span>
-        </div>
+        </CardHeader>
 
         <div className="contracts-kpi-grid">
           <ContractKpi title="ظاهر للعميل" value={workflowDraft.steps.filter((step) => step.visibility === "customer_visible").length} />

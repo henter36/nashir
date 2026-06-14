@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SelectField, Toggle } from "./components.jsx";
+import { SelectField, Toggle, SectionHead } from "./components.jsx";
 import {
   STRUCTURED_INPUT_SOURCES,
   PROCESSOR_TYPES,
@@ -71,10 +71,7 @@ export default function StepEditor({ step, index, onChange, onChangeInputs, onDe
       </label>
 
       <section className="io-designer-card">
-        <div className="io-designer-head">
-          <strong>مصدر الإدخال</strong>
-          <span>اختيار متعدد للحقول</span>
-        </div>
+        <SectionHead title="مصدر الإدخال" subtitle="اختيار متعدد للحقول" />
 
         <SelectField
           label="الصفحة أو المجال"
@@ -135,10 +132,7 @@ export default function StepEditor({ step, index, onChange, onChangeInputs, onDe
       <ModelRoutingSummary step={step} readinessContext={readinessContext} />
 
       <section className="io-designer-card output-designer">
-        <div className="io-designer-head">
-          <strong>مراجعة المخرج</strong>
-          <span>لا يتم تنفيذ أي مسار من هذه الإعدادات.</span>
-        </div>
+        <SectionHead title="مراجعة المخرج" subtitle="لا يتم تنفيذ أي مسار من هذه الإعدادات." />
 
         <label className="field">
           <span>اسم المخرج</span>
@@ -208,10 +202,7 @@ export default function StepEditor({ step, index, onChange, onChangeInputs, onDe
 
       {step.feedsNextWorkflow ? (
         <section className="io-designer-card chaining-card">
-          <div className="io-designer-head">
-            <strong>يفتح مسارًا تاليًا</strong>
-            <span>ترسل مع المخرج إلى المسار التالي</span>
-          </div>
+          <SectionHead title="يفتح مسارًا تاليًا" subtitle="ترسل مع المخرج إلى المسار التالي" />
 
           <SelectField
             label="المسار التالي"
