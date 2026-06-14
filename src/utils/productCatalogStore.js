@@ -34,10 +34,10 @@ export function normalizeCatalogProduct(product = {}, source = "fallback") {
 }
 
 export function readProductCatalog(seed = []) {
-  if (typeof window === "undefined") return seed.map((item) => normalizeCatalogProduct(item));
+  if (typeof globalThis.window === "undefined") return seed.map((item) => normalizeCatalogProduct(item));
 
   try {
-    const raw = window.localStorage.getItem(PRODUCT_CATALOG_KEY);
+    const raw = globalThis.window.localStorage.getItem(PRODUCT_CATALOG_KEY);
 
     if (!raw) {
       const normalizedSeed = seed.map((item) => normalizeCatalogProduct(item));
@@ -61,11 +61,11 @@ export function readProductCatalog(seed = []) {
 }
 
 export function writeProductCatalog(products = []) {
-  if (typeof window === "undefined") return products.map((item) => normalizeCatalogProduct(item));
+  if (typeof globalThis.window === "undefined") return products.map((item) => normalizeCatalogProduct(item));
 
   const normalized = products.map((item) => normalizeCatalogProduct(item));
 
-  window.localStorage.setItem(
+  globalThis.window.localStorage.setItem(
     PRODUCT_CATALOG_KEY,
     JSON.stringify({
       version: 1,
@@ -75,7 +75,7 @@ export function writeProductCatalog(products = []) {
     })
   );
 
-  window.dispatchEvent(new Event("nashir-product-catalog-updated"));
+  globalThis.window.dispatchEvent(new Event("nashir-product-catalog-updated"));
 
   return normalized;
 }

@@ -49,7 +49,8 @@ const stockOptions = [
 
 function errorNotice(error) {
   if (error instanceof ProductCatalogApiError) {
-    return `${error.message}${error.requestId ? ` (مرجع: ${error.requestId})` : ""}`;
+    const requestReference = error.requestId ? ` (مرجع: ${error.requestId})` : "";
+    return `${error.message}${requestReference}`;
   }
   return "تعذر إكمال العملية. حاول مجددًا.";
 }
@@ -108,8 +109,9 @@ export default function ProductCatalogPage() {
   }, [applyFirstPage, config.configured]);
 
   useEffect(() => {
-    const timer = window.setTimeout(loadFirstPage, 0);
-    return () => window.clearTimeout(timer);
+    if (typeof globalThis.window === "undefined") return undefined;
+    const timer = globalThis.window.setTimeout(loadFirstPage, 0);
+    return () => globalThis.window.clearTimeout(timer);
   }, [loadFirstPage]);
 
   const selectedProduct = products.find((product) => product.id === selectedId) || products[0] || null;
@@ -188,7 +190,7 @@ export default function ProductCatalogPage() {
       setNotice("تمت إضافة المنتج.");
       resetDraft();
     } catch (error) {
-      if (editingId && error instanceof ProductCatalogApiError && error.status === 409) {
+      if (editingId && error instanceof ProductCatalogApiError && error?.status === 409) {
         setConflict({ draft: { ...draft }, productId: editingId });
       }
       setNotice(errorNotice(error));
@@ -262,7 +264,7 @@ export default function ProductCatalogPage() {
       {notice ? <div className="notice">{notice}</div> : null}
       {conflict ? (
         <div className="notice conflict">
-          توجد نسخة أحدث. تم الاحتفاظ بمسودتك؛ حدّث المنتج وراجع التغييرات قبل إعادة الحفظ.
+          <span>توجد نسخة أحدث. تم الاحتفاظ بمسودتك؛ حدّث المنتج وراجع التغييرات قبل إعادة الحفظ.</span>
           <button type="button" onClick={refreshConflict}>تحديث للمراجعة</button>
         </div>
       ) : null}
@@ -275,13 +277,13 @@ export default function ProductCatalogPage() {
       </section>
 
       <section className="add-card">
-        <Field label="اسم المنتج" value={draft.name} onChange={(name) => setDraft((prev) => ({ ...prev, name }))} />
-        <Field label="التصنيف" value={draft.category} onChange={(category) => setDraft((prev) => ({ ...prev, category }))} />
-        <Field label="السعر" value={draft.price} type="number" onChange={(value) => setDraft((prev) => ({ ...prev, price: value === "" ? "" : Number(value) }))} />
-        <Field label="SKU" value={draft.sku} onChange={(sku) => setDraft((prev) => ({ ...prev, sku }))} />
+        {renderTextField({ label: "اسم المنتج", value: draft.name, onChange: (name) => setDraft((prev) => ({ ...prev, name })) })}
+        {renderTextField({ label: "التصنيف", value: draft.category, onChange: (category) => setDraft((prev) => ({ ...prev, category })) })}
+        {renderTextField({ label: "السعر", value: draft.price, type: "number", onChange: (value) => setDraft((prev) => ({ ...prev, price: value === "" ? "" : Number(value) })) })}
+        {renderTextField({ label: "SKU", value: draft.sku, onChange: (sku) => setDraft((prev) => ({ ...prev, sku })) })}
         <label className="field"><span>حالة المخزون</span><select value={draft.stockStatus} onChange={(event) => setDraft((prev) => ({ ...prev, stockStatus: event.target.value }))}>{stockOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <Field label="رابط الصورة" value={draft.imageUrl} onChange={(imageUrl) => setDraft((prev) => ({ ...prev, imageUrl }))} />
-        <Field label="رابط الفيديو" value={draft.videoUrl} onChange={(videoUrl) => setDraft((prev) => ({ ...prev, videoUrl }))} />
+        {renderTextField({ label: "رابط الصورة", value: draft.imageUrl, onChange: (imageUrl) => setDraft((prev) => ({ ...prev, imageUrl })) })}
+        {renderTextField({ label: "رابط الفيديو", value: draft.videoUrl, onChange: (videoUrl) => setDraft((prev) => ({ ...prev, videoUrl })) })}
         <label className="field wide"><span>الوصف</span><textarea value={draft.description} onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))} /></label>
         {editingId ? <button type="button" className="secondary-button" onClick={resetDraft}>إلغاء التعديل</button> : null}
       </section>
@@ -296,17 +298,17 @@ export default function ProductCatalogPage() {
           <div className="table">
             <div className="head"><span>المنتج</span><span>الحالة</span><span>التصنيف</span><span>المخزون</span><span>المصدر</span><span>إجراء</span></div>
             {filteredProducts.map((product) => (
-              <button type="button" key={product.id} className={`row ${selectedId === product.id ? "selected" : ""}`} onClick={() => setSelectedId(product.id)}>
-                <div className="product-main"><div className="thumb"><ImageIcon size={17} /></div><div><strong>{product.name}</strong><small>{product.price === "" ? "سعر غير متاح" : `${product.price} ر.س`}</small></div></div>
+              <div key={product.id} className={`row ${selectedId === product.id ? "selected" : ""}`}>
+                <button type="button" className="product-main" onClick={() => setSelectedId(product.id)}><div className="thumb"><ImageIcon size={17} /></div><div><strong>{product.name}</strong><small>{product.price === "" ? "سعر غير متاح" : `${product.price} ر.س`}</small></div></button>
                 <Status value={product.status} />
                 <span>{product.category || "غير مصنف"}</span>
                 <span>{stockOptions.find(([value]) => value === product.stockStatus)?.[1] || "غير محدد"}</span>
                 <span className="source-pill">{product.dataSource === "backend" ? "Backend" : "Fallback mock"}</span>
                 <div className="actions">
-                  <span className={product.status === "archived" || mode !== "backend" ? "disabled" : ""} onClick={(event) => { event.stopPropagation(); editProduct(product); }}><Edit3 size={14} /> تعديل</span>
-                  <span className="danger disabled" title="لا يوجد مسار حذف مصرح"><Trash2 size={14} /> حذف غير متاح</span>
+                  <button type="button" disabled={product.status === "archived" || mode !== "backend"} onClick={(event) => { event.stopPropagation(); editProduct(product); }}><Edit3 size={14} /> تعديل</button>
+                  <button type="button" className="danger" disabled title="لا يوجد مسار حذف مصرح"><Trash2 size={14} /> حذف غير متاح</button>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
           {hasMore ? <button type="button" className="load-more" onClick={loadMore} disabled={loading}>تحميل المزيد</button> : null}
@@ -332,7 +334,7 @@ export default function ProductCatalogPage() {
   );
 }
 
-function Field({ label, value, onChange, type = "text" }) {
+function renderTextField({ label, value, onChange, type = "text" }) {
   return <label className="field"><span>{label}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} /></label>;
 }
 
@@ -358,7 +360,7 @@ const styles = `
 .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}.stat{padding:16px}.stat span{display:block;color:#6f746b;font-size:12px;font-weight:900}.stat strong{display:block;margin-top:8px;font-size:30px}
 .add-card{padding:16px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.field{display:grid;gap:7px}.field.wide{grid-column:1/-1}.field span{font-size:12px;font-weight:900}.field input,.field select,.field textarea{width:100%;box-sizing:border-box;border:1px solid #e4e7df;border-radius:14px;padding:0 12px;font-family:inherit}.field input,.field select{height:42px}.field textarea{min-height:90px;padding:12px}
 .toolbar{padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;gap:12px;align-items:center}.search{height:42px;border:1px solid #e4e7df;border-radius:999px;display:flex;align-items:center;gap:8px;padding:0 12px;flex:1;color:#94a3b8}.search input{border:0;outline:0;background:transparent;width:100%;font-family:inherit}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px}.table-card,.detail-card{padding:18px}.table{border:1px solid #e4e7df;border-radius:18px;overflow:hidden}.head,.row{display:grid;grid-template-columns:minmax(190px,1.4fr) .7fr .7fr .7fr .7fr 1fr;gap:10px;align-items:center;padding:13px 14px}.head{background:#f7f8f4;color:#6f746b;font-size:12px;font-weight:900}.row{width:100%;border:0;border-top:1px solid #e4e7df;background:#fff;text-align:right;font-family:inherit;cursor:pointer}.row.selected{background:#fbfdf9}.product-main{display:flex;align-items:center;gap:11px}.thumb{width:42px;height:40px;border-radius:14px;background:#eef7e9;color:#176b2c;display:grid;place-items:center}.product-main strong,.product-main small{display:block}.product-main small{color:#6f746b}.status,.source-pill,.actions span{border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;width:fit-content}.status.green{background:#f0fdf4;color:#166534}.status.amber{background:#fffbeb;color:#92400e}.status.slate{background:#f8fafc;color:#475569}.source-pill,.actions span{border:1px solid #e4e7df}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions span{display:flex;gap:4px;align-items:center}.actions .danger{color:#991b1b;background:#fef2f2}.actions .disabled{cursor:not-allowed;opacity:.55}.load-more{display:block;margin:16px auto 0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px}.table-card,.detail-card{padding:18px}.table{border:1px solid #e4e7df;border-radius:18px;overflow:hidden}.head,.row{display:grid;grid-template-columns:minmax(190px,1.4fr) .7fr .7fr .7fr .7fr 1fr;gap:10px;align-items:center;padding:13px 14px}.head{background:#f7f8f4;color:#6f746b;font-size:12px;font-weight:900}.row{width:100%;border:0;border-top:1px solid #e4e7df;background:#fff;text-align:right;font-family:inherit}.row.selected{background:#fbfdf9}.product-main{display:flex;align-items:center;gap:11px;border:0;background:transparent;padding:0;text-align:right;font-family:inherit;cursor:pointer}.thumb{width:42px;height:40px;border-radius:14px;background:#eef7e9;color:#176b2c;display:grid;place-items:center}.product-main strong,.product-main small{display:block}.product-main small{color:#6f746b}.status,.source-pill,.actions button{border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;width:fit-content}.status.green{background:#f0fdf4;color:#166534}.status.amber{background:#fffbeb;color:#92400e}.status.slate{background:#f8fafc;color:#475569}.source-pill,.actions button{border:1px solid #e4e7df}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{display:flex;gap:4px;align-items:center;background:#fff;font-family:inherit;cursor:pointer}.actions .danger{color:#991b1b;background:#fef2f2}.load-more{display:block;margin:16px auto 0}
 .detail-icon{width:54px;height:54px;background:#176b2c;color:#fff;border-radius:18px;display:grid;place-items:center}.info{min-height:46px;border-bottom:1px solid #e4e7df;display:flex;justify-content:space-between;align-items:center;gap:12px}.info span{color:#6f746b;font-size:12px;font-weight:900}.info strong{font-size:12px;text-align:left;word-break:break-word}
 @media(max-width:1050px){.layout{grid-template-columns:1fr}.stats-grid,.add-card{grid-template-columns:repeat(2,minmax(0,1fr))}.head,.row{grid-template-columns:1.4fr .7fr .7fr 1fr}.head span:nth-child(4),.head span:nth-child(5),.row>span:nth-child(4),.row>span:nth-child(5){display:none}}
 @media(max-width:720px){.product-catalog-page{padding:14px}.page-title{display:grid}.stats-grid,.add-card{grid-template-columns:1fr}.field.wide{grid-column:auto}.table{overflow-x:auto}.head,.row{min-width:820px}}
