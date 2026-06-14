@@ -1,5 +1,11 @@
 export const PRODUCT_CATALOG_KEY = "nashir_mock_product_catalog";
 
+function normalizedReadiness(product, backendProduct) {
+  if (backendProduct) return null;
+  if (product.readiness == null) return 35;
+  return Number(product.readiness);
+}
+
 export function normalizeCatalogProduct(product = {}, source = "fallback") {
   const id = product.productId || product.id || `p-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const backendProduct = source === "backend";
@@ -22,7 +28,7 @@ export function normalizeCatalogProduct(product = {}, source = "fallback") {
     createdAt: product.createdAt || null,
     updatedAt: product.updatedAt || null,
     dataSource: backendProduct ? "backend" : "fallback",
-    readiness: backendProduct ? null : (product.readiness != null ? Number(product.readiness) : 35),
+    readiness: normalizedReadiness(product, backendProduct),
     assets: backendProduct ? null : Number(product.assets) || 0,
     source: backendProduct ? "غير متاح في عقد المنتجات" : product.source || "تجريبي",
     flags: Array.isArray(product.flags) ? product.flags : [],

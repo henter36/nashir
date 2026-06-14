@@ -179,7 +179,7 @@ export default function ProductCatalogPage() {
 
       const body = createProductRequestBody(draft);
       const fingerprint = JSON.stringify(body);
-      if (!createIntent.current || createIntent.current.fingerprint !== fingerprint) {
+      if (createIntent.current?.fingerprint !== fingerprint) {
         createIntent.current = { fingerprint, key: createIdempotencyKey() };
       }
       const saved = normalizeCatalogProduct(
