@@ -631,7 +631,7 @@ export const styles = `
 .queue-card small{
   color:#6f746b;
   margin-top:7px;
-  text-align:left;
+  text-align:start;
 }
 .usage-card{
   border:1px solid #e4e7df;
@@ -881,6 +881,21 @@ export const styles = `
   align-items:center;
   font-weight:900;
   cursor:pointer;
+}
+.search-box input:focus-visible,
+.filter-box select:focus-visible,
+.textarea-field textarea:focus-visible,
+.inline-field input:focus-visible,
+.inline-field select:focus-visible,
+.link-controls select:focus-visible,
+.tabs button:focus-visible,
+.primary-action:focus-visible,
+.secondary-action:focus-visible,
+.danger-action:focus-visible,
+.chip-select:focus-visible,
+.usage-edit-row button:focus-visible{
+  outline:2px solid #176b2c;
+  outline-offset:2px;
 }
 .usage-count{
   border-radius:999px;

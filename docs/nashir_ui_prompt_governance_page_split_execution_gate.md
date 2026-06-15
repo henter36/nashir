@@ -125,23 +125,23 @@ Following the pattern from SecretsAndKeysPage fix (commit `9e924f8`):
 ## Verification
 
 ### Build
-```
+```text
 npm run build → ✓ built in 594ms (0 errors)
 PromptGovernancePage-YBcFCE5d.js  62.25 kB │ gzip: 15.19 kB
 ```
 
 ### Lint
-```
+```text
 npm run lint → exit 0 (no errors, no warnings)
 ```
 
 ### Whitespace
-```
+```text
 git diff --check → clean (no trailing whitespace)
 ```
 
 ### Scope guard
-```
+```text
 git status → only PromptGovernancePage.jsx (modified), PromptGovernancePage/ (new), docs/ (new gate)
 ```
 
