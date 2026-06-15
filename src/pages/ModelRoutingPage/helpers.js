@@ -5,7 +5,8 @@ export function findTask(taskType) {
 }
 
 export function modelName(models, id) {
-  return models.find((model) => model.id === id)?.displayName || "غير محدد";
+  const safeModels = Array.isArray(models) ? models : [];
+  return safeModels.find((model) => model.id === id)?.displayName || "غير محدد";
 }
 
 
@@ -33,7 +34,8 @@ export function getRouteHealthLabel(status) {
 export function getRouteCostRow(route, costRows = []) {
   if (!route) return null;
   const routeKeys = [route.taskType, route.routeId, route.id].filter(Boolean);
-  return costRows.find((row) => routeKeys.includes(row.task) || routeKeys.includes(row.route)) || null;
+  const safeCostRows = Array.isArray(costRows) ? costRows : [];
+  return safeCostRows.find((row) => routeKeys.includes(row.task) || routeKeys.includes(row.route)) || null;
 }
 
 export function buildRouteHealth(route, models = [], costRows = []) {
@@ -59,9 +61,10 @@ export function buildRouteHealth(route, models = [], costRows = []) {
   const policy = route.policy || {};
   const governance = route.governance || {};
   const fallbackModelIds = Array.isArray(route.fallbackModelIds) ? route.fallbackModelIds : [];
-  const primaryModel = models.find((model) => model.id === route.primaryModelId || model.modelId === route.primaryModelId);
+  const safeModels = Array.isArray(models) ? models : [];
+  const primaryModel = safeModels.find((model) => model.id === route.primaryModelId || model.modelId === route.primaryModelId);
   const fallbackModels = fallbackModelIds
-    .map((id) => models.find((model) => model.id === id || model.modelId === id))
+    .map((id) => safeModels.find((model) => model.id === id || model.modelId === id))
     .filter(Boolean);
   const costRow = getRouteCostRow(route, costRows);
   const usage = getWorkflowUsage(route.taskType);
