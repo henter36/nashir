@@ -55,6 +55,7 @@ import {
 
 import {
   channelNeedsUrl,
+  getAcquisitionPlanKey,
   getChannelUrlLabel,
   getSelectedSalesChannels,
   normalizeSalesChannelName,
@@ -289,7 +290,7 @@ export default function StoreSetupPage({ onCreateCampaign = () => {} }) {
   }).length;
 
   const acquisitionPlan = useMemo(() => {
-    const plan = acquisitionPlans[form.storeType] || acquisitionPlans["متجر إلكتروني مستقل"];
+    const plan = acquisitionPlans[getAcquisitionPlanKey(form.storeType)];
     return {
       ...plan,
       statusItems: [

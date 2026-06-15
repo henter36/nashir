@@ -1,6 +1,12 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Save, Upload, Wand2 } from "lucide-react";
 import { channelConnectionLabels, smartBoxTips, statusLabels } from "./constants.js";
 
+function getStepState(id, step) {
+  if (id < step) return "done";
+  if (id === step) return "current";
+  return "future";
+}
+
 function FieldShell({ label, children }) {
   return (
     <label className="field">
@@ -57,7 +63,7 @@ export function StepTabs({ steps, step, setStep }) {
   return (
     <div className="step-tabs">
       {safeSteps.map(([id, title, desc]) => {
-        const state = id < step ? "done" : id === step ? "current" : "future";
+        const state = getStepState(id, step);
         return (
           <button key={id} type="button" onClick={() => setStep(id)} className={`step-tab ${state}`}>
             <div className="step-number">{state === "done" ? "✓" : id}</div>

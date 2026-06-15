@@ -22,8 +22,8 @@ Split `src/pages/StoreSetupPage.jsx` (1791 lines) into co-located modules under 
 
 | File | Contents |
 |------|----------|
-| `src/pages/StoreSetupPage/constants.js` | 14 exported constants: steps, channelOptions, storeTypeOptions, marketScopeOptions, acquisitionPlans, productFlagOptions, policyItems, defaultForm, defaultProducts, statusLabels, channelConnectionLabels, oauthProviderMeta, legacyChannelMap, channelUrlLabels |
-| `src/pages/StoreSetupPage/helpers.js` | 7 exported helpers: normalizeSalesChannelName, getSelectedSalesChannels, getChannelUrlLabel, channelNeedsUrl, normalizeProviderKey, snapshotToStoreSource, snapshotToCollectedData |
+| `src/pages/StoreSetupPage/constants.js` | 16 exported constants: steps, channelOptions, storeTypeOptions, marketScopeOptions, acquisitionPlans, productFlagOptions, policyItems, defaultForm, defaultProducts, statusLabels, channelConnectionLabels, oauthProviderMeta, legacyChannelMap, channelUrlLabels, smartBoxTips, storeTypeAcquisitionPlanMap |
+| `src/pages/StoreSetupPage/helpers.js` | 8 exported helpers: normalizeSalesChannelName, getSelectedSalesChannels, getChannelUrlLabel, channelNeedsUrl, normalizeProviderKey, snapshotToStoreSource, snapshotToCollectedData, getAcquisitionPlanKey |
 | `src/pages/StoreSetupPage/styles.js` | `export const styles` — full minified CSS from original plus focus-visible accessibility rule |
 | `src/pages/StoreSetupPage/components.jsx` | 21 exported UI components: Card, Badge, Button, SectionHeader, StepTabs, Field, FieldSelect, TextArea, ChoiceGroup, MultiChoice, UploadBox, Notice, SourceStatus, Info, ChannelConnectionStatus, PolicyRow, Metric, ChannelPlan, TimelineCard, SmartBox, Footer |
 
@@ -58,7 +58,7 @@ The following were not touched:
 
 ## Verification
 
-```
+```bash
 npm run build  → ✓ built in 634ms (0 errors)
 npm run lint   → ✓ (0 errors, 0 warnings)
 git diff --check → ✓ (no whitespace issues)

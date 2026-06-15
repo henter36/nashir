@@ -1,4 +1,4 @@
-import { channelUrlLabels, legacyChannelMap, oauthProviderMeta } from "./constants.js";
+import { channelUrlLabels, legacyChannelMap, oauthProviderMeta, storeTypeAcquisitionPlanMap } from "./constants.js";
 
 export function normalizeSalesChannelName(channel) {
   return legacyChannelMap[channel] || channel;
@@ -53,6 +53,10 @@ export function snapshotToStoreSource(snapshot) {
     confidence: snapshot.confidence || 35,
     message: snapshot.message || "رابط قناة البيع مُدخل يدويًا ولم يتم فحصه بعد.",
   };
+}
+
+export function getAcquisitionPlanKey(storeType) {
+  return storeTypeAcquisitionPlanMap[storeType] || "متجر إلكتروني مستقل";
 }
 
 export function snapshotToCollectedData(snapshot) {
