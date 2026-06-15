@@ -30,7 +30,7 @@ export function Info({ label, value }) {
   );
 }
 
-export function AssetSelectionGroup({ title, assets, selectedAssetKeys, selectedProduct, onToggle }) {
+export function AssetSelectionGroup({ title, assets = [], selectedAssetKeys = [], selectedProduct, onToggle }) {
   return (
     <section className="asset-selection-section">
       <div className="asset-section-title">
@@ -100,7 +100,7 @@ export function SectionHeader({ icon: Icon, title, description }) {
   );
 }
 
-export function StepTabs({ steps, step, setStep }) {
+export function StepTabs({ steps = [], step, setStep }) {
   return (
     <div className="step-tabs">
       {steps.map(([id, title, desc]) => {
@@ -153,7 +153,7 @@ export function TextArea({ label, value, onChange, placeholder }) {
   );
 }
 
-export function ChoiceGroup({ title, options, selected, setSelected }) {
+export function ChoiceGroup({ title, options = [], selected, setSelected }) {
   return (
     <div className="choice-section">
       <div className="choice-title">{title}</div>
@@ -173,7 +173,7 @@ export function ChoiceGroup({ title, options, selected, setSelected }) {
   );
 }
 
-export function MultiChoice({ title, options, selected, setSelected }) {
+export function MultiChoice({ title, options = [], selected = [], setSelected }) {
   return (
     <div className="choice-section wide">
       <div className="choice-title">{title}</div>
@@ -269,7 +269,9 @@ export function SmartBox({ step, readiness, productName }) {
   );
 }
 
-export function Footer({ step, total, back, next, nextLabel }) {
+export function Footer({ step = 1, total = 5, back, next, nextLabel }) {
+  const safeTotal = total || 1;
+  const progress = Math.min(100, Math.max(0, (step / safeTotal) * 100));
   return (
     <footer className="footer-bar">
       <Button variant="secondary" onClick={back} disabled={step === 1}>
@@ -282,7 +284,7 @@ export function Footer({ step, total, back, next, nextLabel }) {
           الخطوة {step} من {total}
         </strong>
         <span>
-          <i style={{ width: `${(step / total) * 100}%` }} />
+          <i style={{ width: `${progress}%` }} />
         </span>
       </div>
 

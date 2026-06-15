@@ -25,38 +25,41 @@ export function makeCustomerText({
   style,
   videoDuration,
 }) {
+  const outputStr = String(output || "");
   const audienceContext = `${ageGroup || "الفئة غير محددة"} · ${gender || "الكل"}`;
 
-  if (output.includes("فيديو") || output.includes("Reel")) {
+  if (outputStr.includes("فيديو") || outputStr.includes("Reel")) {
     return `سيناريو فيديو ${videoDuration} يعرّف بالمنتج "${productName}" ويربطه بهدف "${goal}" لفئة ${audienceContext} بأسلوب ${style}. سيظهر المنتج بوضوح، ثم يشرح الفائدة الرئيسية، ثم ينتهي بدعوة "${cta}".`;
   }
 
-  if (output.includes("صورة") || output.includes("Story") || output.includes("Carousel")) {
-    return `اتجاه بصري عام لمخرج ${output}: إبراز المنتج "${productName}" مع عرض واضح "${offer}" ودعوة "${cta}" وخلفية نظيفة تناسب الهوية. الفئة: ${audienceContext}.`;
+  if (outputStr.includes("صورة") || outputStr.includes("Story") || outputStr.includes("Carousel")) {
+    return `اتجاه بصري عام لمخرج ${outputStr}: إبراز المنتج "${productName}" مع عرض واضح "${offer}" ودعوة "${cta}" وخلفية نظيفة تناسب الهوية. الفئة: ${audienceContext}.`;
   }
 
-  if (output.includes("Email")) {
+  if (outputStr.includes("Email")) {
     return `هيكل بريد تسويقي يفتتح بمناسبة أو فائدة، ثم يعرض المنتج "${productName}" وفوائده، ثم يوضح العرض "${offer}" وينتهي بدعوة "${cta}". الفئة: ${audienceContext}.`;
   }
 
-  if (output.includes("WhatsApp")) {
+  if (outputStr.includes("WhatsApp")) {
     return `صياغة قصيرة ومباشرة تناسب WhatsApp، تركز على المنتج "${productName}" والعرض "${offer}" مع دعوة "${cta}" دون إطالة.`;
   }
 
-  return `نص تسويقي عام لمخرج ${output} يركز على المنتج "${productName}" والهدف "${goal}" والعرض "${offer}" ودعوة "${cta}" بنبرة واضحة وقابلة للمراجعة.`;
+  return `نص تسويقي عام لمخرج ${outputStr} يركز على المنتج "${productName}" والهدف "${goal}" والعرض "${offer}" ودعوة "${cta}" بنبرة واضحة وقابلة للمراجعة.`;
 }
 
 export function makeInternalPrompt({ output, productName, goal, offer, cta, ageGroup, gender, style }) {
   return `INTERNAL_PROMPT:: generate_${output} | product=${productName} | goal=${goal} | offer=${offer} | cta=${cta} | age=${ageGroup} | gender=${gender} | style=${style} | include_brand_rules=true | include_platform_constraints=true | hidden_from_customer=true`;
 }
 
-export function buildSuggestedCampaignText({ productName, goal, offer, audience, cta, channels, assets }) {
+export function buildSuggestedCampaignText({ productName, goal, offer, audience, cta, channels = [], assets = [] }) {
   if (!productName || !offer || !audience) {
     return "أكمل بيانات المنتج والعرض والجمهور لظهور نص مقترح أوضح.";
   }
 
-  const channelText = channels.length ? channels.join("، ") : "القنوات المختارة";
-  const assetText = assets.length ? ` بالاعتماد على ${assets.slice(0, 2).map((asset) => asset.name).join("، ")}` : "";
+  const safeChannels = Array.isArray(channels) ? channels : [];
+  const safeAssets = Array.isArray(assets) ? assets : [];
+  const channelText = safeChannels.length ? safeChannels.join("، ") : "القنوات المختارة";
+  const assetText = safeAssets.length ? ` بالاعتماد على ${safeAssets.slice(0, 2).map((asset) => asset.name).join("، ")}` : "";
 
   return `اكتشف ${productName} مع ${offer} يناسب ${audience}. حملة ${goal} على ${channelText}${assetText}. ${cta || "تسوق الآن"}.`;
 }
@@ -115,7 +118,7 @@ export function resolvePromptForOutput(output, prompts) {
   const typeLabel = getOutputTypeLabel(output);
   return (
     prompts.find((p) => p.task === taskType) ||
-    prompts.find((p) => Array.isArray(p.allowedOutputs) && p.allowedOutputs.some((o) => typeLabel.includes(o) || o.includes(typeLabel))) ||
+    prompts.find((p) => Array.isArray(p.allowedOutputs) && p.allowedOutputs.some((o) => { const optionLabel = String(o || ""); return typeLabel.includes(optionLabel) || optionLabel.includes(typeLabel); })) ||
     prompts[0] ||
     null
   );
