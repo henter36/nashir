@@ -1,5 +1,7 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Save, Upload, Wand2 } from "lucide-react";
-import { channelConnectionLabels, smartBoxTips, statusLabels } from "./constants.js";
+import { channelConnectionLabels, policyAnswerOptions, smartBoxTips, statusLabels } from "./constants.js";
+
+const fromEvent = (handler) => (event) => handler(event.target.value);
 
 function getStepState(id, step) {
   if (id < step) return "done";
@@ -16,20 +18,32 @@ function FieldShell({ label, children }) {
   );
 }
 
-function ChoiceButtonList({ options, isSelected, onSelect }) {
+function LabelValueBlock({ className, label, value }) {
+  return (
+    <div className={className}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function OptionButtons({ options, onSelect, getClass }) {
   const safeOptions = Array.isArray(options) ? options : [];
+  return safeOptions.map((item) => (
+    <button key={item} type="button" onClick={() => onSelect(item)} className={getClass(item)}>
+      {item}
+    </button>
+  ));
+}
+
+function ChoiceButtonList({ options, isSelected, onSelect }) {
   return (
     <div className="choice-list">
-      {safeOptions.map((item) => (
-        <button
-          key={item}
-          type="button"
-          onClick={() => onSelect(item)}
-          className={`choice ${isSelected(item) ? "selected" : ""}`}
-        >
-          {item}
-        </button>
-      ))}
+      <OptionButtons
+        options={options}
+        onSelect={onSelect}
+        getClass={(item) => isSelected(item) ? "choice selected" : "choice"}
+      />
     </div>
   );
 }
@@ -78,7 +92,7 @@ export function StepTabs({ steps, step, setStep }) {
 export function Field({ label, value, placeholder = "", onChange }) {
   return (
     <FieldShell label={label}>
-      <input value={value ?? ""} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+      <input value={value ?? ""} placeholder={placeholder} onChange={fromEvent(onChange)} />
     </FieldShell>
   );
 }
@@ -87,7 +101,7 @@ export function FieldSelect({ label, value, options, onChange }) {
   const safeOptions = Array.isArray(options) ? options : [];
   return (
     <FieldShell label={label}>
-      <select value={value ?? ""} onChange={(event) => onChange(event.target.value)}>
+      <select value={value ?? ""} onChange={fromEvent(onChange)}>
         {safeOptions.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
@@ -99,7 +113,7 @@ export function FieldSelect({ label, value, options, onChange }) {
 export function TextArea({ label, value, placeholder = "", onChange }) {
   return (
     <FieldShell label={label}>
-      <textarea value={value ?? ""} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} rows={5} />
+      <textarea value={value ?? ""} placeholder={placeholder} onChange={fromEvent(onChange)} rows={5} />
     </FieldShell>
   );
 }
@@ -160,12 +174,7 @@ export function SourceStatus({ status, confidence = 0 }) {
 }
 
 export function Info({ label, value }) {
-  return (
-    <div className="info-row">
-      <span>{label}</span>
-      <strong>{value || "غير متاح"}</strong>
-    </div>
-  );
+  return <LabelValueBlock className="info-row" label={label} value={value || "غير متاح"} />;
 }
 
 export function ChannelConnectionStatus({ status }) {
@@ -178,21 +187,18 @@ export function PolicyRow({ title, value, onChange }) {
     <div className="policy-row">
       <strong>{title}</strong>
       <div>
-        {["نعم", "لا", "بحاجة مراجعة"].map((item) => (
-          <button key={item} type="button" onClick={() => onChange(item)} className={value === item ? "active" : ""}>{item}</button>
-        ))}
+        <OptionButtons
+          options={policyAnswerOptions}
+          onSelect={onChange}
+          getClass={(item) => value === item ? "active" : ""}
+        />
       </div>
     </div>
   );
 }
 
 export function Metric({ title, value, tone = "green" }) {
-  return (
-    <div className={`metric ${tone}`}>
-      <span>{title}</span>
-      <strong>{value}</strong>
-    </div>
-  );
+  return <LabelValueBlock className={`metric ${tone}`} label={title} value={value} />;
 }
 
 export function ChannelPlan({ title, channels }) {

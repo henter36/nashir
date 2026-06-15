@@ -295,6 +295,8 @@ export const smartBoxTips = {
   5: ["لا تنتقل إلى الحملة إذا كانت المنتجات أو السياسات ناقصة.", "ابدأ بحملة منتج واحد قبل التوسع."],
 };
 
+export const policyAnswerOptions = ["نعم", "لا", "بحاجة مراجعة"];
+
 export const storeTypeAcquisitionPlanMap = {
   "منتجات جاهزة": "متجر إلكتروني مستقل",
   "أسر منتجة": "بدون موقع واضح",

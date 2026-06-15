@@ -22,7 +22,7 @@ Split `src/pages/StoreSetupPage.jsx` (1791 lines) into co-located modules under 
 
 | File | Contents |
 |------|----------|
-| `src/pages/StoreSetupPage/constants.js` | 16 exported constants: steps, channelOptions, storeTypeOptions, marketScopeOptions, acquisitionPlans, productFlagOptions, policyItems, defaultForm, defaultProducts, statusLabels, channelConnectionLabels, oauthProviderMeta, legacyChannelMap, channelUrlLabels, smartBoxTips, storeTypeAcquisitionPlanMap |
+| `src/pages/StoreSetupPage/constants.js` | 17 exported constants: steps, channelOptions, storeTypeOptions, marketScopeOptions, acquisitionPlans, productFlagOptions, policyItems, defaultForm, defaultProducts, statusLabels, channelConnectionLabels, oauthProviderMeta, legacyChannelMap, channelUrlLabels, smartBoxTips, storeTypeAcquisitionPlanMap, policyAnswerOptions |
 | `src/pages/StoreSetupPage/helpers.js` | 8 exported helpers: normalizeSalesChannelName, getSelectedSalesChannels, getChannelUrlLabel, channelNeedsUrl, normalizeProviderKey, snapshotToStoreSource, snapshotToCollectedData, getAcquisitionPlanKey |
 | `src/pages/StoreSetupPage/styles.js` | `export const styles` — full minified CSS from original plus focus-visible accessibility rule |
 | `src/pages/StoreSetupPage/components.jsx` | 21 exported UI components: Card, Badge, Button, SectionHeader, StepTabs, Field, FieldSelect, TextArea, ChoiceGroup, MultiChoice, UploadBox, Notice, SourceStatus, Info, ChannelConnectionStatus, PolicyRow, Metric, ChannelPlan, TimelineCard, SmartBox, Footer |
