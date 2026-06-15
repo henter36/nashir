@@ -78,12 +78,12 @@ class ErrorBoundary extends React.Component {
 **Proposed wrapping:**
 ```jsx
 // Pseudocode — final form approved in implementation PR
-<ErrorBoundary key={currentPage} onReset={() => setPage(defaultPage)}>
-  <CurrentPageComponent />
+<ErrorBoundary key={activeScreen} onReset={() => navigateToScreen("dashboard")}>
+  {pageContent}
 </ErrorBoundary>
 ```
 
-- `key={currentPage}`: resets the boundary automatically when the user navigates to a different page.
+- `key={activeScreen}`: resets the boundary automatically when the user navigates to a different page.
 - `onReset`: optional prop passed to the fallback to allow navigating home.
 - The navigation/sidebar shell renders outside the boundary.
 
@@ -147,7 +147,7 @@ The future implementation PR must NOT include:
 | `ErrorBoundary` does not catch async errors or event-handler errors | Document this clearly; the boundary only covers synchronous render errors |
 | Fallback UI wording may imply data loss or a backend failure | Use neutral Arabic copy: "حدث خطأ في عرض هذه الصفحة" — no mention of servers or data |
 | Arabic RTL shell must not break | The boundary wraps only the page slot; the navigation shell renders outside it and is unaffected |
-| `key={currentPage}` resets boundary on navigation — if the crash source persists across pages, the user may see repeated fallback | Acceptable for a prototype; noted for V1 hardening |
+| `key={activeScreen}` resets boundary on navigation — if the crash source persists across pages, the user may see repeated fallback | Acceptable for a prototype; noted for V1 hardening |
 
 ---
 
