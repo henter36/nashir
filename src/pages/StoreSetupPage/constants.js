@@ -40,79 +40,75 @@ export const marketScopeOptions = [
   "أخرى",
 ];
 
+function makePlan(method, tool, collects, backend, analysisInput, nextAction) {
+  return { method, tool, collects, backend, analysisInput, readiness: "جاهز للتصميم / غير منفذ", nextAction };
+}
+
 export const acquisitionPlans = {
-  "متجر إلكتروني مستقل": {
-    method: "Website crawl / rendered page extraction",
-    tool: "Firecrawl / Browserless",
-    collects: "صفحات المنتجات، الأسعار، الوصف، الصور، السياسات",
-    backend: "Backend مطلوب للتنفيذ الحقيقي وجدولة السحب وتخزين النتائج.",
-    analysisInput: "صفحات منظمة، منتجات مستخرجة، صور وروابط، وسياسات واضحة.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "راجع رابط قناة البيع وحدد الصفحات التي يجب تحليلها لاحقًا.",
-  },
-  "متجر على منصة تجارة إلكترونية": {
-    method: "Official platform API first, Firecrawl fallback للصفحات العامة",
-    tool: "Official platform API / Firecrawl",
-    collects: "المنتجات، التصنيفات، المخزون، الأسعار، الطلبات لاحقًا",
-    backend: "Backend مطلوب لربط المنصة وحفظ مراجع الأسرار وجدولة المزامنة.",
-    analysisInput: "كتالوج المنتجات والتصنيفات والأسعار وحالة المخزون عند توفرها.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "حدد منصة التجارة الإلكترونية قبل تصميم موصل V1.",
-  },
-  "Instagram-first": {
-    method: "Official API عند توفر الصلاحيات، مع Apify/PhantomBuster كخيارات محكومة",
-    tool: "Official API / Apify / PhantomBuster",
-    collects: "البايو، الرابط، المنشورات، Reels، التعليقات، مؤشرات التفاعل المصرح بها",
-    backend: "Backend مطلوب للتحقق من الصلاحيات وتشغيل الموصلات دون كشف أسرار.",
-    analysisInput: "ملف الحساب، إشارات المحتوى، أسئلة الجمهور، والمنتجات الظاهرة عند توفرها.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "جهز مرجع السر وسياسة الامتثال قبل أي ربط اجتماعي.",
-  },
-  "TikTok-first": {
-    method: "TikTok API عند توفر الصلاحيات، مع Apify/PhantomBuster كخيارات محكومة",
-    tool: "TikTok API / Apify / PhantomBuster",
-    collects: "الحساب، الفيديوهات، التعليقات، مؤشرات الأداء المصرح بها",
-    backend: "Backend مطلوب لتشغيل الموصلات ومعالجة النتائج بشكل آمن.",
-    analysisInput: "فيديوهات ومنشورات منظمة، تعليقات مصنفة، وإشارات أداء مسموحة.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "حدد الحساب ونطاق الصلاحيات قبل تصميم التحليل.",
-  },
-  "TikTok Shop": {
-    method: "TikTok Shop API / governed connector",
-    tool: "TikTok Shop API / governed connector",
-    collects: "المنتجات، المتجر، المحتوى التجاري، المؤشرات المصرح بها",
-    backend: "Backend مطلوب لربط المتجر التجاري وإدارة الصلاحيات.",
-    analysisInput: "منتجات المتجر، محتوى تجاري، ومؤشرات مصرح بها للتحليل.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "حدد نطاق TikTok Shop المطلوب للمنتجات والمحتوى.",
-  },
-  Marketplace: {
-    method: "Official marketplace API عند توفرها، أو موصل خارجي محكوم إذا اعتمد",
-    tool: "Official marketplace API / governed external connector",
-    collects: "بيانات المتجر، المنتجات، التقييمات، الأسعار",
-    backend: "Backend مطلوب لتنفيذ الربط ومراجعة الامتثال.",
-    analysisInput: "بيانات منتجات وتقييمات وأسعار منظمة مع حدود البيانات.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "حدد السوق وسياسة استخدام بياناته قبل الربط.",
-  },
-  "متعدد القنوات": {
-    method: "Connector orchestration",
-    tool: "Connector orchestration",
-    collects: "website + social + marketplace signals",
-    backend: "Backend مطلوب لتنسيق الموصلات وترتيب المعالجة.",
-    analysisInput: "حزمة أدلة موحدة تجمع الموقع، القنوات الاجتماعية، والأسواق.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "ابدأ بمصدر واحد موثوق ثم أضف باقي القنوات تدريجيًا.",
-  },
-  "بدون موقع واضح": {
-    method: "Social connector / user-created store profile",
-    tool: "Social connector / user-created store profile",
-    collects: "بيانات الحساب الاجتماعي والمنتجات المدخلة",
-    backend: "Backend مطلوب لأي جمع اجتماعي آلي مصرح به.",
-    analysisInput: "ملف متجر يدوي، منتجات مدخلة، وإشارات اجتماعية عند توفر موصل مصرح.",
-    readiness: "جاهز للتصميم / غير منفذ",
-    nextAction: "أكمل ملف المتجر والمنتجات يدويًا قبل أي تحليل آلي.",
-  },
+  "متجر إلكتروني مستقل": makePlan(
+    "Website crawl / rendered page extraction",
+    "Firecrawl / Browserless",
+    "صفحات المنتجات، الأسعار، الوصف، الصور، السياسات",
+    "Backend مطلوب للتنفيذ الحقيقي وجدولة السحب وتخزين النتائج.",
+    "صفحات منظمة، منتجات مستخرجة، صور وروابط، وسياسات واضحة.",
+    "راجع رابط قناة البيع وحدد الصفحات التي يجب تحليلها لاحقًا."
+  ),
+  "متجر على منصة تجارة إلكترونية": makePlan(
+    "Official platform API first, Firecrawl fallback للصفحات العامة",
+    "Official platform API / Firecrawl",
+    "المنتجات، التصنيفات، المخزون، الأسعار، الطلبات لاحقًا",
+    "Backend مطلوب لربط المنصة وحفظ مراجع الأسرار وجدولة المزامنة.",
+    "كتالوج المنتجات والتصنيفات والأسعار وحالة المخزون عند توفرها.",
+    "حدد منصة التجارة الإلكترونية قبل تصميم موصل V1."
+  ),
+  "Instagram-first": makePlan(
+    "Official API عند توفر الصلاحيات، مع Apify/PhantomBuster كخيارات محكومة",
+    "Official API / Apify / PhantomBuster",
+    "البايو، الرابط، المنشورات، Reels، التعليقات، مؤشرات التفاعل المصرح بها",
+    "Backend مطلوب للتحقق من الصلاحيات وتشغيل الموصلات دون كشف أسرار.",
+    "ملف الحساب، إشارات المحتوى، أسئلة الجمهور، والمنتجات الظاهرة عند توفرها.",
+    "جهز مرجع السر وسياسة الامتثال قبل أي ربط اجتماعي."
+  ),
+  "TikTok-first": makePlan(
+    "TikTok API عند توفر الصلاحيات، مع Apify/PhantomBuster كخيارات محكومة",
+    "TikTok API / Apify / PhantomBuster",
+    "الحساب، الفيديوهات، التعليقات، مؤشرات الأداء المصرح بها",
+    "Backend مطلوب لتشغيل الموصلات ومعالجة النتائج بشكل آمن.",
+    "فيديوهات ومنشورات منظمة، تعليقات مصنفة، وإشارات أداء مسموحة.",
+    "حدد الحساب ونطاق الصلاحيات قبل تصميم التحليل."
+  ),
+  "TikTok Shop": makePlan(
+    "TikTok Shop API / governed connector",
+    "TikTok Shop API / governed connector",
+    "المنتجات، المتجر، المحتوى التجاري، المؤشرات المصرح بها",
+    "Backend مطلوب لربط المتجر التجاري وإدارة الصلاحيات.",
+    "منتجات المتجر، محتوى تجاري، ومؤشرات مصرح بها للتحليل.",
+    "حدد نطاق TikTok Shop المطلوب للمنتجات والمحتوى."
+  ),
+  Marketplace: makePlan(
+    "Official marketplace API عند توفرها، أو موصل خارجي محكوم إذا اعتمد",
+    "Official marketplace API / governed external connector",
+    "بيانات المتجر، المنتجات، التقييمات، الأسعار",
+    "Backend مطلوب لتنفيذ الربط ومراجعة الامتثال.",
+    "بيانات منتجات وتقييمات وأسعار منظمة مع حدود البيانات.",
+    "حدد السوق وسياسة استخدام بياناته قبل الربط."
+  ),
+  "متعدد القنوات": makePlan(
+    "Connector orchestration",
+    "Connector orchestration",
+    "website + social + marketplace signals",
+    "Backend مطلوب لتنسيق الموصلات وترتيب المعالجة.",
+    "حزمة أدلة موحدة تجمع الموقع، القنوات الاجتماعية، والأسواق.",
+    "ابدأ بمصدر واحد موثوق ثم أضف باقي القنوات تدريجيًا."
+  ),
+  "بدون موقع واضح": makePlan(
+    "Social connector / user-created store profile",
+    "Social connector / user-created store profile",
+    "بيانات الحساب الاجتماعي والمنتجات المدخلة",
+    "Backend مطلوب لأي جمع اجتماعي آلي مصرح به.",
+    "ملف متجر يدوي، منتجات مدخلة، وإشارات اجتماعية عند توفر موصل مصرح.",
+    "أكمل ملف المتجر والمنتجات يدويًا قبل أي تحليل آلي."
+  ),
 };
 
 export const productFlagOptions = [
@@ -185,87 +181,29 @@ export const channelConnectionLabels = {
   failed: ["فشل الربط", "red"],
 };
 
+const INSTAGRAM_PROVIDER = { id: "instagram", authUrl: "https://www.instagram.com/accounts/login/", scopes: ["profile", "content_read", "insights_later"] };
+const TIKTOK_PROVIDER = { id: "tiktok", authUrl: "https://www.tiktok.com/login", scopes: ["profile", "video_read", "content_planning"] };
+const SNAPCHAT_PROVIDER = { id: "snapchat", authUrl: "https://accounts.snapchat.com/", scopes: ["profile", "ads_later"] };
+const WHATSAPP_PROVIDER = { id: "whatsapp", authUrl: "https://business.facebook.com/", scopes: ["business_profile", "message_templates_later"] };
+const SALLA_PROVIDER = { id: "salla", authUrl: "https://s.salla.sa/", scopes: ["store_profile", "products_read_later"] };
+
 export const oauthProviderMeta = {
-  إنستغرام: {
-    id: "instagram",
-    authUrl: "https://www.instagram.com/accounts/login/",
-    scopes: ["profile", "content_read", "insights_later"],
-  },
-  Instagram: {
-    id: "instagram",
-    authUrl: "https://www.instagram.com/accounts/login/",
-    scopes: ["profile", "content_read", "insights_later"],
-  },
-  "تيك توك": {
-    id: "tiktok",
-    authUrl: "https://www.tiktok.com/login",
-    scopes: ["profile", "video_read", "content_planning"],
-  },
-  TikTok: {
-    id: "tiktok",
-    authUrl: "https://www.tiktok.com/login",
-    scopes: ["profile", "video_read", "content_planning"],
-  },
-  "سناب شات": {
-    id: "snapchat",
-    authUrl: "https://accounts.snapchat.com/",
-    scopes: ["profile", "ads_later"],
-  },
-  Snapchat: {
-    id: "snapchat",
-    authUrl: "https://accounts.snapchat.com/",
-    scopes: ["profile", "ads_later"],
-  },
-  واتساب: {
-    id: "whatsapp",
-    authUrl: "https://business.facebook.com/",
-    scopes: ["business_profile", "message_templates_later"],
-  },
-  "WhatsApp Business": {
-    id: "whatsapp",
-    authUrl: "https://business.facebook.com/",
-    scopes: ["business_profile", "message_templates_later"],
-  },
-  سلة: {
-    id: "salla",
-    authUrl: "https://s.salla.sa/",
-    scopes: ["store_profile", "products_read_later"],
-  },
-  Email: {
-    id: "email",
-    authUrl: "https://accounts.google.com/",
-    scopes: ["drafts_later", "sender_profile"],
-  },
-  YouTube: {
-    id: "youtube",
-    authUrl: "https://accounts.google.com/",
-    scopes: ["channel_profile", "video_planning"],
-  },
-  "Google Ads": {
-    id: "google_ads",
-    authUrl: "https://accounts.google.com/",
-    scopes: ["ads_profile_later", "reporting_later"],
-  },
-  "Meta Ads": {
-    id: "meta_ads",
-    authUrl: "https://business.facebook.com/",
-    scopes: ["ads_profile_later", "reporting_later"],
-  },
-  Salla: {
-    id: "salla",
-    authUrl: "https://s.salla.sa/",
-    scopes: ["store_profile", "products_read_later"],
-  },
-  زد: {
-    id: "zid",
-    authUrl: "https://zid.sa/",
-    scopes: ["store_profile_later", "products_read_later"],
-  },
-  شوبيفاي: {
-    id: "shopify",
-    authUrl: "https://www.shopify.com/login",
-    scopes: ["store_profile_later", "products_read_later"],
-  },
+  إنستغرام: INSTAGRAM_PROVIDER,
+  Instagram: INSTAGRAM_PROVIDER,
+  "تيك توك": TIKTOK_PROVIDER,
+  TikTok: TIKTOK_PROVIDER,
+  "سناب شات": SNAPCHAT_PROVIDER,
+  Snapchat: SNAPCHAT_PROVIDER,
+  واتساب: WHATSAPP_PROVIDER,
+  "WhatsApp Business": WHATSAPP_PROVIDER,
+  سلة: SALLA_PROVIDER,
+  Salla: SALLA_PROVIDER,
+  Email: { id: "email", authUrl: "https://accounts.google.com/", scopes: ["drafts_later", "sender_profile"] },
+  YouTube: { id: "youtube", authUrl: "https://accounts.google.com/", scopes: ["channel_profile", "video_planning"] },
+  "Google Ads": { id: "google_ads", authUrl: "https://accounts.google.com/", scopes: ["ads_profile_later", "reporting_later"] },
+  "Meta Ads": { id: "meta_ads", authUrl: "https://business.facebook.com/", scopes: ["ads_profile_later", "reporting_later"] },
+  زد: { id: "zid", authUrl: "https://zid.sa/", scopes: ["store_profile_later", "products_read_later"] },
+  شوبيفاي: { id: "shopify", authUrl: "https://www.shopify.com/login", scopes: ["store_profile_later", "products_read_later"] },
 };
 
 export const legacyChannelMap = {

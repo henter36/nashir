@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Save, Upload, Wand2 } from "lucide
 import { channelConnectionLabels, policyAnswerOptions, smartBoxTips, statusLabels } from "./constants.js";
 
 const fromEvent = (handler) => (event) => handler(event.target.value);
+const safeArray = (value) => (Array.isArray(value) ? value : []);
 
 function getStepState(id, step) {
   if (id < step) return "done";
@@ -28,7 +29,7 @@ function LabelValueBlock({ className, label, value }) {
 }
 
 function OptionButtons({ options, onSelect, getClass }) {
-  const safeOptions = Array.isArray(options) ? options : [];
+  const safeOptions = safeArray(options);
   return safeOptions.map((item) => (
     <button key={item} type="button" onClick={() => onSelect(item)} className={getClass(item)}>
       {item}
@@ -73,7 +74,7 @@ export function SectionHeader({ icon: Icon, title, description }) {
 }
 
 export function StepTabs({ steps, step, setStep }) {
-  const safeSteps = Array.isArray(steps) ? steps : [];
+  const safeSteps = safeArray(steps);
   return (
     <div className="step-tabs">
       {safeSteps.map(([id, title, desc]) => {
@@ -98,7 +99,7 @@ export function Field({ label, value, placeholder = "", onChange }) {
 }
 
 export function FieldSelect({ label, value, options, onChange }) {
-  const safeOptions = Array.isArray(options) ? options : [];
+  const safeOptions = safeArray(options);
   return (
     <FieldShell label={label}>
       <select value={value ?? ""} onChange={fromEvent(onChange)}>
@@ -132,7 +133,7 @@ export function ChoiceGroup({ title, options, selected, setSelected }) {
 }
 
 export function MultiChoice({ title, options, selected, setSelected }) {
-  const safeSelected = Array.isArray(selected) ? selected : [];
+  const safeSelected = safeArray(selected);
   const toggle = (item) =>
     setSelected(safeSelected.includes(item) ? safeSelected.filter((v) => v !== item) : [...safeSelected, item]);
   return (
@@ -202,7 +203,7 @@ export function Metric({ title, value, tone = "green" }) {
 }
 
 export function ChannelPlan({ title, channels }) {
-  const safeChannels = Array.isArray(channels) ? channels : [];
+  const safeChannels = safeArray(channels);
   return (
     <div className="channel-plan">
       <strong>{title}</strong>
