@@ -373,6 +373,20 @@ export const styles = `
   outline:none;
 }
 
+.field input:focus-visible,
+.field select:focus-visible,
+.switch:focus-visible{
+  outline:2px solid #176b2c;
+  outline-offset:2px;
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.oauth-actions button:focus-visible{
+  outline:2px solid #176b2c;
+  outline-offset:2px;
+}
+
 .summary-list{
   display:grid;
   gap:8px;

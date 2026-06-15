@@ -156,7 +156,7 @@ export function ToggleRow({ title, description, checked, onChange }) {
         <span>{description}</span>
       </div>
 
-      <Switch checked={checked} onChange={onChange} />
+      <Switch checked={checked} onChange={onChange} ariaLabel={title} />
     </div>
   );
 }
@@ -173,13 +173,14 @@ export function OwnershipNote({ title, text }) {
   );
 }
 
-export function Switch({ checked, onChange }) {
+export function Switch({ checked, onChange, ariaLabel }) {
   return (
     <button
       type="button"
       className={checked ? "switch active" : "switch"}
       onClick={() => onChange && onChange(!checked)}
       aria-pressed={checked}
+      aria-label={ariaLabel}
     >
       <span />
     </button>

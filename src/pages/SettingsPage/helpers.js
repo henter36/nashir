@@ -35,6 +35,8 @@ export function buildDefaultChannels(sharedConnections = {}) {
   return Object.values(OAUTH_PROVIDERS).map((provider) => {
     const existing = safeConnections[provider.id] || {};
     const status = getChannelConnectionStatus(existing);
+    const providerScopes = Array.isArray(provider.scopes) ? provider.scopes : [];
+    const existingScopes = Array.isArray(existing.requestedScopes) ? existing.requestedScopes : providerScopes;
 
     return {
       ...provider,
@@ -42,7 +44,7 @@ export function buildDefaultChannels(sharedConnections = {}) {
       status,
       accountName: existing.accountName || "",
       authorizationUrl: existing.authorizationUrl || provider.authUrl,
-      requestedScopes: existing.requestedScopes || provider.scopes,
+      requestedScopes: existingScopes,
       updatedAt: existing.updatedAt || "",
       lastAction: existing.lastAction || "",
       fromSharedConnection: Boolean(safeConnections[provider.id]),
@@ -58,6 +60,9 @@ export function applySharedConnections(channels, sharedConnections = {}) {
     const shared = safeConnections[key] || {};
     const provider = OAUTH_PROVIDERS[key] || channel;
     const status = getChannelConnectionStatus(shared);
+    const sharedScopes = Array.isArray(shared.requestedScopes) ? shared.requestedScopes : null;
+    const providerScopes = Array.isArray(provider.scopes) ? provider.scopes : null;
+    const channelScopes = Array.isArray(channel.requestedScopes) ? channel.requestedScopes : [];
 
     return {
       ...channel,
@@ -66,7 +71,7 @@ export function applySharedConnections(channels, sharedConnections = {}) {
       status,
       accountName: shared.accountName || "",
       authorizationUrl: shared.authorizationUrl || provider.authUrl || channel.authorizationUrl,
-      requestedScopes: shared.requestedScopes || provider.scopes || channel.requestedScopes || [],
+      requestedScopes: sharedScopes || providerScopes || channelScopes,
       updatedAt: shared.updatedAt || "",
       lastAction: shared.lastAction || "",
       fromSharedConnection: Boolean(safeConnections[key]),

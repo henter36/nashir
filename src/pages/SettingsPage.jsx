@@ -518,6 +518,7 @@ export default function SettingsPage() {
                         <Switch
                           checked={channel.enabled}
                           onChange={(value) => updateChannelEnabled(channel.id, value)}
+                          ariaLabel={`تفعيل قناة ${channel.name}`}
                         />
                       </div>
 
