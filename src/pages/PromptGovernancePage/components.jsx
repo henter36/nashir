@@ -2,25 +2,58 @@ import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { BLOCKED_PATTERN_SEVERITY, EXPECTED_INPUT_OPTIONS, REVIEW_LABELS, STATUS_LABELS } from "./constants.js";
 import { getExpectedInputs, getPromptReadinessLabel } from "./helpers.js";
 
+function getScorePillClass(score) {
+  if (score >= 80) return "good";
+  if (score >= 60) return "mid";
+  return "bad";
+}
+
+function ReadinessNoteSection({ className, title, items = [], emptyText, limit }) {
+  const displayItems = limit != null ? items.slice(0, limit) : items;
+  return (
+    <div className={`prompt-readiness-notes ${className}`}>
+      <strong>{title}</strong>
+      {items.length
+        ? displayItems.map((item) => <span key={item}>{item}</span>)
+        : emptyText
+          ? <span>{emptyText}</span>
+          : null}
+    </div>
+  );
+}
+
+function AdvancedArrayEdit({ summary, label, value, onChange }) {
+  return (
+    <details className="advanced-array-edit">
+      <summary>{summary}</summary>
+      <TextAreaField label={label} value={value} rows={3} onChange={onChange} />
+    </details>
+  );
+}
+
 export function PromptReadinessBadge({ status }) {
   return <span className={`prompt-readiness-badge ${status}`}>{getPromptReadinessLabel(status)}</span>;
 }
 
 export function PromptStepReadinessPanel({ prompt, readiness }) {
   const safePrompt = prompt || {};
+  const safeReadiness = readiness || { blockedReasons: [], warnings: [], checks: [], status: "", score: 0 };
   const usageCount = Array.isArray(safePrompt.usage) ? safePrompt.usage.length : 0;
-  const requiredChecks = Array.isArray(safePrompt.requiredChecks) ? safePrompt.requiredChecks.length : 0;
-  const allowedOutputs = Array.isArray(safePrompt.allowedOutputs) ? safePrompt.allowedOutputs.length : 0;
+  const requiredChecksCount = Array.isArray(safePrompt.requiredChecks) ? safePrompt.requiredChecks.length : 0;
+  const allowedOutputsCount = Array.isArray(safePrompt.allowedOutputs) ? safePrompt.allowedOutputs.length : 0;
   const expectedInputs = getExpectedInputs(safePrompt).filter((item) => item !== "غير محددة بعد");
+  const blockedReasons = Array.isArray(safeReadiness.blockedReasons) ? safeReadiness.blockedReasons : [];
+  const warnings = Array.isArray(safeReadiness.warnings) ? safeReadiness.warnings : [];
+  const checks = Array.isArray(safeReadiness.checks) ? safeReadiness.checks : [];
 
   return (
-    <section className={`prompt-readiness-panel ${readiness.status}`}>
+    <section className={`prompt-readiness-panel ${safeReadiness.status}`}>
       <div className="prompt-readiness-head">
         <div>
           <strong>جاهزية المطالبة للخطوة</strong>
-          <span>روابط الاستخدام تؤثر على جاهزية الخطوة في تشغيلات النظام. · {readiness.score}%</span>
+          <span>روابط الاستخدام تؤثر على جاهزية الخطوة في تشغيلات النظام. · {safeReadiness.score}%</span>
         </div>
-        <PromptReadinessBadge status={readiness.status} />
+        <PromptReadinessBadge status={safeReadiness.status} />
       </div>
 
       <div className="prompt-readiness-grid">
@@ -29,40 +62,20 @@ export function PromptStepReadinessPanel({ prompt, readiness }) {
         <Info label="سياسة المراجعة" value={REVIEW_LABELS[safePrompt.review] || "غير محددة"} />
         <Info label="المدخلات المتوقعة محددة" value={expectedInputs.length ? `${expectedInputs.length}` : "غير محددة بعد"} />
         <Info label="عدد روابط الاستخدام" value={usageCount} />
-        <Info label="الفحوصات المطلوبة" value={requiredChecks} />
-        <Info label="المخرجات المتوقعة/المسموحة" value={allowedOutputs} />
+        <Info label="الفحوصات المطلوبة" value={requiredChecksCount} />
+        <Info label="المخرجات المتوقعة/المسموحة" value={allowedOutputsCount} />
       </div>
 
-      <div className="prompt-readiness-notes blocked-notes">
-        <strong>أسباب الحظر</strong>
-        {readiness.blockedReasons.length
-          ? readiness.blockedReasons.map((reason) => (
-              <span key={reason}>{reason}</span>
-            ))
-          : <span>لا توجد أسباب حظر</span>}
-      </div>
-
-      <div className="prompt-readiness-notes warning-notes">
-        <strong>تحذيرات</strong>
-        {readiness.warnings.length
-          ? readiness.warnings.map((warning) => (
-              <span key={warning}>{warning}</span>
-            ))
-          : <span>لا توجد تحذيرات</span>}
-      </div>
-
-      <div className="prompt-readiness-notes check-notes">
-        <strong>الفحوصات الناجحة</strong>
-        {readiness.checks.slice(0, 5).map((check) => (
-          <span key={check}>{check}</span>
-        ))}
-      </div>
+      <ReadinessNoteSection className="blocked-notes" title="أسباب الحظر" items={blockedReasons} emptyText="لا توجد أسباب حظر" />
+      <ReadinessNoteSection className="warning-notes" title="تحذيرات" items={warnings} emptyText="لا توجد تحذيرات" />
+      <ReadinessNoteSection className="check-notes" title="الفحوصات الناجحة" items={checks} limit={5} />
     </section>
   );
 }
 
 export function PromptSafetySummary({ prompt, findings = [], readiness, score }) {
   const safePrompt = prompt || {};
+  const safeFindings = Array.isArray(findings) ? findings : [];
   const checks = Array.isArray(safePrompt.requiredChecks) ? safePrompt.requiredChecks : [];
   const patterns = Array.isArray(safePrompt.blockedPatterns) ? safePrompt.blockedPatterns : [];
   const usage = Array.isArray(safePrompt.usage) ? safePrompt.usage : [];
@@ -73,7 +86,7 @@ export function PromptSafetySummary({ prompt, findings = [], readiness, score })
   const assetSafe = checks.includes("asset_rights_check") || checks.includes("visual_safety_review");
   const reviewSafe = ["required", "always"].includes(safePrompt.review) || checks.includes("human_review");
   const visibleLabel = safePrompt.visibleToCustomer ? "ملخص آمن فقط" : "غير ظاهر للعميل";
-  const hasBlocks = findings.some((finding) => finding.level === "block") || readiness?.status === "blocked";
+  const hasBlocks = safeFindings.some((f) => f?.level === "block") || readiness?.status === "blocked";
 
   return (
     <section className={`prompt-safety-card ${hasBlocks ? "blocked" : "safe"}`}>
@@ -82,7 +95,7 @@ export function PromptSafetySummary({ prompt, findings = [], readiness, score })
           <h3>سلامة المطالبة</h3>
           <p>ملخص سريع للمخاطر قبل استخدامها في التشغيلات.</p>
         </div>
-        <span className={`score-pill ${score >= 80 ? "good" : score >= 60 ? "mid" : "bad"}`}>{score}%</span>
+        <span className={`score-pill ${getScorePillClass(score)}`}>{score}%</span>
       </div>
 
       <div className="safety-grid">
@@ -125,7 +138,7 @@ export function ExpectedInputContext({ prompt, onToggle, onTextChange }) {
               type="button"
               key={item}
               className={`chip-select ${isSelected ? "selected" : ""}`}
-              onClick={() => onToggle(item)}
+              onClick={() => onToggle && onToggle(item)}
             >
               <span>{item}</span>
             </button>
@@ -140,15 +153,12 @@ export function ExpectedInputContext({ prompt, onToggle, onTextChange }) {
         </div>
       ) : null}
 
-      <details className="advanced-array-edit">
-        <summary>تحرير متقدم للمدخلات المتوقعة</summary>
-        <TextAreaField
-          label="المدخلات المتوقعة للمطالبة — كل قيمة في سطر"
-          value={selectedInputs.join("\n")}
-          rows={3}
-          onChange={onTextChange}
-        />
-      </details>
+      <AdvancedArrayEdit
+        summary="تحرير متقدم للمدخلات المتوقعة"
+        label="المدخلات المتوقعة للمطالبة — كل قيمة في سطر"
+        value={selectedInputs.join("\n")}
+        onChange={onTextChange}
+      />
     </section>
   );
 }
@@ -180,7 +190,8 @@ export function PromptContractCard() {
 
 export function ChipArrayEditor({ label, helper, values = [], suggestions = [], tone = "slate", showSeverity = false, onToggle, onTextChange }) {
   const safeValues = Array.isArray(values) ? values : [];
-  const mergedSuggestions = Array.from(new Set([...suggestions, ...safeValues]));
+  const safeSuggestions = Array.isArray(suggestions) ? suggestions : [];
+  const mergedSuggestions = Array.from(new Set([...safeSuggestions, ...safeValues]));
 
   return (
     <section className="chip-array-editor">
@@ -201,7 +212,7 @@ export function ChipArrayEditor({ label, helper, values = [], suggestions = [], 
               type="button"
               key={item}
               className={`chip-select ${isSelected ? "selected" : ""} ${tone}`}
-              onClick={() => onToggle(item)}
+              onClick={() => onToggle && onToggle(item)}
             >
               <span>{item}</span>
               {showSeverity ? <small>{severity}</small> : null}
@@ -210,15 +221,12 @@ export function ChipArrayEditor({ label, helper, values = [], suggestions = [], 
         })}
       </div>
 
-      <details className="advanced-array-edit">
-        <summary>تحرير متقدم للقائمة</summary>
-        <TextAreaField
-          label={`${label} — كل قيمة في سطر`}
-          value={safeValues.join("\n")}
-          rows={3}
-          onChange={onTextChange}
-        />
-      </details>
+      <AdvancedArrayEdit
+        summary="تحرير متقدم للقائمة"
+        label={`${label} — كل قيمة في سطر`}
+        value={safeValues.join("\n")}
+        onChange={onTextChange}
+      />
     </section>
   );
 }
@@ -227,7 +235,7 @@ export function Field({ label, value, onChange }) {
   return (
     <label className="inline-field">
       <span>{label}</span>
-      <input value={value} onChange={(event) => onChange(event.target.value)} />
+      <input value={value} onChange={(event) => onChange && onChange(event.target.value)} />
     </label>
   );
 }
@@ -237,17 +245,18 @@ export function TextAreaField({ label, value, rows = 3, helper = "", onChange })
     <label className="textarea-field compact">
       <span>{label}</span>
       {helper ? <em>{helper}</em> : null}
-      <textarea value={value} rows={rows} onChange={(event) => onChange(event.target.value)} />
+      <textarea value={value} rows={rows} onChange={(event) => onChange && onChange(event.target.value)} />
     </label>
   );
 }
 
 export function SelectInline({ label, value, options, onChange }) {
+  const safeOptions = Array.isArray(options) ? options : [];
   return (
     <label className="inline-field">
       <span>{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
-        {options.map(([id, labelText]) => (
+      <select value={value} onChange={(event) => onChange && onChange(event.target.value)}>
+        {safeOptions.map(([id, labelText]) => (
           <option key={id} value={id}>{labelText}</option>
         ))}
       </select>
@@ -267,7 +276,7 @@ export function StatCard({ title, value, icon: Icon, tone = "default" }) {
         <span>{title}</span>
         <strong>{value}</strong>
       </div>
-      <Icon size={22} />
+      {Icon ? <Icon size={22} /> : null}
     </article>
   );
 }
@@ -286,9 +295,11 @@ export function Chip({ children, tone = "slate" }) {
 }
 
 export function Finding({ finding }) {
-  const Icon = finding.level === "pass" ? CheckCircle2 : finding.level === "block" ? ShieldAlert : AlertTriangle;
+  if (!finding) return null;
+  const level = finding.level || "info";
+  const Icon = level === "pass" ? CheckCircle2 : level === "block" ? ShieldAlert : AlertTriangle;
   return (
-    <div className={`finding ${finding.level}`}>
+    <div className={`finding ${level}`}>
       <Icon size={16} />
       <span>{finding.text}</span>
     </div>

@@ -55,9 +55,12 @@ export const styles = `
   padding:13px;
   border-radius:20px;
 }
-.hero-guard strong,.hero-guard span{
-  display:block;
-}
+.hero-guard strong,.hero-guard span,
+.prompt-main strong,.prompt-main span,
+.audit-row strong,.audit-row span,
+.queue-card strong,.queue-card span,.queue-card small,
+.usage-row strong,.usage-row span,
+.usage-edit-row strong,.usage-edit-row span{display:block;}
 .hero-guard span{
   color:#66705f;
   font-size:12px;
@@ -184,9 +187,6 @@ export const styles = `
 .prompt-row.selected{
   border-color:#176B2C;
   background:#f0f8ec;
-}
-.prompt-main strong,.prompt-main span{
-  display:block;
 }
 .prompt-main span{
   color:#6f746b;
@@ -624,9 +624,6 @@ export const styles = `
   justify-content:space-between;
   gap:12px;
 }
-.queue-card strong,.queue-card span,.queue-card small{
-  display:block;
-}
 .queue-card span{
   color:#6f746b;
   margin-top:4px;
@@ -656,9 +653,6 @@ export const styles = `
   border-top:1px solid #edf0e8;
   padding-top:10px;
   margin-top:10px;
-}
-.usage-row strong,.usage-row span{
-  display:block;
 }
 .usage-row span{
   color:#6f746b;
@@ -730,9 +724,6 @@ export const styles = `
   place-items:center;
   background:#eef7e9;
   color:#176B2C;
-}
-.audit-row strong,.audit-row span{
-  display:block;
 }
 .audit-row span{
   color:#6f746b;
@@ -877,7 +868,6 @@ export const styles = `
   border-radius:16px;
   padding:10px;
 }
-.usage-edit-row strong,.usage-edit-row span{display:block;}
 .usage-edit-row span{color:#6f746b;font-size:12px;margin-top:3px;}
 .usage-edit-row button{
   border:1px solid #e2e8f0;
