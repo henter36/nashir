@@ -62,9 +62,11 @@ export function buildRouteHealth(route, models = [], costRows = []) {
   const governance = route.governance || {};
   const fallbackModelIds = Array.isArray(route.fallbackModelIds) ? route.fallbackModelIds : [];
   const safeModels = Array.isArray(models) ? models : [];
-  const primaryModel = safeModels.find((model) => model.id === route.primaryModelId || model.modelId === route.primaryModelId);
+  const matchesModelReference = (model, id) =>
+    model.id === id || model.modelId === id || model.modelIdentifier === id;
+  const primaryModel = safeModels.find((model) => matchesModelReference(model, route.primaryModelId));
   const fallbackModels = fallbackModelIds
-    .map((id) => safeModels.find((model) => model.id === id || model.modelId === id))
+    .map((id) => safeModels.find((model) => matchesModelReference(model, id)))
     .filter(Boolean);
   const costRow = getRouteCostRow(route, costRows);
   const usage = getWorkflowUsage(route.taskType);

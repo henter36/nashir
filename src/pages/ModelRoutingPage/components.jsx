@@ -47,8 +47,8 @@ export function RouteHealthBadge({ status }) {
 export function RouteHealthPanel({ route, models = [], costRows = [] }) {
   const health = buildRouteHealth(route, models, costRows);
   const fallbackCount = Array.isArray(route?.fallbackModelIds) ? route.fallbackModelIds.length : 0;
-  const maxCost = route?.cost?.maxCostPerRun || health.costRow?.avgRunCost || "غير محدد";
-  const approvalAbove = route?.cost?.requireApprovalAboveCost || health.costRow?.approvalAbove || "غير محدد";
+  const maxCost = route?.cost?.maxCostPerRun ?? health.costRow?.avgRunCost ?? "غير محدد";
+  const approvalAbove = route?.cost?.requireApprovalAboveCost ?? health.costRow?.approvalAbove ?? "غير محدد";
 
   return (
     <section className={`route-health-panel ${health.status}`}>
