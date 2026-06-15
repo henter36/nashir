@@ -31,6 +31,40 @@ function AdvancedArrayEdit({ summary, label, value, onChange }) {
   );
 }
 
+function ChipArrayHeader({ label, helper, count }) {
+  return (
+    <div className="chip-array-head">
+      <div>
+        <h4>{label}</h4>
+        <p>{helper}</p>
+      </div>
+      <span>{count}</span>
+    </div>
+  );
+}
+
+function SelectableChipList({ items, selectedItems, tone = "", showSeverity = false, onToggle }) {
+  return (
+    <div className="chips selectable-chips">
+      {items.map((item) => {
+        const isSelected = selectedItems.includes(item);
+        const severity = showSeverity ? BLOCKED_PATTERN_SEVERITY[item] || "مراقبة" : "";
+        return (
+          <button
+            type="button"
+            key={item}
+            className={`chip-select ${isSelected ? "selected" : ""}${tone ? ` ${tone}` : ""}`}
+            onClick={() => onToggle && onToggle(item)}
+          >
+            <span>{item}</span>
+            {showSeverity ? <small>{severity}</small> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PromptReadinessBadge({ status }) {
   return <span className={`prompt-readiness-badge ${status}`}>{getPromptReadinessLabel(status)}</span>;
 }
@@ -119,32 +153,18 @@ export function ExpectedInputContext({ prompt, onToggle, onTextChange }) {
 
   return (
     <section className="expected-input-card">
-      <div className="chip-array-head">
-        <div>
-          <h4>المدخلات المتوقعة للمطالبة</h4>
-          <p>
+      <ChipArrayHeader
+        label="المدخلات المتوقعة للمطالبة"
+        helper={(
+          <>
             المطالبة تُرسل مع سياق مثل رابط متجر، بيانات منتج، أصول مختارة، قناة، جمهور، أو مخرج سابق.
             هذه الصفحة تضبط العقد المتوقع ولا تنفذ المطالبة.
-          </p>
-        </div>
-        <span>{selectedInputs.length || "—"}</span>
-      </div>
+          </>
+        )}
+        count={selectedInputs.length || "—"}
+      />
 
-      <div className="chips selectable-chips">
-        {EXPECTED_INPUT_OPTIONS.map((item) => {
-          const isSelected = selectedInputs.includes(item);
-          return (
-            <button
-              type="button"
-              key={item}
-              className={`chip-select ${isSelected ? "selected" : ""}`}
-              onClick={() => onToggle && onToggle(item)}
-            >
-              <span>{item}</span>
-            </button>
-          );
-        })}
-      </div>
+      <SelectableChipList items={EXPECTED_INPUT_OPTIONS} selectedItems={selectedInputs} onToggle={onToggle} />
 
       {!selectedInputs.length ? (
         <div className="unused-warning">
@@ -195,31 +215,15 @@ export function ChipArrayEditor({ label, helper, values = [], suggestions = [], 
 
   return (
     <section className="chip-array-editor">
-      <div className="chip-array-head">
-        <div>
-          <h4>{label}</h4>
-          <p>{helper}</p>
-        </div>
-        <span>{safeValues.length}</span>
-      </div>
+      <ChipArrayHeader label={label} helper={helper} count={safeValues.length} />
 
-      <div className="chips selectable-chips">
-        {mergedSuggestions.map((item) => {
-          const isSelected = safeValues.includes(item);
-          const severity = showSeverity ? BLOCKED_PATTERN_SEVERITY[item] || "مراقبة" : "";
-          return (
-            <button
-              type="button"
-              key={item}
-              className={`chip-select ${isSelected ? "selected" : ""} ${tone}`}
-              onClick={() => onToggle && onToggle(item)}
-            >
-              <span>{item}</span>
-              {showSeverity ? <small>{severity}</small> : null}
-            </button>
-          );
-        })}
-      </div>
+      <SelectableChipList
+        items={mergedSuggestions}
+        selectedItems={safeValues}
+        tone={tone}
+        showSeverity={showSeverity}
+        onToggle={onToggle}
+      />
 
       <AdvancedArrayEdit
         summary="تحرير متقدم للقائمة"
