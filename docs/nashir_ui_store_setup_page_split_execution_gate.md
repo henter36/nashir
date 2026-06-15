@@ -25,7 +25,7 @@ Split `src/pages/StoreSetupPage.jsx` (1791 lines) into co-located modules under 
 | `src/pages/StoreSetupPage/constants.js` | 14 exported constants: steps, channelOptions, storeTypeOptions, marketScopeOptions, acquisitionPlans, productFlagOptions, policyItems, defaultForm, defaultProducts, statusLabels, channelConnectionLabels, oauthProviderMeta, legacyChannelMap, channelUrlLabels |
 | `src/pages/StoreSetupPage/helpers.js` | 7 exported helpers: normalizeSalesChannelName, getSelectedSalesChannels, getChannelUrlLabel, channelNeedsUrl, normalizeProviderKey, snapshotToStoreSource, snapshotToCollectedData |
 | `src/pages/StoreSetupPage/styles.js` | `export const styles` — full minified CSS from original plus focus-visible accessibility rule |
-| `src/pages/StoreSetupPage/components.jsx` | 22 exported UI components: Card, Badge, Button, SectionHeader, StepTabs, Field, FieldSelect, TextArea, ChoiceGroup, MultiChoice, UploadBox, Notice, SourceStatus, Info, ChannelConnectionStatus, PolicyRow, Metric, ChannelPlan, TimelineCard, SmartBox, Footer |
+| `src/pages/StoreSetupPage/components.jsx` | 21 exported UI components: Card, Badge, Button, SectionHeader, StepTabs, Field, FieldSelect, TextArea, ChoiceGroup, MultiChoice, UploadBox, Notice, SourceStatus, Info, ChannelConnectionStatus, PolicyRow, Metric, ChannelPlan, TimelineCard, SmartBox, Footer |
 
 ## Files modified
 

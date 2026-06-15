@@ -5,13 +5,15 @@ export function normalizeSalesChannelName(channel) {
 }
 
 export function getSelectedSalesChannels(form) {
-  const raw = Array.isArray(form?.salesChannels) && form.salesChannels.length
-    ? form.salesChannels
-    : Array.isArray(form?.preferredChannels) && form.preferredChannels.length
-      ? form.preferredChannels
-      : form?.primarySalesChannel
-        ? [form.primarySalesChannel]
-        : [];
+  let raw = [];
+
+  if (Array.isArray(form?.salesChannels) && form.salesChannels.length) {
+    raw = form.salesChannels;
+  } else if (Array.isArray(form?.preferredChannels) && form.preferredChannels.length) {
+    raw = form.preferredChannels;
+  } else if (form?.primarySalesChannel) {
+    raw = [form.primarySalesChannel];
+  }
 
   return Array.from(
     new Set(

@@ -1,5 +1,32 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Save, Upload, Wand2 } from "lucide-react";
-import { channelConnectionLabels, statusLabels } from "./constants.js";
+import { channelConnectionLabels, smartBoxTips, statusLabels } from "./constants.js";
+
+function FieldShell({ label, children }) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function ChoiceButtonList({ options, isSelected, onSelect }) {
+  const safeOptions = Array.isArray(options) ? options : [];
+  return (
+    <div className="choice-list">
+      {safeOptions.map((item) => (
+        <button
+          key={item}
+          type="button"
+          onClick={() => onSelect(item)}
+          className={`choice ${isSelected(item) ? "selected" : ""}`}
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function Card({ children, className = "" }) {
   return <section className={`card ${className}`}>{children}</section>;
@@ -44,62 +71,58 @@ export function StepTabs({ steps, step, setStep }) {
 
 export function Field({ label, value, placeholder = "", onChange }) {
   return (
-    <label className="field">
-      <span>{label}</span>
+    <FieldShell label={label}>
       <input value={value ?? ""} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
-    </label>
+    </FieldShell>
   );
 }
 
 export function FieldSelect({ label, value, options, onChange }) {
   const safeOptions = Array.isArray(options) ? options : [];
   return (
-    <label className="field">
-      <span>{label}</span>
+    <FieldShell label={label}>
       <select value={value ?? ""} onChange={(event) => onChange(event.target.value)}>
         {safeOptions.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
       </select>
-    </label>
+    </FieldShell>
   );
 }
 
 export function TextArea({ label, value, placeholder = "", onChange }) {
   return (
-    <label className="field">
-      <span>{label}</span>
+    <FieldShell label={label}>
       <textarea value={value ?? ""} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} rows={5} />
-    </label>
+    </FieldShell>
   );
 }
 
 export function ChoiceGroup({ title, options, selected, setSelected }) {
-  const safeOptions = Array.isArray(options) ? options : [];
   return (
     <div className="choice-block">
       <h4>{title}</h4>
-      <div className="choice-list">
-        {safeOptions.map((item) => (
-          <button key={item} type="button" onClick={() => setSelected(item)} className={`choice ${selected === item ? "selected" : ""}`}>{item}</button>
-        ))}
-      </div>
+      <ChoiceButtonList
+        options={options}
+        isSelected={(item) => selected === item}
+        onSelect={setSelected}
+      />
     </div>
   );
 }
 
 export function MultiChoice({ title, options, selected, setSelected }) {
-  const safeOptions = Array.isArray(options) ? options : [];
   const safeSelected = Array.isArray(selected) ? selected : [];
-  const toggle = (item) => setSelected(safeSelected.includes(item) ? safeSelected.filter((value) => value !== item) : [...safeSelected, item]);
+  const toggle = (item) =>
+    setSelected(safeSelected.includes(item) ? safeSelected.filter((v) => v !== item) : [...safeSelected, item]);
   return (
     <div className="choice-block wide">
       <h4>{title}</h4>
-      <div className="choice-list">
-        {safeOptions.map((item) => (
-          <button key={item} type="button" onClick={() => toggle(item)} className={`choice ${safeSelected.includes(item) ? "selected" : ""}`}>{item}</button>
-        ))}
-      </div>
+      <ChoiceButtonList
+        options={options}
+        isSelected={(item) => safeSelected.includes(item)}
+        onSelect={toggle}
+      />
     </div>
   );
 }
@@ -188,18 +211,11 @@ export function TimelineCard({ title, text }) {
 }
 
 export function SmartBox({ step }) {
-  const tips = {
-    1: ["أبقِ بيانات المتجر مختصرة؛ لا تحولها إلى صفحة Branding كاملة.", "فحص المتجر يولّد اقتراحات فقط، ولا يعتمدها دون مراجعة."],
-    2: ["المنتجات هنا ستُستخدم كمدخلات للحملات القادمة.", "لا تجعل هامش الربح إلزاميًا في V1."],
-    3: ["اجمع الجمهور والقنوات في قرار واحد قبل الانتقال للسياسات.", "الربط الذي يتم هنا ينعكس تلقائيًا في الإعدادات دون مزامنة يدوية."],
-    4: ["السياسات تحمي النظام من ادعاءات أو نشر غير آمن.", "أي عنصر بحاجة مراجعة يجب أن يمنع النشر التلقائي لاحقًا."],
-    5: ["لا تنتقل إلى الحملة إذا كانت المنتجات أو السياسات ناقصة.", "ابدأ بحملة منتج واحد قبل التوسع."],
-  };
   return (
     <Card className="smart-box">
       <div className="smart-title"><Wand2 size={20} /><h3>توصيات ذكية</h3></div>
       <div className="tips-list">
-        {(tips[step] || []).map((tip, index) => (
+        {(smartBoxTips[step] || []).map((tip, index) => (
           <div key={tip} className="tip">
             <span>{index + 1}</span>
             <p>{tip}</p>
