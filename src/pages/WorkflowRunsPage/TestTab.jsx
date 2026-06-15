@@ -12,7 +12,7 @@ export default function TestTab({
 }) {
   return (
     <section className="enhanced-test-layout">
-      <article className="test-card">
+      <article className="test-card wf-card">
         <CardHeader title="اختبار المسار" subtitle="يوضح كيف سيتم فحص المسار قبل التشغيل الفعلي." />
 
         <label className="field">
@@ -59,7 +59,7 @@ export default function TestTab({
         </button>
       </article>
 
-      <article className="test-card">
+      <article className="test-card wf-card">
         <CardHeader title="نتيجة الاختبار" subtitle="نتيجة التحقق من المدخلات والسياسات قبل التشغيل." />
 
         {dryRunResult ? (
@@ -101,7 +101,7 @@ export default function TestTab({
         )}
       </article>
 
-      <article className="test-card wide-test-card">
+      <article className="test-card wide-test-card wf-card">
         <h2>تسلسل فحص الخطوات</h2>
 
         {dryRunResult ? (
@@ -137,7 +137,7 @@ export default function TestTab({
         )}
       </article>
 
-      <article className="test-card wide-test-card">
+      <article className="test-card wide-test-card wf-card">
         <h2>المخرجات المتوقعة</h2>
 
         {dryRunResult ? (
@@ -156,7 +156,7 @@ export default function TestTab({
         )}
       </article>
 
-      <article className="test-card wide-test-card">
+      <article className="test-card wide-test-card wf-card">
         <h2>سجل الاختبار</h2>
         <div className="test-log">
           {testLog.length ? (

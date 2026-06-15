@@ -8,7 +8,7 @@ import {
 
 export default function PipelineReflectionCard() {
   return (
-    <section className="pipeline-reflection-card">
+    <section className="pipeline-reflection-card wf-card">
       <CardHeader
         title="مسار معالجة البيانات"
         subtitle="تشغيلات النظام هنا محاكاة واجهية. التنفيذ الحقيقي يحتاج Backend وQueue وموصلات مصرح بها وتخزين أسرار آمن ومراجعة بشرية."

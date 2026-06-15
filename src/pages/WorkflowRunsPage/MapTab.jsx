@@ -24,7 +24,7 @@ export default function MapTab({ workflowDraft, readinessContext }) {
   const trigger = getWorkflowTrigger(workflowDraft);
   return (
     <section className="enhanced-map-layout">
-      <article className="map-card">
+      <article className="map-card wf-card">
         <CardHeader
           title="خريطة تدفق البيانات"
           subtitle="توضح انتقال البيانات من المشغل إلى المدخلات ثم المعالجة والمخرج والصفحة المستهدفة والحقل المستهدف والمراجعة والمسار التالي. هذا مصمم تدفق واجهي فقط. لا يتم تنفيذ المسارات أو استدعاء النماذج فعليًا في هذا النموذج."

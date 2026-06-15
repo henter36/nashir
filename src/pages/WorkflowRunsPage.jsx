@@ -332,7 +332,7 @@ export default function WorkflowRunsPage() {
     <main className="workflow-builder-page" dir="rtl">
       <style>{styles}</style>
 
-      <section className="page-title">
+      <section className="page-title wf-card">
         <div>
           <div className="eyebrow"><Workflow size={15} /> تشغيل المسارات</div>
           <h1>مصمم مسارات البيانات بين الأدوات والنماذج</h1>
@@ -354,7 +354,7 @@ export default function WorkflowRunsPage() {
         </div>
       </section>
 
-      <section className="screen-guidance-card">
+      <section className="screen-guidance-card wf-card">
         <div><span>هدف الشاشة</span><strong>متابعة مسار التشغيل ومعرفة أين توقفت العملية.</strong></div>
         <div><span>المدخلات</span><strong>Workflow، الموصلات، النماذج، المطالبات، حدود التكلفة.</strong></div>
         <div><span>المخرجات</span><strong>جاهزية التشغيل، أسباب الحظر، حزمة الأدلة، مخرجات قابلة لإعادة الاستخدام.</strong></div>
@@ -362,7 +362,7 @@ export default function WorkflowRunsPage() {
         <div><span>ما لا يحدث هنا</span><strong>لا يتم تنفيذ Backend أو إرسال بيانات فعلية للنماذج.</strong></div>
       </section>
 
-      <section className="governance-alert">
+      <section className="governance-alert wf-card">
         <ShieldCheck size={20} />
         <div>
           <strong>لا يظهر هذا للمستخدم النهائي</strong>
@@ -374,7 +374,7 @@ export default function WorkflowRunsPage() {
         </div>
       </section>
 
-      <section className="tabs">
+      <section className="tabs wf-card">
         {TABS.map(([id, label]) => (
           <button
             key={id}

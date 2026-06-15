@@ -13,7 +13,7 @@ export default function RunsTab({
 }) {
   return (
     <section className="runs-layout enhanced-runs-layout">
-      <article className="runs-card">
+      <article className="runs-card wf-card">
         <CardHeader
           title="مراقبة التشغيلات"
           subtitle="تعرض حالات التشغيل والأخطاء والمراجعات المطلوبة كما يجب أن تظهر عند التنفيذ."
@@ -40,7 +40,7 @@ export default function RunsTab({
         </div>
       </article>
 
-      <article className="run-detail-card">
+      <article className="run-detail-card wf-card">
         <CardHeader
           title={selectedRun.title}
           subtitle={`حالة التشغيل: ${STATUS_META[selectedRun.status]?.[0] || selectedRun.status}`}
@@ -107,7 +107,7 @@ export default function RunsTab({
         </div>
       </article>
 
-      <article className="run-timeline-card">
+      <article className="run-timeline-card wf-card">
         <h2>تسلسل الخطوات</h2>
         <div className="run-timeline">
           {(selectedRun.steps || []).map(([id, label, duration, status]) => (
@@ -123,7 +123,7 @@ export default function RunsTab({
         </div>
       </article>
 
-      <article className="run-warnings-card">
+      <article className="run-warnings-card wf-card">
         <h2>التحذيرات والإجراءات</h2>
 
         <div className="warnings-list">

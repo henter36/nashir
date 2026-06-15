@@ -13,7 +13,7 @@ import {
 export default function ContractsTab({ workflowDraft }) {
   return (
     <section className="contracts-enhanced-layout">
-      <article className="contracts-overview-card">
+      <article className="contracts-overview-card wf-card">
         <CardHeader title="ضوابط المخرجات" subtitle="تحدد قواعد الظهور والمراجعة قبل استخدام المخرجات أو نشرها.">
           <span className="contracts-count">{workflowDraft.steps.length} عقود</span>
         </CardHeader>
@@ -34,7 +34,7 @@ export default function ContractsTab({ workflowDraft }) {
           const sensitive = isSensitiveOutput(step);
 
           return (
-            <article key={`${step.id}-contract`} className={`contract-card enhanced-contract-card ${riskFlags.length ? "has-risk" : ""}`}>
+            <article key={`${step.id}-contract`} className={`contract-card enhanced-contract-card wf-card ${riskFlags.length ? "has-risk" : ""}`}>
               <div className="contract-card-head">
                 <div>
                   <h3>{step.name}</h3>

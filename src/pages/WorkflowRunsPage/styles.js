@@ -9,27 +9,12 @@ export const styles = `
   font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
-.page-title,
-.governance-alert,
-.stat-card,
-.tabs,
-.template-card,
-.steps-card,
-.step-editor-card,
-.map-card,
-.contract-card,
-.runs-card,
-.test-card,
-.run-detail-card,
-.run-timeline-card,
-.run-warnings-card,
-.contracts-overview-card,
-.pipeline-reflection-card,
-.screen-guidance-card {
+.wf-card {
   background: #fff;
   border: 1px solid #e4e7df;
   border-radius: 24px;
   box-shadow: 0 8px 26px rgba(24, 38, 18, 0.035);
+  padding: 18px;
 }
 
 .page-title {
@@ -180,21 +165,6 @@ export const styles = `
   grid-template-columns: 280px minmax(0, 1fr) 360px;
   gap: 16px;
   align-items: start;
-}
-
-.template-card,
-.steps-card,
-.step-editor-card,
-.map-card,
-.contract-card,
-.runs-card,
-.test-card,
-.run-detail-card,
-.run-timeline-card,
-.run-warnings-card,
-.contracts-overview-card,
-.pipeline-reflection-card {
-  padding: 18px;
 }
 
 .template-card h2,

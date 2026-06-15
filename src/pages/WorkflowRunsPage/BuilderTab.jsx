@@ -19,7 +19,7 @@ export default function BuilderTab({
 }) {
   return (
     <section className="builder-layout">
-      <aside className="template-card">
+      <aside className="template-card wf-card">
         <h2>مصمم مسارات التشغيل</h2>
         <p className="section-purpose">يعرض طريقة تكوين المسار والخطوات المطلوبة لتنفيذه لاحقًا.</p>
         <div className="template-list">
@@ -37,7 +37,7 @@ export default function BuilderTab({
         </div>
       </aside>
 
-      <article className="steps-card">
+      <article className="steps-card wf-card">
         <CardHeader title={workflowDraft.name} subtitle={workflowDraft.description}>
           <button type="button" className="secondary-button" onClick={addStep}>
             + إضافة خطوة
@@ -87,7 +87,7 @@ export default function BuilderTab({
         </div>
       </article>
 
-      <aside className="step-editor-card">
+      <aside className="step-editor-card wf-card">
         <h2>إعداد الخطوة</h2>
         {workflowDraft.steps[selectedStepIndex] ? (
           <StepEditor
