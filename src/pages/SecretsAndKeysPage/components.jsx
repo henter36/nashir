@@ -93,8 +93,9 @@ export function ProviderReadinessSummary({ provider }) {
 export function ProviderReadinessPanel({ provider }) {
   const readiness = buildProviderReadiness(provider);
   const configuredModels = getConfiguredModels(provider);
-  const capabilities = Object.entries(normalizeCapabilities(provider.capabilities)).filter(([, enabled]) => enabled);
-  const lastTest = provider.metadata?.lastTestedAt || "لم يتم الاختبار";
+  const safeProvider = provider || {};
+  const capabilities = Object.entries(normalizeCapabilities(safeProvider.capabilities)).filter(([, enabled]) => enabled);
+  const lastTest = safeProvider.metadata?.lastTestedAt || "لم يتم الاختبار";
 
   return (
     <section className={`provider-readiness-panel ${readiness.status}`}>
@@ -109,16 +110,16 @@ export function ProviderReadinessPanel({ provider }) {
       <div className="readiness-grid">
         <Info label="حالة الجاهزية" value={getReadinessLabel(readiness.status)} />
         <Info label="الدرجة" value={`${readiness.score}%`} />
-        <Info label="نوع المزود" value={provider.providerType} />
-        <Info label="قناة الوصول" value={getOptionLabel(DELIVERY_CHANNELS, provider.deliveryChannel)} />
-        <Info label="البيئة" value={getOptionLabel(ENVIRONMENTS, provider.environment)} />
-        <Info label="طريقة المصادقة" value={getOptionLabel(AUTH_TYPES, provider.authType)} />
-        <Info label="مرجع السر" value={provider.secretName || "غير محدد"} />
-        <Info label="نطاق الاعتماد" value={getCredentialScope(provider)} />
-        <Info label="العنوان الأساسي" value={provider.baseUrl || "غير محدد"} />
+        <Info label="نوع المزود" value={safeProvider.providerType} />
+        <Info label="قناة الوصول" value={getOptionLabel(DELIVERY_CHANNELS, safeProvider.deliveryChannel)} />
+        <Info label="البيئة" value={getOptionLabel(ENVIRONMENTS, safeProvider.environment)} />
+        <Info label="طريقة المصادقة" value={getOptionLabel(AUTH_TYPES, safeProvider.authType)} />
+        <Info label="مرجع السر" value={safeProvider.secretName || "غير محدد"} />
+        <Info label="نطاق الاعتماد" value={getCredentialScope(safeProvider)} />
+        <Info label="العنوان الأساسي" value={safeProvider.baseUrl || "غير محدد"} />
         <Info label="نماذج يعلن المزود توفرها" value={configuredModels.length ? `${configuredModels.length}` : "غير مهيأة"} />
         <Info label="القدرات" value={capabilities.length ? `${capabilities.length}` : "غير مفعلة"} />
-        <Info label="Webhook" value={provider.webhooks?.enabled ? "مفعل" : "غير مفعل"} />
+        <Info label="Webhook" value={safeProvider.webhooks?.enabled ? "مفعل" : "غير مفعل"} />
         <Info label="آخر اختبار" value={lastTest} />
         <Info label="أثره على توجيه النماذج" value="يؤثر على جاهزية المسار قبل التشغيل" />
       </div>

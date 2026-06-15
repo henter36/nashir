@@ -154,28 +154,30 @@ export function getOptionLabel(options, value) {
 }
 
 export function normalizeCapabilities(capabilities = {}) {
+  const safeCapabilities = capabilities || {};
   return {
     ...DEFAULT_CAPABILITIES,
-    textGeneration: Boolean(capabilities.textGeneration),
-    structuredOutput: Boolean(capabilities.structuredOutput),
-    visionInput: Boolean(capabilities.visionInput || capabilities.vision),
-    imageGeneration: Boolean(capabilities.imageGeneration),
-    videoGeneration: Boolean(capabilities.videoGeneration),
-    embeddings: Boolean(capabilities.embeddings),
-    toolCalling: Boolean(capabilities.toolCalling || capabilities.functionCalling),
-    streaming: Boolean(capabilities.streaming),
-    batch: Boolean(capabilities.batch),
-    files: Boolean(capabilities.files),
-    webhooks: Boolean(capabilities.webhooks),
+    textGeneration: Boolean(safeCapabilities.textGeneration),
+    structuredOutput: Boolean(safeCapabilities.structuredOutput),
+    visionInput: Boolean(safeCapabilities.visionInput || safeCapabilities.vision),
+    imageGeneration: Boolean(safeCapabilities.imageGeneration),
+    videoGeneration: Boolean(safeCapabilities.videoGeneration),
+    embeddings: Boolean(safeCapabilities.embeddings),
+    toolCalling: Boolean(safeCapabilities.toolCalling || safeCapabilities.functionCalling),
+    streaming: Boolean(safeCapabilities.streaming),
+    batch: Boolean(safeCapabilities.batch),
+    files: Boolean(safeCapabilities.files),
+    webhooks: Boolean(safeCapabilities.webhooks),
   };
 }
 
 export function getCredentialScope(provider = {}) {
+  const safeProvider = provider || {};
   const values = [
-    provider.organizationId ? "معرف المنظمة" : "",
-    provider.projectId || provider.googleCloudProject ? "معرف المشروع" : "",
-    provider.workspaceId ? "معرف مساحة العمل" : "",
-    provider.serviceAccountRef ? "مرجع حساب الخدمة" : "",
+    safeProvider.organizationId ? "معرف المنظمة" : "",
+    safeProvider.projectId || safeProvider.googleCloudProject ? "معرف المشروع" : "",
+    safeProvider.workspaceId ? "معرف مساحة العمل" : "",
+    safeProvider.serviceAccountRef ? "مرجع حساب الخدمة" : "",
   ].filter(Boolean);
 
   return values.length ? values.join("، ") : "غير محدد";
@@ -191,9 +193,10 @@ export function isCloudStyleProvider(provider = {}) {
 }
 
 export function getProviderContext(provider = {}) {
-  const providerType = String(provider.providerType || "").toLowerCase();
-  const deliveryChannel = provider.deliveryChannel || "";
-  const authType = provider.authType || "";
+  const safeProvider = provider || {};
+  const providerType = String(safeProvider.providerType || "").toLowerCase();
+  const deliveryChannel = safeProvider.deliveryChannel || "";
+  const authType = safeProvider.authType || "";
 
   return {
     providerType,
@@ -213,8 +216,9 @@ export function getProviderContext(provider = {}) {
 }
 
 export function getAdvancedScopeFields(provider = {}) {
-  const context = getProviderContext(provider);
-  const requiredFields = Array.isArray(provider.requiredFields) ? provider.requiredFields : [];
+  const safeProvider = provider || {};
+  const context = getProviderContext(safeProvider);
+  const requiredFields = Array.isArray(safeProvider.requiredFields) ? safeProvider.requiredFields : [];
   const fields = [];
   const addField = (key, label, required = false, show = true) => {
     if (!show || fields.some((field) => field.key === key)) return;
@@ -229,8 +233,8 @@ export function getAdvancedScopeFields(provider = {}) {
   if (context.isOpenAiStyle) {
     addField("organizationId", "معرف المنظمة");
     addField("projectId", "معرف المشروع");
-    addField("deploymentName", "اسم النشر", context.isAzureStyle, context.deliveryChannel === "openai_compatible" || Boolean(provider.deploymentName));
-    addField("apiVersion", "إصدار API", context.isAzureStyle, Boolean(provider.apiVersion) || ["gateway", "openai_compatible"].includes(context.deliveryChannel));
+    addField("deploymentName", "اسم النشر", context.isAzureStyle, context.deliveryChannel === "openai_compatible" || Boolean(safeProvider.deploymentName));
+    addField("apiVersion", "إصدار API", context.isAzureStyle, Boolean(safeProvider.apiVersion) || ["gateway", "openai_compatible"].includes(context.deliveryChannel));
   }
 
   if (context.isAnthropicStyle) {
@@ -254,8 +258,8 @@ export function getAdvancedScopeFields(provider = {}) {
   if (context.isGatewayProxy) {
     addField("projectId", "معرف المشروع");
     addField("workspaceId", "معرف مساحة العمل");
-    addField("apiVersion", "إصدار API", requiredFields.includes("apiVersion"), Boolean(provider.apiVersion) || requiredFields.includes("apiVersion"));
-    addField("deploymentName", "اسم النشر", false, Boolean(provider.deploymentName));
+    addField("apiVersion", "إصدار API", requiredFields.includes("apiVersion"), Boolean(safeProvider.apiVersion) || requiredFields.includes("apiVersion"));
+    addField("deploymentName", "اسم النشر", false, Boolean(safeProvider.deploymentName));
   }
 
   if (context.usesServiceAccount) {
@@ -266,31 +270,32 @@ export function getAdvancedScopeFields(provider = {}) {
 }
 
 export function getAvailableModelFields(provider = {}) {
-  const capabilities = normalizeCapabilities(provider.capabilities);
-  const requiredFields = Array.isArray(provider.requiredFields) ? provider.requiredFields : [];
+  const safeProvider = provider || {};
+  const capabilities = normalizeCapabilities(safeProvider.capabilities);
+  const requiredFields = Array.isArray(safeProvider.requiredFields) ? safeProvider.requiredFields : [];
   const fields = [
     {
       key: "textModel",
       label: "نموذج النصوص",
-      show: capabilities.textGeneration || requiredFields.includes("textModel") || Boolean(provider.textModel),
+      show: capabilities.textGeneration || requiredFields.includes("textModel") || Boolean(safeProvider.textModel),
       required: capabilities.textGeneration || requiredFields.includes("textModel"),
     },
     {
       key: "imageModel",
       label: "نموذج الصور",
-      show: capabilities.imageGeneration || capabilities.visionInput || requiredFields.includes("imageModel") || Boolean(provider.imageModel),
+      show: capabilities.imageGeneration || capabilities.visionInput || requiredFields.includes("imageModel") || Boolean(safeProvider.imageModel),
       required: capabilities.imageGeneration || requiredFields.includes("imageModel"),
     },
     {
       key: "videoModel",
       label: "نموذج الفيديو",
-      show: capabilities.videoGeneration || requiredFields.includes("videoModel") || Boolean(provider.videoModel),
+      show: capabilities.videoGeneration || requiredFields.includes("videoModel") || Boolean(safeProvider.videoModel),
       required: capabilities.videoGeneration || requiredFields.includes("videoModel"),
     },
     {
       key: "embeddingModel",
       label: "نموذج التضمين",
-      show: capabilities.embeddings || requiredFields.includes("embeddingModel") || Boolean(provider.embeddingModel),
+      show: capabilities.embeddings || requiredFields.includes("embeddingModel") || Boolean(safeProvider.embeddingModel),
       required: capabilities.embeddings || requiredFields.includes("embeddingModel"),
     },
   ];
@@ -299,12 +304,13 @@ export function getAvailableModelFields(provider = {}) {
 }
 
 export function getConfiguredModels(provider = {}) {
+  const safeProvider = provider || {};
   return [
-    provider.textModel,
-    provider.imageModel,
-    provider.videoModel,
-    provider.embeddingModel,
-    provider[ROUTING_COMPAT_MODEL_FIELD],
+    safeProvider.textModel,
+    safeProvider.imageModel,
+    safeProvider.videoModel,
+    safeProvider.embeddingModel,
+    safeProvider[ROUTING_COMPAT_MODEL_FIELD],
   ].filter(Boolean);
 }
 

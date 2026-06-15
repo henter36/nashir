@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   TestTube2,
 } from "lucide-react";
-import { DEFAULT_OPERATIONAL_SUPPORT, PROVIDER_TYPES, statusMap } from "./SecretsAndKeysPage/constants.js";
+import { AUTH_TYPES, DEFAULT_OPERATIONAL_SUPPORT, DELIVERY_CHANNELS, ENVIRONMENTS, PROVIDER_TYPES, statusMap } from "./SecretsAndKeysPage/constants.js";
 import {
   authRequiresSecret,
   buildProviderReadiness,
@@ -467,38 +467,19 @@ export default function SecretsAndKeysPage() {
                 <SelectField
                   label="البيئة"
                   value={selectedProvider.environment || "sandbox"}
-                  options={[
-                    ["sandbox", "تجريبي"],
-                    ["staging", "اختبار"],
-                    ["production", "إنتاج"],
-                  ]}
+                  options={ENVIRONMENTS}
                   onChange={(value) => updateSelected("environment", value)}
                 />
                 <SelectField
                   label="قناة الوصول"
                   value={selectedProvider.deliveryChannel || "direct_api"}
-                  options={[
-                    ["direct_api", "API مباشر"],
-                    ["cloud_platform", "منصة سحابية"],
-                    ["openai_compatible", "متوافق مع OpenAI"],
-                    ["gateway", "بوابة موحدة"],
-                    ["proxy", "وسيط Proxy"],
-                    ["self_hosted", "مستضاف ذاتيًا"],
-                  ]}
+                  options={DELIVERY_CHANNELS}
                   onChange={(value) => updateSelected("deliveryChannel", value)}
                 />
                 <SelectField
                   label="طريقة المصادقة"
                   value={selectedProvider.authType || "bearer_token"}
-                  options={[
-                    ["bearer_token", "Bearer Token"],
-                    ["api_key_header", "API Key Header"],
-                    ["oauth_bearer", "OAuth Bearer"],
-                    ["workload_identity", "هوية عمل / Workload Identity"],
-                    ["service_account", "حساب خدمة"],
-                    ["custom_headers", "ترويسات مخصصة"],
-                    ["no_auth_local", "بدون مصادقة محليًا"],
-                  ]}
+                  options={AUTH_TYPES}
                   onChange={(value) => updateSelected("authType", value)}
                 />
               </div>
