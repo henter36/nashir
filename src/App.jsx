@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "./components/layout/AppShell.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import "./styles.css";
 
 const DashboardPage = lazy(() => import("./pages/DashboardPage.jsx"));
@@ -217,7 +218,13 @@ export default function App() {
       setActiveScreen={navigateToScreen}
     >
       <Suspense fallback={<PageLoadingFallback />}>
-        {pageContent}
+        <ErrorBoundary
+          key={activeScreen}
+          onReset={() => navigateToScreen("dashboard")}
+          resetLabel="العودة للوحة التحكم"
+        >
+          {pageContent}
+        </ErrorBoundary>
       </Suspense>
     </AppShell>
   );
