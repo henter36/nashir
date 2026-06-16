@@ -60,7 +60,7 @@ console.log("\n[1] screens[] registry");
 
 // Extract all id:"..." entries inside the screens useMemo array.
 // Matches: { id: "someId", ... }
-const registryMatches = [...src.matchAll(/\{\s*id:\s*"([^"]+)"/g)].map((m) => m[1]);
+const registryMatches = [...src.matchAll(/\{\s*id:\s*["']([^"']+)["']/g)].map((m) => m[1]);
 
 const seen = new Set();
 const duplicates = [];
