@@ -1371,7 +1371,7 @@ export interface components {
             };
         };
         /** @enum {string} */
-        ErrorCode: "workspace.not_found" | "resource.not_found" | "validation.failed" | "permission.denied" | "conflict.version_mismatch" | "idempotency.conflict" | "rate_limit.exceeded" | "review.required" | "publishing.blocked" | "provider.not_ready" | "model_route.not_ready" | "prompt_template.not_approved" | "cost_policy.exceeded" | "creator_studio.session.not_found" | "creator_studio.session.expired" | "creator_studio.draft.not_found" | "creator_studio.draft.expired" | "creator_studio.draft.not_ready" | "creator_studio.transfer.not_found" | "creator_studio.transfer.expired" | "creator_studio.content.not_approved" | "creator_studio.content.archived_or_expired" | "creator_studio.workspace.mismatch" | "creator_studio.governance.blocked" | "creator_studio.consent.required" | "creator_studio.platform.not_connected" | "creator_studio.scheduling.duplicate_not_supported" | "creator_studio.override.invalid" | "workspace.member.not_found" | "workspace.member.already_active" | "workspace.member.already_suspended" | "workspace.member.self_action_forbidden" | "store_profile.not_found" | "data_source.not_found" | "channel_connection.not_found" | "integration_credential.not_found" | "campaign.not_found" | "campaign.archived" | "content_item.not_found" | "content_draft.not_found" | "content_approval.self_approval_forbidden" | "content_approval.already_decided" | "publishing_job.not_found" | "publishing_job.already_confirmed" | "publishing_job.already_cancelled" | "analytics_snapshot.not_found" | "audit_event.not_found";
+        ErrorCode: "workspace.not_found" | "resource.not_found" | "validation.failed" | "permission.denied" | "conflict.version_mismatch" | "idempotency.conflict" | "rate_limit.exceeded" | "internal.error" | "service.unavailable" | "unknown.error" | "review.required" | "publishing.blocked" | "provider.not_ready" | "model_route.not_ready" | "prompt_template.not_approved" | "cost_policy.exceeded" | "creator_studio.session.not_found" | "creator_studio.session.expired" | "creator_studio.draft.not_found" | "creator_studio.draft.expired" | "creator_studio.draft.not_ready" | "creator_studio.transfer.not_found" | "creator_studio.transfer.expired" | "creator_studio.content.not_approved" | "creator_studio.content.archived_or_expired" | "creator_studio.workspace.mismatch" | "creator_studio.governance.blocked" | "creator_studio.consent.required" | "creator_studio.platform.not_connected" | "creator_studio.scheduling.duplicate_not_supported" | "creator_studio.override.invalid" | "workspace.member.not_found" | "workspace.member.already_active" | "workspace.member.already_suspended" | "workspace.member.self_action_forbidden" | "store_profile.not_found" | "data_source.not_found" | "channel_connection.not_found" | "integration_credential.not_found" | "campaign.not_found" | "campaign.archived" | "content_item.not_found" | "content_draft.not_found" | "content_approval.self_approval_forbidden" | "content_approval.already_decided" | "publishing_job.not_found" | "publishing_job.already_confirmed" | "publishing_job.already_cancelled" | "analytics_snapshot.not_found" | "audit_event.not_found";
         ErrorModel: {
             errorCode: components["schemas"]["ErrorCode"];
             message: string;
@@ -1427,28 +1427,48 @@ export interface components {
         };
         CreateProductRequest: {
             name: string;
-            category?: string;
-            price?: number;
-            sku?: string;
+            /** @description Send null to clear this field. */
+            category?: string | null;
+            /** @description Send null to clear this field. */
+            price?: number | null;
+            /** @description Send null to clear this field. */
+            sku?: string | null;
             stockStatus?: components["schemas"]["StockStatus"];
-            /** Format: uri */
-            imageUrl?: string;
-            /** Format: uri */
-            videoUrl?: string;
-            description?: string;
+            /**
+             * Format: uri
+             * @description Send null to clear this field.
+             */
+            imageUrl?: string | null;
+            /**
+             * Format: uri
+             * @description Send null to clear this field.
+             */
+            videoUrl?: string | null;
+            /** @description Send null to clear this field. */
+            description?: string | null;
             status?: components["schemas"]["ProductStatus"];
         };
         UpdateProductRequest: {
             name?: string;
-            category?: string;
-            price?: number;
-            sku?: string;
+            /** @description Send null to clear this field. */
+            category?: string | null;
+            /** @description Send null to clear this field. */
+            price?: number | null;
+            /** @description Send null to clear this field. */
+            sku?: string | null;
             stockStatus?: components["schemas"]["StockStatus"];
-            /** Format: uri */
-            imageUrl?: string;
-            /** Format: uri */
-            videoUrl?: string;
-            description?: string;
+            /**
+             * Format: uri
+             * @description Send null to clear this field.
+             */
+            imageUrl?: string | null;
+            /**
+             * Format: uri
+             * @description Send null to clear this field.
+             */
+            videoUrl?: string | null;
+            /** @description Send null to clear this field. */
+            description?: string | null;
             status?: components["schemas"]["ProductStatus"];
         };
         ProductResponse: {
@@ -2681,6 +2701,15 @@ export interface components {
         };
         /** @description Rate limit exceeded. */
         RateLimited: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorModel"];
+            };
+        };
+        /** @description Service unavailable or dependency unavailable. */
+        ServiceUnavailable: {
             headers: {
                 [name: string]: unknown;
             };
