@@ -4481,6 +4481,9 @@ components:
         - conflict.version_mismatch
         - idempotency.conflict
         - rate_limit.exceeded
+        - internal.error
+        - service.unavailable
+        - unknown.error
         - review.required
         - publishing.blocked
         - provider.not_ready
