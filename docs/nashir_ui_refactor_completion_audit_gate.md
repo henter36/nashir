@@ -1,4 +1,4 @@
-# nashir_ui_refactor_completion_audit_gate
+# Nashir UI Refactor Completion Audit Gate
 
 ## Gate type
 UI refactor completion audit gate — review only. No runtime code in this PR.
@@ -25,18 +25,18 @@ Completed merged PRs reviewed in this audit:
 
 | PR | Title |
 |----|-------|
-| [#191](../pull/191) | docs: review UI refactor report and execution sequence |
-| [#192](../pull/192) | refactor: split dashboard page |
-| [#193](../pull/193) | refactor: split workflow runs page |
-| [#194](../pull/194) | refactor: split campaign wizard page |
-| [#195](../pull/195) | refactor: split secrets and keys page |
-| [#196](../pull/196) | refactor: split prompt governance page |
-| [#197](../pull/197) | refactor: split model routing page |
-| [#198](../pull/198) | refactor: split settings page |
-| [#199](../pull/199) | refactor: split store setup page |
-| [#200](../pull/200) | docs: plan UI error boundary route safety |
-| [#201](../pull/201) | feat: add UI error boundary route safety |
-| [#202](../pull/202) | docs: index active UI gates |
+| #191 | docs: review UI refactor report and execution sequence |
+| #192 | refactor: split dashboard page |
+| #193 | refactor: split workflow runs page |
+| #194 | refactor: split campaign wizard page |
+| #195 | refactor: split secrets and keys page |
+| #196 | refactor: split prompt governance page |
+| #197 | refactor: split model routing page |
+| #198 | refactor: split settings page |
+| #199 | refactor: split store setup page |
+| #200 | docs: plan UI error boundary route safety |
+| #201 | feat: add UI error boundary route safety |
+| #202 | docs: index active UI gates |
 
 Reference: [docs/INDEX.md](INDEX.md)
 
