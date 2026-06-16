@@ -4685,22 +4685,34 @@ components:
           type: string
           minLength: 1
         category:
-          type: string
+          type:
+            - string
+            - "null"
         price:
-          type: number
+          type:
+            - number
+            - "null"
           minimum: 0
         sku:
-          type: string
+          type:
+            - string
+            - "null"
         stockStatus:
           $ref: "#/components/schemas/StockStatus"
         imageUrl:
-          type: string
+          type:
+            - string
+            - "null"
           format: uri
         videoUrl:
-          type: string
+          type:
+            - string
+            - "null"
           format: uri
         description:
-          type: string
+          type:
+            - string
+            - "null"
         status:
           $ref: "#/components/schemas/ProductStatus"
     UpdateProductRequest:
@@ -4711,22 +4723,40 @@ components:
           type: string
           minLength: 1
         category:
-          type: string
+          type:
+            - string
+            - "null"
+          description: Send null to clear this field.
         price:
-          type: number
+          type:
+            - number
+            - "null"
           minimum: 0
+          description: Send null to clear this field.
         sku:
-          type: string
+          type:
+            - string
+            - "null"
+          description: Send null to clear this field.
         stockStatus:
           $ref: "#/components/schemas/StockStatus"
         imageUrl:
-          type: string
+          type:
+            - string
+            - "null"
           format: uri
+          description: Send null to clear this field.
         videoUrl:
-          type: string
+          type:
+            - string
+            - "null"
           format: uri
+          description: Send null to clear this field.
         description:
-          type: string
+          type:
+            - string
+            - "null"
+          description: Send null to clear this field.
         status:
           $ref: "#/components/schemas/ProductStatus"
     ProductResponse:
