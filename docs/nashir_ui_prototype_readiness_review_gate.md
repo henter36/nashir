@@ -134,6 +134,7 @@ VERDICT: Ready for backend/API integration planning.
 | Backend planning gate expands scope into implementation | High | Backend planning gate must include explicit implementation blocks matching this sequence's governance model |
 | ErrorBoundary fallback exposed to users during real data errors | Low | Current fallback is Arabic RTL and graceful; acceptable for prototype; revisit UX in a separate gate before production |
 | 23-screen inventory grows or shrinks without a new inventory gate | Medium | Any screen addition or removal must open a new navigation inventory gate before backend contracts are designed around the screen list |
+| Premature API contract definition | Backend/API planning could incorrectly define OpenAPI before Auth/RBAC/Workspace Identity and contract alignment readiness are confirmed | Require a separate backend/API planning gate to confirm prerequisite identity, authorization, workspace, and contract-authority alignment boundaries before any OpenAPI/generated-type edits |
 
 ---
 
@@ -161,7 +162,16 @@ Backend/API integration planning does not require a mounted React environment â€
 
 > **Decision: GO to Backend/API Integration Planning Gate.**
 >
-> This recommendation authorizes planning only. It does not authorize backend/API implementation, OpenAPI edits, generated type updates, auth integration, real data wiring, or runtime UI changes. Those require a separate implementation authorization gate.
+> This recommendation authorizes planning only. It does not authorize backend/API implementation, OpenAPI edits, generated type updates, auth integration, real data wiring, or runtime UI changes. Those require separate authorization gates.
+>
+> The next planning gate must also distinguish between:
+>
+> - resolving the location/identity of the contract authority;
+> - resolving the alignment and content readiness of that contract;
+> - mitigating contract drift after an authority is accepted;
+> - avoiding premature API Contract/OpenAPI definition before prerequisite Auth/RBAC/Workspace Identity decisions are established or confirmed.
+>
+> Accordingly, Backend/API Integration Planning must start by confirming the prerequisite Auth/RBAC/Workspace Identity and contract-authority alignment boundaries before any API Contract/OpenAPI or generated-type work is authorized.
 
 ---
 
