@@ -4429,6 +4429,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorModel"
+    ServiceUnavailable:
+      description: Service unavailable or dependency unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorModel"
     InternalServerError:
       description: Internal server error.
       content:
