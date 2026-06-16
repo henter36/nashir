@@ -4688,18 +4688,15 @@ components:
           type:
             - string
             - "null"
-          description: Send null to clear this field.
         price:
           type:
             - number
             - "null"
           minimum: 0
-          description: Send null to clear this field.
         sku:
           type:
             - string
             - "null"
-          description: Send null to clear this field.
         stockStatus:
           $ref: "#/components/schemas/StockStatus"
         imageUrl:
@@ -4707,18 +4704,15 @@ components:
             - string
             - "null"
           format: uri
-          description: Send null to clear this field.
         videoUrl:
           type:
             - string
             - "null"
           format: uri
-          description: Send null to clear this field.
         description:
           type:
             - string
             - "null"
-          description: Send null to clear this field.
         status:
           $ref: "#/components/schemas/ProductStatus"
     UpdateProductRequest:

@@ -1427,24 +1427,14 @@ export interface components {
         };
         CreateProductRequest: {
             name: string;
-            /** @description Send null to clear this field. */
             category?: string | null;
-            /** @description Send null to clear this field. */
             price?: number | null;
-            /** @description Send null to clear this field. */
             sku?: string | null;
             stockStatus?: components["schemas"]["StockStatus"];
-            /**
-             * Format: uri
-             * @description Send null to clear this field.
-             */
+            /** Format: uri */
             imageUrl?: string | null;
-            /**
-             * Format: uri
-             * @description Send null to clear this field.
-             */
+            /** Format: uri */
             videoUrl?: string | null;
-            /** @description Send null to clear this field. */
             description?: string | null;
             status?: components["schemas"]["ProductStatus"];
         };
