@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:creator-studio-types": "openapi-typescript docs/nashir_v1_openapi.yaml -o src/generated/creator-studio-openapi-types/index.d.ts"
+    "generate:creator-studio-types": "openapi-typescript docs/nashir_v1_openapi.yaml -o src/generated/creator-studio-openapi-types/index.d.ts",
+    "validate:ui-screens": "node scripts/validate-ui-screen-inventory.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",
