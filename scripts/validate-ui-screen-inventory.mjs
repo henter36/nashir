@@ -94,9 +94,9 @@ if (duplicates.length === 0 && failures.filter((f) => f.includes("screens[]")).l
 // ── 2. pageContent branches ───────────────────────────────────────────────────
 console.log("\n[2] pageContent branches");
 
-// Match: activeScreen === "someId"  (used in if-branch or ternary)
+// Match: activeScreen === "someId" or activeScreen === 'someId'
 const branchMatches = new Set(
-  [...src.matchAll(/activeScreen\s*===\s*"([^"]+)"/g)].map((m) => m[1])
+  [...src.matchAll(/activeScreen\s*===\s*["']([^"']+)["']/g)].map((m) => m[1])
 );
 
 // Also accept the dashboard block which is in an if (activeScreen === "dashboard") { ... } form
@@ -116,15 +116,15 @@ if (branchFailures === 0) {
 // ── 3. Lazy import file existence ─────────────────────────────────────────────
 console.log("\n[3] Lazy import file paths");
 
-// Match: lazy(() => import("./pages/SomePage.jsx"))
-const lazyMatches = [...src.matchAll(/lazy\(\s*\(\)\s*=>\s*import\(\s*"([^"]+)"\s*\)/g)].map(
+// Match: lazy(() => import("./pages/SomePage.jsx")) or single-quoted equivalent
+const lazyMatches = [...src.matchAll(/lazy\(\s*\(\)\s*=>\s*import\(\s*["']([^"']+)["']\s*\)/g)].map(
   (m) => m[1]
 );
 
 let importFailures = 0;
 for (const importPath of lazyMatches) {
-  // Resolve relative to src/App.jsx (which lives in src/)
-  const fullPath = resolve(ROOT, "src", importPath.replace(/^\.\//, ""));
+  // Resolve relative to App.jsx itself — handles any relative prefix correctly
+  const fullPath = resolve(dirname(APP_JSX), importPath);
   if (!existsSync(fullPath)) {
     fail(`Lazy import not found on disk: "${importPath}" → ${fullPath}`);
     importFailures++;
@@ -139,7 +139,7 @@ if (importFailures === 0) {
 console.log("\n[4] PlaceholderPage fallback check");
 
 // The fallback block pattern in App.jsx: if (!pageContent) { pageContent = <PlaceholderPage ...
-const hasGuardedFallback = /if\s*\(!pageContent\)/.test(src);
+const hasGuardedFallback = /if\s*\(\s*!pageContent\s*\)/.test(src);
 if (!hasGuardedFallback) {
   fail("Could not find guarded PlaceholderPage fallback (expected: if (!pageContent) {...})");
 } else {
