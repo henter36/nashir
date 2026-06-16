@@ -108,7 +108,7 @@ All 23 have explicit `pageContent` assignments in `App.jsx`. The `PlaceholderPag
 | `costMonitor` | `CostMonitorPage` | Single-line `if` branch | None |
 | `settings` | `SettingsPage` | Single-line `if` branch | None |
 
-**Summary:** 19 of 23 screens have no mapping concern. 4 screens carry a legacy naming observation (documented in §6).
+**Summary:** 18 of 23 screens have no mapping concern. 5 screens carry a legacy naming observation (documented in §6).
 
 ---
 
@@ -132,7 +132,7 @@ Screen ID `secrets` maps to `SecretsAndKeysPage`. The screen ID is abbreviated; 
 Screen ID `content` (label: "المحتوى") maps to `ContentStudioPage`. The component name implies a studio/editor context that is not reflected in the short screen ID. Navigation functions correctly.
 
 ### Additional observation: shared icons
-Three pairs of screens share the same icon:
+Four groups of screens share the same icon:
 - `storeSetup` and `productCatalog` both use `Store`
 - `campaigns` and `campaignsList` both use `Megaphone`
 - `content` and `contentReview` both use `FileCheck2`
@@ -160,7 +160,7 @@ This inventory should serve as the authoritative source list for the future smok
 | Risk | Inventory finding | Future action |
 |------|------------------|---------------|
 | Screen ID exists without `pageContent` assignment | Not found — all 23 IDs have explicit branches; `PlaceholderPage` is a safety net only | Smoke check should assert no named ID falls through to `PlaceholderPage` |
-| Page component exists but carries legacy/unified naming | 4 screens observed (`campaignsList`, `analytics`, `contentReview`, `secrets`; `content` also noted) | Accept as-is or open UI Navigation Cleanup Planning Gate before smoke implementation |
+| Page component exists but carries legacy/unified naming | 5 screens observed (`campaignsList`, `analytics`, `contentReview`, `secrets`, and `content`) | Accept as-is or open UI Navigation Cleanup Planning Gate before smoke implementation |
 | Placeholder screens counted as active/healthy | None currently — no screen intentionally targets `PlaceholderPage` | Smoke gate should flag any `PlaceholderPage` render as a failure |
 | Future smoke checks using wrong screen count | Inventory confirmed at 23; prior gates have stated 23 | Smoke gate should import or reference this document as source of truth |
 | Backend/API scope creep in smoke implementation | Not present in current mapping — all pages are prototype-only | Smoke implementation gate must include prototype-only boundary check |
@@ -186,7 +186,7 @@ Use if unexpected runtime, API, dependency, or routing drift is found since PR #
 
 ## 10. Recommended decision
 
-All 23 screen IDs are mapped to explicit page components. No screen falls through to the `PlaceholderPage` fallback by design. Navigation is correct for all entries. The 4 legacy/unified naming observations are cosmetic — they do not affect navigation and are not blockers.
+All 23 screen IDs are mapped to explicit page components. No screen falls through to the `PlaceholderPage` fallback by design. Navigation is correct for all entries. The 5 legacy/unified naming observations are cosmetic — they do not affect navigation and are not blockers.
 
 > **Decision: GO to UI Smoke Verification Implementation Authorization Gate.**
 >
