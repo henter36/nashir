@@ -50,8 +50,7 @@ The following risks motivate smoke verification before any further integration p
 - **Lazy imports may fail silently.** React's `lazy()` defers import errors until the user navigates to that screen; a `Suspense` fallback and ErrorBoundary mask the failure from casual observation.
 - **`App.jsx` screen registry may drift.** New screen IDs can be added to `screens` without a corresponding `if (activeScreen === ...)` branch — or vice versa — and no check currently catches the mismatch.
 - **ErrorBoundary catches render crashes but does not prove pages are healthy.** A page that always throws will always show the fallback, with no automated signal that something is wrong.
-- **No automated confidence exists for navigating all 23 screen IDs.** Without smoke coverage, prototype readiness cannot be assessed reliably before backend integration planning begins.
-- **Prototype readiness cannot be assessed reliably** until a basic smoke plan confirms the full screen inventory renders and navigation works.
+- **No automated confidence exists for navigating all 23 screen IDs.** Without smoke coverage, prototype readiness cannot be assessed reliably to confirm that the full screen inventory renders and navigation works before backend integration planning begins.
 
 ---
 
