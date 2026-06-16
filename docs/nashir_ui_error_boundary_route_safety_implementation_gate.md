@@ -38,7 +38,7 @@ Completed UI split sequence (Steps 3–9) confirmed merged before this branch wa
 Class component. Two lifecycle methods:
 
 - `static getDerivedStateFromError()` — sets `hasError: true` when a descendant render throws.
-- `componentDidCatch(error, info)` — logs to `console.error` in development only (no remote reporting).
+- `componentDidCatch(error, info)` — logs to `console.error` only when `import.meta.env.PROD !== true` (Vite non-production flag); silent in production builds. No remote reporting.
 
 Fallback UI:
 - Arabic RTL (`dir="rtl"`), matches existing prototype card style.

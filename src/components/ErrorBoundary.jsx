@@ -12,7 +12,7 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    if (typeof console !== "undefined") {
+    if (import.meta.env?.PROD !== true && typeof console !== "undefined") {
       console.error("[ErrorBoundary]", error, info?.componentStack);
     }
   }
@@ -68,7 +68,7 @@ export default class ErrorBoundary extends Component {
                 cursor: "pointer",
               }}
             >
-              العودة للوحة التحكم
+              {this.props.resetLabel || "العودة للوحة التحكم"}
             </button>
           )}
         </div>

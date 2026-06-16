@@ -218,7 +218,11 @@ export default function App() {
       setActiveScreen={navigateToScreen}
     >
       <Suspense fallback={<PageLoadingFallback />}>
-        <ErrorBoundary key={activeScreen} onReset={() => navigateToScreen("dashboard")}>
+        <ErrorBoundary
+          key={activeScreen}
+          onReset={() => navigateToScreen("dashboard")}
+          resetLabel="العودة للوحة التحكم"
+        >
           {pageContent}
         </ErrorBoundary>
       </Suspense>
