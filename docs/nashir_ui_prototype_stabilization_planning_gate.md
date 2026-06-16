@@ -27,7 +27,7 @@ This gate identifies stabilization risks and proposes candidate future gates. It
 | [docs/nashir_ui_refactor_completion_acceptance_gate.md](nashir_ui_refactor_completion_acceptance_gate.md) | Acceptance gate — Step 14 |
 | [docs/nashir_ui_refactor_completion_audit_gate.md](nashir_ui_refactor_completion_audit_gate.md) | Audit gate — Step 13 |
 | [docs/INDEX.md](INDEX.md) | Active gates registry |
-| Current UI prototype page set | 22 screen IDs registered in `App.jsx` at acceptance time |
+| Current UI prototype page set | 23 screen IDs registered in `App.jsx` at acceptance time |
 
 ---
 
@@ -64,7 +64,7 @@ The following are candidate future gates only. None are authorized by this plann
 
 Plan minimal smoke checks for:
 - Page component rendering (confirm each lazy import resolves without error)
-- Screen navigation (confirm `navigateToScreen` transitions work for all 22 screen IDs)
+- Screen navigation (confirm `navigateToScreen` transitions work for all 23 screen IDs)
 - ErrorBoundary activation (confirm fallback UI renders on forced throw)
 
 No implementation in this PR. A separate execution gate is required before any smoke infrastructure is added.
@@ -81,7 +81,7 @@ No dependency addition or TypeScript introduction in this PR or any gate derived
 ### C. UI Prototype Readiness Review Gate
 
 Review whether the current prototype is ready for backend/API integration planning. Criteria to evaluate:
-- All 22 screens render without white-screen errors
+- All 23 screens render without white-screen errors
 - Navigation between all screens functions correctly
 - No unauthorized runtime changes have been introduced since acceptance
 - Gate documentation is up to date and linked from `docs/INDEX.md`
@@ -89,7 +89,7 @@ Review whether the current prototype is ready for backend/API integration planni
 ### D. UI Navigation Inventory Gate
 
 Confirm the current active page inventory:
-- All 22 screen IDs registered in `App.jsx`
+- All 23 screen IDs registered in `App.jsx`
 - Labels, icons, and enabled flags for each screen
 - Identify any screens that are placeholder-only vs. fully implemented
 - Identify any deprecated or unused screen IDs
