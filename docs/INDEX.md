@@ -8,17 +8,17 @@
 
 | PR | Commit title | Status |
 |----|-------------|--------|
-| #191 | docs: review UI refactor report and execution sequence | Merged |
-| #192 | refactor: split dashboard page | Merged |
-| #193 | refactor: split workflow runs page | Merged |
-| #194 | refactor: split campaign wizard page | Merged |
-| #195 | refactor: split secrets and keys page | Merged |
-| #196 | refactor: split prompt governance page | Merged |
-| #197 | refactor: split model routing page | Merged |
-| #198 | refactor: split settings page | Merged |
-| #199 | refactor: split store setup page | Merged |
-| #200 | docs: plan UI error boundary route safety | Merged |
-| #201 | feat: add UI error boundary route safety | Merged |
+| [#191](../pull/191) | docs: review UI refactor report and execution sequence | Merged |
+| [#192](../pull/192) | refactor: split dashboard page | Merged |
+| [#193](../pull/193) | refactor: split workflow runs page | Merged |
+| [#194](../pull/194) | refactor: split campaign wizard page | Merged |
+| [#195](../pull/195) | refactor: split secrets and keys page | Merged |
+| [#196](../pull/196) | refactor: split prompt governance page | Merged |
+| [#197](../pull/197) | refactor: split model routing page | Merged |
+| [#198](../pull/198) | refactor: split settings page | Merged |
+| [#199](../pull/199) | refactor: split store setup page | Merged |
+| [#200](../pull/200) | docs: plan UI error boundary route safety | Merged |
+| [#201](../pull/201) | feat: add UI error boundary route safety | Merged |
 
 ---
 
@@ -28,29 +28,29 @@
 
 | Document | Page / scope |
 |----------|-------------|
-| [nashir_ui_dashboard_page_split_execution_gate.md](nashir_ui_dashboard_page_split_execution_gate.md) | DashboardPage |
-| [nashir_ui_workflow_runs_page_split_execution_gate.md](nashir_ui_workflow_runs_page_split_execution_gate.md) | WorkflowRunsPage |
-| [nashir_ui_campaign_wizard_page_split_execution_gate.md](nashir_ui_campaign_wizard_page_split_execution_gate.md) | CampaignWizardPage |
-| [nashir_ui_secrets_and_keys_page_split_execution_gate.md](nashir_ui_secrets_and_keys_page_split_execution_gate.md) | SecretsAndKeysPage |
-| [nashir_ui_prompt_governance_page_split_execution_gate.md](nashir_ui_prompt_governance_page_split_execution_gate.md) | PromptGovernancePage |
-| [nashir_ui_model_routing_page_split_execution_gate.md](nashir_ui_model_routing_page_split_execution_gate.md) | ModelRoutingPage |
-| [nashir_ui_settings_page_split_execution_gate.md](nashir_ui_settings_page_split_execution_gate.md) | SettingsPage |
-| [nashir_ui_store_setup_page_split_execution_gate.md](nashir_ui_store_setup_page_split_execution_gate.md) | StoreSetupPage |
+| [Dashboard Page Split Execution Gate](nashir_ui_dashboard_page_split_execution_gate.md) | DashboardPage |
+| [Workflow Runs Page Split Execution Gate](nashir_ui_workflow_runs_page_split_execution_gate.md) | WorkflowRunsPage |
+| [Campaign Wizard Page Split Execution Gate](nashir_ui_campaign_wizard_page_split_execution_gate.md) | CampaignWizardPage |
+| [Secrets and Keys Page Split Execution Gate](nashir_ui_secrets_and_keys_page_split_execution_gate.md) | SecretsAndKeysPage |
+| [Prompt Governance Page Split Execution Gate](nashir_ui_prompt_governance_page_split_execution_gate.md) | PromptGovernancePage |
+| [Model Routing Page Split Execution Gate](nashir_ui_model_routing_page_split_execution_gate.md) | ModelRoutingPage |
+| [Settings Page Split Execution Gate](nashir_ui_settings_page_split_execution_gate.md) | SettingsPage |
+| [Store Setup Page Split Execution Gate](nashir_ui_store_setup_page_split_execution_gate.md) | StoreSetupPage |
 
 ### UI safety gates
 
 | Document | Scope |
 |----------|-------|
-| [nashir_ui_error_boundary_route_safety_planning_gate.md](nashir_ui_error_boundary_route_safety_planning_gate.md) | ErrorBoundary — planning |
-| [nashir_ui_error_boundary_route_safety_implementation_gate.md](nashir_ui_error_boundary_route_safety_implementation_gate.md) | ErrorBoundary — implementation |
+| [Error Boundary Route Safety Planning Gate](nashir_ui_error_boundary_route_safety_planning_gate.md) | ErrorBoundary — planning |
+| [Error Boundary Route Safety Implementation Gate](nashir_ui_error_boundary_route_safety_implementation_gate.md) | ErrorBoundary — implementation |
 
 ### UI overview and reference gates
 
 | Document | Scope |
 |----------|-------|
-| [nashir_ui_refactor_report_execution_sequence_review_gate.md](nashir_ui_refactor_report_execution_sequence_review_gate.md) | Refactor execution sequence review |
-| [nashir_ui_readiness_consumption_mapping_prototype_only.md](nashir_ui_readiness_consumption_mapping_prototype_only.md) | Readiness consumption mapping |
-| [nashir_ui_source_of_truth_cleanup_acceptance_gate.md](nashir_ui_source_of_truth_cleanup_acceptance_gate.md) | Source-of-truth cleanup acceptance |
+| [Refactor Report Execution Sequence Review Gate](nashir_ui_refactor_report_execution_sequence_review_gate.md) | Refactor execution sequence review |
+| [Readiness Consumption Mapping](nashir_ui_readiness_consumption_mapping_prototype_only.md) | Readiness consumption mapping |
+| [Source-of-Truth Cleanup Acceptance Gate](nashir_ui_source_of_truth_cleanup_acceptance_gate.md) | Source-of-truth cleanup acceptance |
 
 ---
 
