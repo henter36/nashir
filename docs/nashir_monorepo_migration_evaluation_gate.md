@@ -50,6 +50,15 @@ Current verified constraints:
 - Current frontend CI validates lint, UI screen inventory, and build for the
   frontend repository.
 
+Constraint provenance:
+
+- React/Vite and mock-only UI status are established by `README.md` and
+  `docs/nashir_openapi_source_of_truth_gate.md`.
+- OpenAPI authority and generated type downstream status are established by
+  `docs/nashir_openapi_source_of_truth_gate.md`.
+- Backend runtime setup-only and `/health` boundary are established by
+  `docs/nashir_backend_runtime_repository_setup_closure_gate.md`.
+
 ## 3. Why Monorepo Is Being Considered
 
 Monorepo consolidation is being considered because the current cross-repository
