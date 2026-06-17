@@ -91,6 +91,34 @@ ownership boundaries.
 
 ## 6. Recommended Target Structure
 
+Current layout is still repository-root frontend-oriented. The proposed
+monorepo layout does not exist yet and must not be assumed by current scripts or
+CI.
+
+Current:
+
+```text
+nashir/
+  src/
+  docs/
+  package.json
+
+nashir-backend/
+  src/
+  tests/
+  package.json
+```
+
+Proposed:
+
+```text
+nashir/
+  apps/web/
+  apps/api/
+  packages/contracts/
+  docs/
+```
+
 Recommended target structure:
 
 ```text
@@ -138,6 +166,19 @@ Risks:
 
 Import `henter36/nashir-backend` into `henter36/nashir` under `apps/api` using a
 history-preserving method where practical.
+
+Example starting point only:
+
+```bash
+git remote add nashir-backend ../nashir-backend
+git fetch nashir-backend
+git subtree add --prefix=apps/api nashir-backend main
+```
+
+This example is not authorized for execution by this PR. A future migration
+authorization PR must validate the exact command sequence through a dry-run
+review before execution. `git-filter-repo`, `git subtree`, or another
+history-preserving approach may be selected only after that separate review.
 
 Benefits:
 
@@ -207,7 +248,7 @@ Future monorepo CI should be path-aware:
 | `apps/api/**` | Backend lint, typecheck, tests, and API smoke checks authorized for the backend layer |
 | `packages/contracts/**` | Contract lint/parse, OpenAPI inventory, generated artifact drift checks only when authorized |
 | `docs/**` | Documentation checks and governance text validation where available |
-| Shared config files | Explicitly run affected workspace checks |
+| Root configuration files (for example, `package.json`, `tsconfig.json`, `vite.config.*`, `.github/workflows/**`) | Explicitly run affected workspace checks |
 
 Path-aware CI must not weaken required verification. It should avoid running
 irrelevant jobs while still failing closed when shared contracts or shared
@@ -250,6 +291,16 @@ Current generation script reads:
 docs/nashir_v1_openapi.yaml
 ```
 
+If the frontend `package.json` later moves under `apps/web`, the relative path
+from `apps/web` back to the repository-root OpenAPI file would become:
+
+```text
+../../docs/nashir_v1_openapi.yaml
+```
+
+Package scripts such as `generate:creator-studio-types` must be reviewed in the
+relocation PR. This gate does not modify package scripts.
+
 A monorepo migration may later require moving generated types to an app-local
 or package-local location, but that must be handled by a separate
 generated-types gate. The migration PR itself must not regenerate or relocate
@@ -265,8 +316,9 @@ Required future boundaries:
 - Real secrets must not be committed.
 - Backend secret names, vault references, and runtime env handling remain
   backend-governed and require explicit authorization.
-- Frontend must not gain access to backend secrets because the code is in the
-  same repository.
+- Frontend must not gain access to backend secrets just because the code is in
+  the same repository; runtime environments and secret access must remain
+  strictly isolated.
 - CI secrets must be scoped by job/environment and least privilege.
 
 ## 14. Rollback Strategy
