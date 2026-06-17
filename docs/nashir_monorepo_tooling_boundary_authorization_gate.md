@@ -50,9 +50,9 @@ The dry-run findings established:
 - `npm run build -- --outDir /tmp/nashir-build` passed.
 - `npm run validate:ui-screens` passed.
 - `git diff --check` passed.
-- `npm run lint` failed after import because root ESLint flat-config behavior
-  discovered backend lint configuration and required backend tooling not
-  installed in the frontend/root package.
+- `npm run lint` failed after import because the root ESLint execution
+  traversed `apps/api/**`, bringing backend files into a frontend/root lint
+  context that does not include backend parser/plugin/tooling dependencies.
 
 ## 3. Problem Statement
 
@@ -82,13 +82,17 @@ lint.
 
 Root cause:
 
-ESLint flat-config discovery crosses the intended frontend/backend tooling
-boundary when root `eslint .` traverses `apps/api/**` after import.
-
-The backend lint configuration expects backend package dependencies such as
-`typescript-eslint`. Those dependencies are intentionally not installed in the
-current Nashir root package, which currently owns frontend UI tooling and
-governance validation.
+- Root `eslint .` traverses `apps/api/**` after backend import.
+- This brings backend files into the root/frontend ESLint execution context.
+- The root/frontend lint context is not intended to own backend
+  parser/plugin/tooling needs, such as `typescript-eslint`.
+- Depending on ESLint/workspace/editor invocation, nested backend lint
+  configuration may also be loaded from `apps/api`, but the actionable
+  boundary remains the same: root/frontend lint must not traverse or validate
+  `apps/api/**`.
+- Option B is still valid because it prevents root/frontend lint from
+  traversing `apps/api/**`, regardless of which exact mechanism would
+  otherwise load backend lint/tooling dependencies.
 
 Installing backend lint dependencies at the root would mask the boundary issue
 by mixing frontend/root and backend tooling responsibilities.
