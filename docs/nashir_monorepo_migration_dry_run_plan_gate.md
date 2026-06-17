@@ -19,7 +19,7 @@ checklist for a future dry-run review of importing `henter36/nashir-backend` int
 `apps/api`, and does not change any code, CI, OpenAPI, generated types, package
 scripts, or runtime behavior.
 
-The dry-run is Phase 1 from the phased migration plan established in the source
+The dry-run is Phase 1 of the phased migration plan established in the source
 evaluation gate. This gate defines what a reviewer must see, verify, and confirm
 before any implementation proceeds.
 
@@ -44,7 +44,8 @@ The dry-run objective is to determine, without committing any migration to
 
 1. A correct, conflict-free `apps/api` tree under `henter36/nashir`.
 2. Preserved backend commit history attached to `apps/api` paths.
-3. No changes to `apps/web` (current frontend root), `docs`, `.github/workflows`,
+3. No changes to `src/` (current frontend root; `apps/web` is only a future
+   relocation target and does not exist yet), `docs`, `.github/workflows`,
    `docs/nashir_v1_openapi.yaml`, `src/generated`, or `package.json` and scripts.
 4. A diff stat that is reviewable as structure-only and does not include runtime,
    contract, or tooling changes.
@@ -82,13 +83,34 @@ git subtree add --prefix=apps/api nashir-backend main
 # Step 5 — Inspect the result without merging or pushing.
 git log --oneline -20
 git diff --stat main...HEAD
-git diff --name-only main...HEAD | grep -v '^apps/api' || echo "No unexpected files changed"
+unexpected_files="$(git diff --name-only main...HEAD | grep -v '^apps/api/' || true)"
+if [ -n "$unexpected_files" ]; then
+  echo "Unexpected files changed outside apps/api:"
+  echo "$unexpected_files"
+  exit 1
+fi
+echo "No unexpected files changed outside apps/api."
 git log --oneline -- apps/api | head -20
 
 # Step 6 — Check that no forbidden paths changed.
-git diff --name-only main...HEAD | grep -E \
-  '^src/|^\.github/|^package\.json|^docs/nashir_v1_openapi\.yaml|^vite\.config\.' \
-  && echo "STOP: unexpected files changed" || echo "OK: no forbidden file changes"
+forbidden_files="$(git diff --name-only main...HEAD | grep -E \
+  '^src/|^\.github/|^package\.json$|^package-lock\.json$|^docs/nashir_v1_openapi\.yaml$|^vite\.config\.' || true)"
+if [ -n "$forbidden_files" ]; then
+  echo "STOP: forbidden files changed outside the allowed apps/api scope:"
+  echo "$forbidden_files"
+  exit 1
+fi
+echo "OK: no forbidden file changes"
+
+# Step 6b — Check for unexpected .env or secret files inside apps/api.
+env_files="$(git diff --name-only main...HEAD -- 'apps/api/**.env' 'apps/api/**.env.*' \
+  | grep -v '^apps/api/\.env\.example$' || true)"
+if [ -n "$env_files" ]; then
+  echo "STOP: unexpected .env or secret files found in apps/api:"
+  echo "$env_files"
+  exit 1
+fi
+echo "OK: no unexpected .env or secret files in apps/api (apps/api/.env.example, if present and intentional, is allowed)"
 
 # Step 7 — Clean up the throwaway branch after review.
 git checkout main
@@ -173,20 +195,22 @@ A reviewer executing the dry-run must verify each item before the result is
 accepted as a valid dry-run:
 
 - [ ] `git diff --name-only main...HEAD` contains only `apps/api/**` paths.
-- [ ] No files in `src/`, `docs/`, `.github/`, `package.json`, or
-  `vite.config.*` appear in the diff.
+- [ ] No files in `src/`, `docs/`, `.github/`, `package.json`,
+  `package-lock.json`, or `vite.config.*` appear in the diff.
 - [ ] `docs/nashir_v1_openapi.yaml` is unchanged.
 - [ ] `src/generated/creator-studio-openapi-types/index.d.ts` is unchanged.
 - [ ] `.github/workflows/frontend-ci.yml` is unchanged.
-- [ ] `package.json` at the repository root is unchanged (no new scripts or
-  dependencies).
+- [ ] `package.json` and `package-lock.json` at the repository root are
+  unchanged (no new scripts or dependencies).
+- [ ] No `.env` or secret-carrying file appears in `apps/api`, other than an
+  `apps/api/.env.example` if one already exists and is intentional.
 - [ ] `git log --oneline -- apps/api | head -20` shows real backend commits, not
   just the merge commit.
 - [ ] `npm run lint` passes after the import (frontend eslint must not be broken
   by the backend file presence).
 - [ ] `npm run validate:ui-screens` passes (screen inventory must be unchanged).
-- [ ] `npm run build -- --configLoader runner --outDir /tmp/nashir-build` passes
-  (frontend build must not be broken).
+- [ ] `npm run build -- --outDir /tmp/nashir-build` passes (frontend build must
+  not be broken).
 - [ ] `git diff --check` reports no whitespace errors in tracked files.
 - [ ] No new runtime dependencies appear in the root `package.json`.
 - [ ] The throwaway dry-run branch is not pushed to remote.
@@ -231,7 +255,7 @@ Future migration impact:
 
 After the dry-run and implementation, `nashir-backend` must still reference
 the OpenAPI authority inside `henter36/nashir` without copying or forking it.
-In a monorepo, the backend can reference it via relative path such as
+In a monorepo, the backend can reference it via a relative path such as
 `../../docs/nashir_v1_openapi.yaml` from `apps/api`, but this is a backend
 configuration decision that requires a separate gate.
 
@@ -321,8 +345,8 @@ the following are true:
 - `src/generated/**` changes or is touched.
 - `.github/workflows/frontend-ci.yml` changes or is touched.
 - Any file under `src/` changes or is touched.
-- `package.json` at the repository root changes (scripts, dependencies, or
-  metadata).
+- `package.json` or `package-lock.json` at the repository root changes
+  (scripts, dependencies, or metadata).
 - The frontend build (`npm run build`) fails after the import.
 - `npm run lint` fails after the import.
 - `npm run validate:ui-screens` fails after the import.
