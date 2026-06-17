@@ -120,7 +120,7 @@ later gate separately authorizes them:
 - Any production or pilot readiness claim.
 - Pushing any branch to remote without explicit instruction.
 
-## 7. Required Validation
+## 7. Required Verification
 
 The authorized implementation PR must run and report:
 
