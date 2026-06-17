@@ -175,10 +175,11 @@ git fetch nashir-backend
 git subtree add --prefix=apps/api nashir-backend main
 ```
 
-This example is not authorized for execution by this PR. A future migration
-authorization PR must validate the exact command sequence through a dry-run
-review before execution. `git-filter-repo`, `git subtree`, or another
-history-preserving approach may be selected only after that separate review.
+This example is not authorized for execution by this PR and must be validated
+in a separate migration authorization PR. That later PR must validate the exact
+command sequence through a dry-run review before execution. `git-filter-repo`,
+`git subtree`, or another history-preserving approach may be selected only
+after that separate review.
 
 Benefits:
 
