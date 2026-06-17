@@ -54,7 +54,7 @@ implementation could proceed. This gate records that revalidation.
 The revalidation ran inside a disposable temporary clone, isolated from the
 original `nashir` and `nashir-backend` working trees:
 
-- Temp clone path: `/private/tmp/nashir-monorepo-eslint-revalidation-20260617154814`
+- Temp clone path: `/tmp/nashir-monorepo-eslint-revalidation-20260617154814`
 - Dry-run branch: `dry-run/monorepo-eslint-revalidation`
 - Nashir `main` HEAD at clone time: `0a03f05197774dc4cd3dccf7fffe55934806f4f7`
   (includes the merged tooling-boundary implementation that ignores
@@ -176,7 +176,7 @@ After this PR merges, the disposable temporary clone used for revalidation
 should be deleted:
 
 ```bash
-rm -rf /private/tmp/nashir-monorepo-eslint-revalidation-20260617154814
+rm -rf /tmp/nashir-monorepo-eslint-revalidation-20260617154814
 ```
 
 This cleanup must happen only after the findings in this document are
