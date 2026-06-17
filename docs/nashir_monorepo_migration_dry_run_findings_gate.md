@@ -137,7 +137,11 @@ frontend/root level.
 The current root script is:
 
 ```json
-"lint": "eslint ."
+{
+  "scripts": {
+    "lint": "eslint ."
+  }
+}
 ```
 
 That command runs from the frontend/root package context and, after backend
@@ -209,7 +213,7 @@ planning.
 
 ### Option D: Add Separate Backend Lint Job After Import
 
-Run backend lint separately from `apps/api` or through a path-aware API CI job
+Run backend lint separately within `apps/api` or through a path-aware API CI job
 after migration.
 
 Result: **Recommended as part of the next tooling-boundary gate.**
@@ -222,7 +226,7 @@ checks to be scoped to `apps/api/**`.
 Recommended path: **B + D**.
 
 Root/frontend lint must ignore `apps/api/**`, and backend lint must run
-separately from `apps/api` or a path-aware API CI job after migration.
+separately within `apps/api` or a path-aware API CI job after migration.
 
 This keeps the frontend/root package from absorbing backend lint dependencies
 while preserving a clear place for backend validation after import.
