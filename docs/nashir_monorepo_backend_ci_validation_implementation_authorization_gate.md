@@ -34,7 +34,7 @@ The implementation may include:
 * setup pnpm
 * install dependencies in `apps/api`
 * run backend validation from `apps/api`
-* set `NASHIR_AUTHORITY_REPO` to the monorepo root path
+* pass `--authority-repo <monorepo-root>` to backend authority validation commands
 * keep frontend/root validation isolated from backend dependencies
 
 ## 4. Authorized Backend Commands
@@ -46,15 +46,15 @@ The implementation PR may run these commands from `apps/api`:
 * `pnpm run format:check`
 * `pnpm typecheck`
 * `pnpm test`
-* `NASHIR_AUTHORITY_REPO=<monorepo-root> pnpm run validate:contract-authority`
-* `NASHIR_AUTHORITY_REPO=<monorepo-root> pnpm run validate:contracts`
-* `pnpm run validate:runtime-conformance`
+* `pnpm run validate:contract-authority -- --authority-repo <monorepo-root>`
+* `pnpm run validate:contracts -- --authority-repo <monorepo-root>`
+* `pnpm run validate:runtime-conformance -- --authority-repo <monorepo-root>`
 
 ## 5. Authority Repo Decision
 
 Use Option A from the planning gate:
 
-`NASHIR_AUTHORITY_REPO` should point to the checked-out monorepo root.
+The backend validation commands should pass `--authority-repo <monorepo-root>` pointing to the checked-out monorepo root.
 
 Rationale:
 
@@ -62,7 +62,7 @@ Rationale:
 * A separate authority checkout is unnecessary for the first monorepo backend CI slice.
 * This reduces path drift and avoids duplicate checkout complexity.
 
-Implementation must verify that backend validation scripts accept the monorepo root path correctly.
+Implementation must verify that backend validation scripts accept `--authority-repo <monorepo-root>` correctly.
 
 ## 6. PostgreSQL / DB Test Boundary
 
@@ -117,7 +117,7 @@ The implementation PR must stop if:
 * frontend CI behavior changes unexpectedly
 * backend dependencies are added to the root package
 * root lint starts traversing backend files again
-* `NASHIR_AUTHORITY_REPO` path does not work from CI
+* `--authority-repo <monorepo-root>` does not work from CI
 * backend validation requires PostgreSQL but no service is explicitly configured
 * OpenAPI or generated files are touched
 * package or lockfile changes appear without separate authorization
