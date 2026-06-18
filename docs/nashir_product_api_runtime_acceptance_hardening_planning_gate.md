@@ -182,39 +182,45 @@ pnpm test
 pnpm run validate:contract-authority -- --authority-repo ../../nashir-authority --authority-ref e22c84fa0e2b6c01d4ee98383ef9fad2d0fa3337
 pnpm run validate:contracts -- --authority-repo ../..
 pnpm run validate:runtime-conformance -- --authority-repo ../..
-Repository-level checks:
+```
 
+# Repository-level checks:
+
+```bash
 git status --short
 git diff --stat
-grep -R -nE "/nashir-products|nashir-products" apps/api src docs || true
+grep -R -nE "/nashir-products|nashir-products" apps/api docs || true
 sed '/## .*Verification/,$d' docs/nashir_product_api_runtime_acceptance_hardening_planning_gate.md | grep -E -n "Decision:|Product API Runtime|Implementation authorization|NO-GO|Required Review Areas|Required Next Gate|Stop Conditions"
 git diff --check
-9. Explicit NO-GO
+```
+
+## 9. Explicit NO-GO
 
 This gate does not authorize:
 
-implementation work
-backend runtime edits
-new API routes
-route alias creation
-OpenAPI edits
-generated client updates
-SQL schema changes
-migrations
-migration runner changes
-PostgreSQL CI service
-database service changes
-frontend changes
-Product Catalog UI integration changes
-deployment changes
-production readiness
-cache/performance optimization
-changing Auth/RBAC/workspace identity decisions
-weakening validation scripts
-bypassing contract authority validation
-changing Product API response shapes
-changing canonical route naming
-10. Required Next Gate
+- implementation work
+- backend runtime edits
+- new API routes
+- route alias creation
+- OpenAPI edits
+- generated client updates
+- SQL schema changes
+- migrations
+- migration runner changes
+- PostgreSQL CI service
+- database service changes
+- frontend changes
+- Product Catalog UI integration changes
+- deployment changes
+- production readiness
+- cache/performance optimization
+- changing Auth/RBAC/workspace identity decisions
+- weakening validation scripts
+- bypassing contract authority validation
+- changing Product API response shapes
+- changing canonical route naming
+
+## 10. Required Next Gate
 
 Open:
 
@@ -222,45 +228,48 @@ Product API Runtime Acceptance Hardening Review Gate
 
 That review gate must produce one of these decisions:
 
-Option A — ACCEPT / NO-OP
+### Option A — ACCEPT / NO-OP
 
 Use if the existing Product API runtime is aligned and no changes are required.
 
-Option B — TEST-ONLY HARDENING AUTHORIZATION
+### Option B — TEST-ONLY HARDENING AUTHORIZATION
 
 Use if runtime is aligned but test coverage needs strengthening.
 
-Option C — RUNTIME FIX AUTHORIZATION
+### Option C — RUNTIME FIX AUTHORIZATION
 
 Use if runtime behavior diverges from accepted contract or security boundaries.
 
-Option D — CONTRACT AUTHORITY CORRECTION GATE
+### Option D — CONTRACT AUTHORITY CORRECTION GATE
 
 Use if the runtime is correct but OpenAPI/authority text is wrong or stale.
 
-Option E — DATABASE CI PLANNING GATE
+### Option E — DATABASE CI PLANNING GATE
 
 Use if confidence is blocked by skipped database/integration tests.
 
-11. Stop Conditions
+## 11. Stop Conditions
 
 Stop and ask for a direct decision if review discovers any need for:
 
-OpenAPI changes
-generated type changes
-database schema or migration changes
-new route behavior
-frontend integration changes
-permission model changes
-Auth/RBAC/workspace identity changes
-production deployment assumptions
-PostgreSQL CI service introduction
-changing route naming
-introducing /nashir-products
-broad refactoring outside Product API runtime acceptance
-12. Verification
+- OpenAPI changes
+- generated type changes
+- database schema or migration changes
+- new route behavior
+- frontend integration changes
+- permission model changes
+- Auth/RBAC/workspace identity changes
+- production deployment assumptions
+- PostgreSQL CI service introduction
+- changing route naming
+- introducing `/nashir-products`
+- broad refactoring outside Product API runtime acceptance
+
+## 12. Verification
+
+```bash
 git status --short
 git diff --stat
 sed '/## .*Verification/,$d' docs/nashir_product_api_runtime_acceptance_hardening_planning_gate.md | grep -E -n "Decision:|Product API Runtime|Implementation authorization|NO-GO|Required Review Areas|Required Next Gate|Stop Conditions"
 git diff --check
-
+```
