@@ -8,7 +8,7 @@ Backend Database CI implementation baseline = ACCEPTED.
 
 Product API runtime acceptance remains NO-GO.
 
-This review does not authorize backend runtime edits, new API routes, OpenAPI edits, generated client updates, package script changes, test edits, SQL/schema/migration changes, frontend changes, Product Catalog UI integration, deployment changes, or production readiness work.
+This review does not authorize implementation work. The canonical NO-GO list is maintained in Section 11 and referenced by the rest of this document to avoid authorization drift.
 
 ## 2. Source Authority
 
@@ -66,6 +66,16 @@ Backend CI currently runs backend jobs using `node-version: 20`.
 
 This is a CI/runtime drift risk.
 
+For the next implementation PR, CI should pin the minimum supported major runtime:
+
+```text
+node-version: 22
+```
+
+This means CI should align to Node 22.x as the currently approved minimum supported major. It should not automatically track every runtime allowed by the open-ended `>=22` engine range.
+
+Node 23 or any later major runtime must not be adopted implicitly. Moving CI beyond Node 22 requires a separate compatibility review or explicit authorization gate.
+
 Even if the current CI passes, the project should not accept Product API runtime behavior while tests run under a Node version below the backend package engine.
 
 ## 7. Security and Operational Note
@@ -82,15 +92,9 @@ That is no longer accurate after the backend app, Backend CI, migration runner, 
 
 This PR may update README documentation only to reflect the repository’s current reality.
 
-The README update must not claim:
+The README update must follow the canonical NO-GO list in Section 11.
 
-- production readiness
-- full Product API acceptance
-- complete backend feature coverage
-- real AI/provider execution
-- deployment readiness
-- complete Auth/RBAC production rollout
-- Product Catalog UI production integration
+It may correct repository reality, but it must not imply production readiness, full Product API runtime acceptance, deployment readiness, real AI/provider execution, complete Auth/RBAC production rollout, or Product Catalog UI production integration.
 
 ## 9. Required Next Step
 
@@ -101,7 +105,7 @@ Backend CI Node Runtime Alignment Fix
 Authorized scope for the next implementation PR:
 
 - edit `.github/workflows/backend-ci.yml` only
-- change backend setup-node `node-version` from `20` to `22` wherever backend jobs run
+- change backend setup-node `node-version` from `20` to `22` wherever backend jobs run, intentionally pinning the minimum supported major Node 22.x
 - preserve existing backend CI validation steps
 - preserve the database-tests job
 - do not change package scripts
@@ -124,7 +128,9 @@ That next gate must decide how to run or classify DB-backed tests for:
 - migration tests
 - DB-backed Product API error/conflict paths
 
-## 11. Explicit NO-GO
+## 11. Canonical Explicit NO-GO
+
+This is the canonical NO-GO list for this review gate. Other sections should reference this list instead of duplicating it.
 
 This review does not authorize:
 
@@ -151,5 +157,6 @@ Required commands:
 
 - `git status --short`
 - `git diff --stat`
-- `grep -nE "Decision:|Node Runtime Alignment|Product API runtime acceptance remains NO-GO|test:db|POSTGRES_HOST_AUTH_METHOD|README Reality Correction|Explicit NO-GO|Required Next Step" docs/nashir_backend_database_ci_implementation_review_gate.md README.md`
+- `sed '/## .*Verification/,$d' docs/nashir_backend_database_ci_implementation_review_gate.md | grep -E "Decision:|Node Runtime Alignment|Product API runtime acceptance remains NO-GO|test:db|POSTGRES_HOST_AUTH_METHOD|README Reality Correction|Canonical Explicit NO-GO|Required Next Step"`
+- `grep -nE "Repository status|Backend/API|apps/api|Product API runtime acceptance|NO-GO|Node Runtime Alignment|DB-backed Product API coverage" README.md`
 - `git diff --check`
