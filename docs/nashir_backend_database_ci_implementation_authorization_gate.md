@@ -81,7 +81,7 @@ The implementation PR may set this job-level environment variable:
 
 ```yaml
 env:
-  TEST_DATABASE_URL: postgres://nashir:nashir@localhost:5432/nashir_test
+  TEST_DATABASE_URL: postgresql://nashir:nashir@127.0.0.1:5432/nashir_test
 ```
 
 This is authorized only for the CI ephemeral PostgreSQL service.
