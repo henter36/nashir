@@ -1,0 +1,338 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  ACTOR_ID_HEADER,
+  GRANTED_PERMISSIONS_HEADER,
+  WORKSPACE_ID_HEADER,
+  requireRequestContext,
+  resolveRequestContextFromHeaders,
+  type RequestContextError
+} from "../src/request-context.js";
+
+type RawHeaders = Record<string, string | readonly string[] | undefined>;
+
+function expectResolvedContext(
+  result: ReturnType<typeof resolveRequestContextFromHeaders>,
+  grantedPermissions: readonly string[] = []
+): void {
+  expect(result).toEqual({
+    ok: true,
+    context: {
+      workspaceId: "workspace-123",
+      actorId: "actor-456",
+      grantedPermissions
+    }
+  });
+}
+
+describe("resolveRequestContextFromHeaders", () => {
+  it("returns context when both headers are present", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "workspace-123",
+      [ACTOR_ID_HEADER]: "actor-456"
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      context: {
+        workspaceId: "workspace-123",
+        actorId: "actor-456",
+        grantedPermissions: []
+      }
+    });
+  });
+
+  it("trims whitespace from header values", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "  workspace-123  ",
+      [ACTOR_ID_HEADER]: "  actor-456  "
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      context: {
+        workspaceId: "workspace-123",
+        actorId: "actor-456",
+        grantedPermissions: []
+      }
+    });
+  });
+
+  it("reads required headers case-insensitively", () => {
+    const result = resolveRequestContextFromHeaders({
+      "X-Nashir-Workspace-Id": "workspace-123",
+      "X-Nashir-Actor-Id": "actor-456"
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      context: {
+        workspaceId: "workspace-123",
+        actorId: "actor-456",
+        grantedPermissions: []
+      }
+    });
+  });
+
+  it("fails when the workspace header is missing", () => {
+    const result = resolveRequestContextFromHeaders({
+      [ACTOR_ID_HEADER]: "actor-456"
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.statusCode).toBe(401);
+      expect(result.code).toBe("REQUEST_CONTEXT_REQUIRED");
+      expect(result.missing).toEqual([WORKSPACE_ID_HEADER]);
+    }
+  });
+
+  it("fails when the actor header is missing", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "workspace-123"
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.missing).toEqual([ACTOR_ID_HEADER]);
+    }
+  });
+
+  it("fails when both headers are missing", () => {
+    const result = resolveRequestContextFromHeaders({});
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.missing).toEqual([WORKSPACE_ID_HEADER, ACTOR_ID_HEADER]);
+    }
+  });
+
+  it("fails defensively when headers are nullish", () => {
+    const result = resolveRequestContextFromHeaders(null);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.statusCode).toBe(401);
+      expect(result.code).toBe("REQUEST_CONTEXT_REQUIRED");
+      expect(result.missing).toEqual([WORKSPACE_ID_HEADER, ACTOR_ID_HEADER]);
+      expect(result.issues).toEqual([
+        { header: WORKSPACE_ID_HEADER, reason: "missing" },
+        { header: ACTOR_ID_HEADER, reason: "missing" }
+      ]);
+    }
+  });
+
+  it("fails when header values are blank", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "   ",
+      [ACTOR_ID_HEADER]: ""
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.missing).toEqual([WORKSPACE_ID_HEADER, ACTOR_ID_HEADER]);
+    }
+  });
+
+  it("reports reason missing when the workspace header is absent", () => {
+    const result = resolveRequestContextFromHeaders({
+      [ACTOR_ID_HEADER]: "actor-456"
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({
+        header: WORKSPACE_ID_HEADER,
+        reason: "missing"
+      });
+    }
+  });
+
+  it("reports reason missing when the actor header is absent", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "workspace-123"
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({
+        header: ACTOR_ID_HEADER,
+        reason: "missing"
+      });
+    }
+  });
+
+  it("reports reason blank when the workspace header is whitespace-only", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "   ",
+      [ACTOR_ID_HEADER]: "actor-456"
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({
+        header: WORKSPACE_ID_HEADER,
+        reason: "blank"
+      });
+    }
+  });
+
+  it("reports reason blank when the actor header is whitespace-only", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "workspace-123",
+      [ACTOR_ID_HEADER]: ""
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({
+        header: ACTOR_ID_HEADER,
+        reason: "blank"
+      });
+    }
+  });
+
+  it("treats a blank first array value as blank without scanning later values", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: ["   ", "workspace-456"],
+      [ACTOR_ID_HEADER]: "actor-456"
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({
+        header: WORKSPACE_ID_HEADER,
+        reason: "blank"
+      });
+    }
+  });
+
+  it("treats a non-string header value as missing", () => {
+    const headers = {
+      [WORKSPACE_ID_HEADER]: 12345,
+      [ACTOR_ID_HEADER]: "actor-456"
+    } as unknown as RawHeaders;
+
+    const result = resolveRequestContextFromHeaders(headers);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues).toContainEqual({
+        header: WORKSPACE_ID_HEADER,
+        reason: "missing"
+      });
+    }
+  });
+
+  it("accepts array header values by using the first value", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: ["workspace-first", "workspace-second"],
+      [ACTOR_ID_HEADER]: ["actor-first", "actor-second"]
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      context: {
+        workspaceId: "workspace-first",
+        actorId: "actor-first",
+        grantedPermissions: []
+      }
+    });
+  });
+  it.each([
+    ["absent", undefined, []],
+    ["blank", "", []],
+    ["whitespace-only", "   ", []],
+    ["single permission", "nashir.products.read", ["nashir.products.read"]],
+    [
+      "comma-separated permissions",
+      "nashir.products.read,nashir.products.manage",
+      ["nashir.products.read", "nashir.products.manage"]
+    ],
+    [
+      "trimmed entries",
+      " nashir.products.read , nashir.products.manage ",
+      ["nashir.products.read", "nashir.products.manage"]
+    ],
+    [
+      "empty entries filtered",
+      "nashir.products.read,, ,nashir.products.manage",
+      ["nashir.products.read", "nashir.products.manage"]
+    ],
+    [
+      "deduplicated entries",
+      "nashir.products.read,nashir.products.read,nashir.products.manage",
+      ["nashir.products.read", "nashir.products.manage"]
+    ]
+  ])("parses granted permissions: %s", (_caseName, headerValue, expected) => {
+    const headers: Record<string, string | undefined> = {
+      [WORKSPACE_ID_HEADER]: "workspace-123",
+      [ACTOR_ID_HEADER]: "actor-456"
+    };
+
+    if (headerValue !== undefined) {
+      headers[GRANTED_PERMISSIONS_HEADER] = headerValue;
+    }
+
+    expectResolvedContext(
+      resolveRequestContextFromHeaders(headers),
+      expected as readonly string[]
+    );
+  });
+
+  it("reads the permissions header name case-insensitively", () => {
+    expectResolvedContext(
+      resolveRequestContextFromHeaders({
+        [WORKSPACE_ID_HEADER]: "workspace-123",
+        [ACTOR_ID_HEADER]: "actor-456",
+        "X-Nashir-Granted-Permissions": "nashir.products.read"
+      }),
+      ["nashir.products.read"]
+    );
+  });
+
+  it("treats permission values as case-sensitive exact strings and does not merge differently-cased duplicates", () => {
+    expectResolvedContext(
+      resolveRequestContextFromHeaders({
+        [WORKSPACE_ID_HEADER]: "workspace-123",
+        [ACTOR_ID_HEADER]: "actor-456",
+        [GRANTED_PERMISSIONS_HEADER]:
+          "nashir.products.read,NASHIR.PRODUCTS.READ,Nashir.Products.Read"
+      }),
+      ["nashir.products.read", "NASHIR.PRODUCTS.READ", "Nashir.Products.Read"]
+    );
+  });
+});
+
+describe("requireRequestContext", () => {
+  it("returns the context on success", () => {
+    const result = resolveRequestContextFromHeaders({
+      [WORKSPACE_ID_HEADER]: "workspace-123",
+      [ACTOR_ID_HEADER]: "actor-456"
+    });
+
+    expect(requireRequestContext(result)).toEqual({
+      workspaceId: "workspace-123",
+      actorId: "actor-456",
+      grantedPermissions: []
+    });
+  });
+
+  it("throws an error with statusCode 401 and code REQUEST_CONTEXT_REQUIRED on failure", () => {
+    const result = resolveRequestContextFromHeaders({});
+
+    expect(() => requireRequestContext(result)).toThrow(
+      "Missing required request context header(s)"
+    );
+
+    try {
+      requireRequestContext(result);
+      expect.unreachable("expected requireRequestContext to throw");
+    } catch (error) {
+      const contextError = error as RequestContextError;
+      expect(contextError).toBeInstanceOf(Error);
+      expect(contextError.statusCode).toBe(401);
+      expect(contextError.code).toBe("REQUEST_CONTEXT_REQUIRED");
+    }
+  });
+});
