@@ -46,10 +46,10 @@ This authorization is based on:
 - `docs/nashir_monorepo_tooling_boundary_implementation_authorization_gate.md`
 - `docs/nashir_monorepo_eslint_revalidation_findings_gate.md`
 
-The ESLint revalidation findings gate decided GO to migration implementation
-authorization planning, having confirmed the lint stop condition was
-resolved. This gate is that planning step: a docs-only authorization for the
-backend import implementation PR itself.
+The ESLint revalidation findings gate decided on a GO for migration
+implementation authorization planning, having confirmed the lint stop
+condition was resolved. This gate is that planning step: a docs-only
+authorization for the backend import implementation PR itself.
 
 ## 3. Evidence Summary From Revalidation
 
@@ -172,7 +172,7 @@ rather than proceed, if any of the following occur:
 
 - `npm run lint` fails after import.
 - Any file outside `apps/api/**` changes as a result of the import.
-- Any protected path listed in Section 7/8 changes.
+- Any protected path listed in Section 8 changes.
 - Real secrets, credentials, or production URLs are found in imported
   files.
 - Backend history is not reachable after the merge (e.g., the merge was
