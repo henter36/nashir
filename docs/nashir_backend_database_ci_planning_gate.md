@@ -35,8 +35,8 @@ However, full Product API runtime acceptance remains blocked because DB-backed t
 
 The skipped confidence areas include:
 
-- Product route handler DB-backed behavior
-- Product repository behavior
+- product route handler DB-backed behavior
+- product repository behavior
 - idempotency repository behavior
 - audit repository behavior
 - migration behavior
