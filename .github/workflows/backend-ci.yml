@@ -52,7 +52,10 @@ jobs:
 
       - name: Validate contract authority
         working-directory: apps/api
-        run: pnpm run validate:contract-authority -- --authority-repo "${{ github.workspace }}"
+        run: >-
+          pnpm run validate:contract-authority --
+          --authority-repo "${{ github.workspace }}"
+          --authority-ref e22c84fa0e2b6c01d4ee98383ef9fad2d0fa3337
 
       - name: Validate contracts
         working-directory: apps/api
