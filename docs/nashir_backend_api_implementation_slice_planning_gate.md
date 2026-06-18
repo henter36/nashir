@@ -17,7 +17,7 @@ The current accepted baseline is:
 - Backend CI validation is merged and accepted as the current validation baseline.
 - Backend validation runs from `apps/api`.
 - Contract authority validation is pinned to the accepted authority reference.
-- Contract and runtime conformance validation run against the current monorepo authority.
+- Contract and runtime conformance validations run against the current monorepo authority.
 - Frontend CI and Backend CI both exist at repository root under `.github/workflows`.
 
 ## 3. Completed Prerequisites
@@ -189,5 +189,5 @@ Stop and ask for a direct decision if planning discovers any need for:
 ```bash
 git status --short
 git diff --stat
-grep -E -n "Decision:|Recommended next planning path|Candidate A|Product API Runtime Acceptance|NO-GO|Required Next Gate|Stop Conditions" docs/nashir_backend_api_implementation_slice_planning_gate.md
+sed '/## .*Verification/,$d' docs/nashir_backend_api_implementation_slice_planning_gate.md | grep -E -n "Decision:|Recommended next planning path|Candidate A|Product API Runtime Acceptance|NO-GO|Required Next Gate|Stop Conditions"
 git diff --check
