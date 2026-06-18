@@ -72,3 +72,50 @@ jobs:
       - name: Validate runtime conformance
         working-directory: apps/api
         run: pnpm run validate:runtime-conformance -- --authority-repo "${{ github.workspace }}"
+
+  database-tests:
+    name: Validate backend database tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nashir
+          POSTGRES_PASSWORD: nashir
+          POSTGRES_DB: nashir_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nashir -d nashir_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      TEST_DATABASE_URL: postgresql://nashir:nashir@127.0.0.1:5432/nashir_test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          package_json_file: apps/api/package.json
+
+      - name: Install backend dependencies
+        working-directory: apps/api
+        run: pnpm install --frozen-lockfile
+
+      - name: Test DB migrations
+        working-directory: apps/api
+        run: pnpm run test:db
+
