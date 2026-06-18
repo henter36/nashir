@@ -17,7 +17,7 @@ Decision: **GO — backend import accepted as present in monorepo.**
 This gate accepts the completed `nashir-backend` subtree import into
 `apps/api/**`, performed in PR #223, as the current state of the monorepo.
 It does not authorize any further implementation; it records acceptance of
-what already merged.
+what has already merged.
 
 ## 2. Context
 
