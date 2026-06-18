@@ -51,10 +51,12 @@ Proposed backend commands:
 
 * `pnpm install --frozen-lockfile`
 * `pnpm lint`
+* `pnpm run format:check`
 * `pnpm typecheck`
 * `pnpm test`
 * `NASHIR_AUTHORITY_REPO=<resolved-authority-path> pnpm run validate:contract-authority`
 * `NASHIR_AUTHORITY_REPO=<resolved-authority-path> pnpm run validate:contracts`
+* `pnpm run validate:runtime-conformance`
 * migration/repository DB tests only if the job provisions PostgreSQL intentionally
 
 ## 5. Authority Repo Handling
