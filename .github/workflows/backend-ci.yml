@@ -67,8 +67,8 @@ jobs:
 
       - name: Validate contracts
         working-directory: apps/api
-        run: pnpm run validate:contracts -- --authority-repo "${{ github.workspace }}/nashir-authority"
+        run: pnpm run validate:contracts -- --authority-repo "${{ github.workspace }}"
 
       - name: Validate runtime conformance
         working-directory: apps/api
-        run: pnpm run validate:runtime-conformance -- --authority-repo "${{ github.workspace }}/nashir-authority"
+        run: pnpm run validate:runtime-conformance -- --authority-repo "${{ github.workspace }}"
