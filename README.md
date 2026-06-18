@@ -1,31 +1,33 @@
 # Nashir
 
-> **Repository status:** هذا المستودع هو المصدر الوحيد المعتمد لواجهة منتج Nashir. الواجهة المعتمدة هي 23 صفحة عربية نشطة فقط، معرفة في `src/App.jsx` ومنفذة في `src/pages`. وهو ليس جاهزًا للإنتاج بعد.
+> **Repository status:** هذا المستودع هو المصدر المعتمد لواجهة منتج Nashir، ويحتوي الآن أيضًا على Backend/API داخل `apps/api` ضمن نطاق تنفيذ مضبوط عبر بوابات مراجعة. الواجهة المعتمدة لا تزال 23 صفحة عربية نشطة فقط، معرفة في `src/App.jsx` ومنفذة في `src/pages`. المستودع ليس جاهزًا للإنتاج بعد.
 >
-> **Repository status (English):** This repository is the only approved Nashir Product UI source. The approved Product UI is exactly the 23 active Arabic screens defined in `src/App.jsx` and implemented in `src/pages`. It is not production-ready yet.
+> **Repository status (English):** This repository is the approved Nashir Product UI source and now also contains a governed Backend/API implementation under `apps/api`. The approved Product UI is still exactly the 23 active Arabic screens defined in `src/App.jsx` and implemented in `src/pages`. It is not production-ready yet.
 
-واجهة React/Vite تجريبية لمنصة **ناشر** ضمن تصور Marketing OS.
+واجهة React/Vite تجريبية لمنصة **ناشر** ضمن تصور Marketing OS، مع Backend/API قيد التأسيس داخل `apps/api`.
 
-هذا المستودع مخصص حاليًا لتثبيت واجهات المنتج ومساراته فقط قبل أي تنفيذ حقيقي. لا يمثل Backend أو API أو Database أو نظام صلاحيات فعلي.
+هذا المستودع لم يعد UI-only. يحتوي الآن على Backend/API foundations، وBackend CI، وDB-backed CI baseline. مع ذلك، لا يعني هذا أن Product API runtime مقبول بالكامل أو أن النظام جاهز للإنتاج.
 
 ## الحالة الحالية
 
-**Status:** UI Prototype / Mock Only  
-**Framework:** React + Vite  
-**Routing:** Local screen state داخل `App.jsx`، وليس React Router  
-**Latest stabilization:** إزالة الصفحات المستقلة القديمة وتثبيت خريطة الشاشات الحالية.
+**Status:** Governed monorepo baseline — UI approved, Backend/API foundations in progress  
+**Frontend:** React + Vite  
+**Backend:** Fastify/TypeScript under `apps/api`  
+**Database:** PostgreSQL-backed migration validation exists in CI; production database readiness is not accepted  
+**Routing:** Local UI screen state داخل `App.jsx`، وليس React Router  
+**Latest stabilization:** Backend Database CI baseline added; Product API runtime acceptance remains NO-GO pending Node runtime alignment and expanded DB-backed Product API coverage.
 
 ## القيود الصريحة
 
-- لا يوجد Backend.
-- لا يوجد API.
-- لا يوجد Database.
-- لا يوجد Auth أو RBAC حقيقي.
-- لا يوجد توليد AI حقيقي.
+- يوجد Backend/API داخل `apps/api`، لكنه لا يمثل قبولًا إنتاجيًا كاملًا.
+- Product API runtime acceptance لا يزال NO-GO حتى اكتمال Node runtime alignment وتوسيع DB-backed Product API coverage.
+- توجد Database migration validation في CI، لكن لا توجد production database readiness.
+- لا يوجد Auth/RBAC production rollout مقبول.
+- لا يوجد توليد AI حقيقي أو provider execution فعلي.
 - لا يوجد نشر فعلي لأي قناة.
 - لا يوجد إرسال WhatsApp أو Email أو تكامل Social حقيقي.
-- البيانات الحالية Mock/Seed داخل ملفات الواجهة.
-- أي أزرار فحص، توليد، نشر، اعتماد، أو تشغيل هي محاكاة محلية فقط.
+- بيانات الواجهة الحالية لا تزال Mock/Seed داخل ملفات الواجهة ما لم يتم ربط شاشة محددة بعقد Backend مصرح.
+- أي أزرار فحص، توليد، نشر، اعتماد، أو تشغيل في الواجهة تبقى محاكاة محلية ما لم توجد بوابة تنفيذ تقبل غير ذلك صراحة.
 
 ## الشاشات الحالية المعتمدة (23 شاشة)
 
@@ -145,10 +147,11 @@ npm run lint
 - **PR #64** Nashir V1 Scope Decision Gate
 - **PR #65** Nashir V1 Scope Decision Review Gate
 
-الخطوات التالية المعتمدة:
-1. Nashir V1 Scope Documentation Update Gate (هذا PR).
-2. Nashir Productization Roadmap Gate.
-3. Nashir Backend/API Strategy Gate — يتبع نطاق V1 Core، لا يقوده.
-4. Marketing OS Knowledge Extraction Gate — يأتي بعد توثيق نطاق Nashir.
+الخطوات التالية الحالية:
+1. Backend Database CI Implementation Review Gate.
+2. Backend CI Node Runtime Alignment Fix.
+3. Product API DB-backed Coverage Authorization.
+4. Product API Runtime Acceptance Re-Review.
+5. Product Catalog UI integration only after the required backend/runtime acceptance gates.
 
-لا يُطلب Backend/API/Database قبل إغلاق Nashir Productization Roadmap Gate.
+أي توسعة Backend/API/Database أو UI integration يجب أن تمر عبر بوابة صريحة، ولا تُستنتج من وجود `apps/api` وحده.
