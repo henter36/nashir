@@ -216,3 +216,4 @@ git status --short
 git diff --stat
 sed '/## .*Verification/,$d' docs/nashir_product_api_runtime_acceptance_hardening_review_gate.md | grep -E -n "Decision:|NO-GO|Backend Database CI Planning Gate|Acceptance Blockers|Why Not ACCEPT|Required Next Decision"
 git diff --check
+```
