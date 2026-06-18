@@ -1,0 +1,61 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/api/package.json
+
+      - name: Install backend dependencies
+        working-directory: apps/api
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: apps/api
+        run: pnpm lint
+
+      - name: Format check
+        working-directory: apps/api
+        run: pnpm run format:check
+
+      - name: Typecheck
+        working-directory: apps/api
+        run: pnpm typecheck
+
+      - name: Test
+        working-directory: apps/api
+        run: pnpm test
+
+      - name: Validate contract authority
+        working-directory: apps/api
+        run: pnpm run validate:contract-authority -- --authority-repo "${{ github.workspace }}"
+
+      - name: Validate contracts
+        working-directory: apps/api
+        run: pnpm run validate:contracts -- --authority-repo "${{ github.workspace }}"
+
+      - name: Validate runtime conformance
+        working-directory: apps/api
+        run: pnpm run validate:runtime-conformance -- --authority-repo "${{ github.workspace }}"
