@@ -51,16 +51,16 @@ This review confirms that the merged backend CI work did not introduce:
 
 ## 6. Local Verification
 
-Local verification completed on `main` after PR #227 merge:
+Local verification completed on `main` after PR #227 was merged:
 
 - `pnpm install --frozen-lockfile`
 - `pnpm lint`
 - `pnpm run format:check`
 - `pnpm typecheck`
 - `pnpm test`
-- `pnpm run validate:contract-authority`
-- `pnpm run validate:contracts`
-- `pnpm run validate:runtime-conformance`
+- `pnpm run validate:contract-authority -- --authority-repo ../../nashir-authority --authority-ref e22c84fa0e2b6c01d4ee98383ef9fad2d0fa3337`
+- `pnpm run validate:contracts -- --authority-repo ../..`
+- `pnpm run validate:runtime-conformance -- --authority-repo ../..`
 
 Result:
 
