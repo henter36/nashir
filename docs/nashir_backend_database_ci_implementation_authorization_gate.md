@@ -90,27 +90,41 @@ No `DATABASE_URL` production-style configuration is authorized unless a later ga
 
 ## 7. Authorized Steps
 
-The DB-backed job may use the same pinned setup actions already used by Backend CI:
+The DB-backed job must align with the active monorepo Backend CI workflow at `.github/workflows/backend-ci.yml`.
+
+The DB-backed job may use the same pinned setup actions already used by the active monorepo Backend CI workflow:
 
 - `actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5`
 - `actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020`
 - `pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1`
 
-The DB-backed job may install backend dependencies from `apps/api` using:
+The implementation PR is not authorized to replace the active monorepo Backend CI setup with the imported legacy workflow setup under `apps/api/.github/workflows/ci.yml`.
 
-```bash
-pnpm install --frozen-lockfile
+The imported legacy workflow may be used only as reference evidence for DB service behavior and DB-backed test command patterns.
+
+The DB-backed job must run backend commands from the backend app directory.
+
+Authorized dependency install step shape:
+
+```yaml
+- name: Install backend dependencies
+  working-directory: apps/api
+  run: pnpm install --frozen-lockfile
 ```
 
-The DB-backed job may run:
+Authorized DB-backed test step shape:
 
-```bash
-pnpm run test:db
+```yaml
+- name: Test DB migrations
+  working-directory: apps/api
+  env:
+    TEST_DATABASE_URL: postgresql://nashir:nashir@127.0.0.1:5432/nashir_test
+  run: pnpm run test:db
 ```
 
 The implementation PR may additionally run DB-backed Product tests with `TEST_DATABASE_URL` only if they are already present and require no code, package, schema, migration, runtime, or OpenAPI changes.
 
-If Product DB-backed tests cannot be run cleanly without additional code/test/schema changes, the implementation PR must not expand scope. It must keep the job limited to the safe DB-backed command and document the remaining acceptance limitation for a later gate.
+Any additional DB-backed product test command must explicitly set `working-directory: apps/api`.
 
 ## 8. Authorized Validation Expectations
 
