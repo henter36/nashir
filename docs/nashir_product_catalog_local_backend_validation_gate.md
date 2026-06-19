@@ -113,7 +113,7 @@ Evidence placeholders:
 - `/nashir-products` not used: PENDING
 - blocked operations not used: PENDING
 
-## Validation Commands to Run Locally
+## Verification Commands to Run Locally
 
 Backend:
 
@@ -135,6 +135,11 @@ Repository checks:
 - `npm run build`
 - `git diff --check`
 
+Package manager note:
+
+- Backend commands under `apps/api` use `pnpm`.
+- Frontend/root commands use `npm`, matching the current Frontend CI workflow.
+
 ## Acceptance Criteria
 
 This gate can become GO only if:
@@ -144,7 +149,7 @@ This gate can become GO only if:
 - local workspace exists
 - frontend starts locally
 - Product Catalog enters backend mode with valid env
-- Product Catalog stays fallback/mock when env is missing
+- Product Catalog stays in fallback/mock mode when env is missing
 - only the four accepted Product API routes are used
 - no `/nashir-products` route is used
 - no delete/archive/store-pull/status mutation is introduced
