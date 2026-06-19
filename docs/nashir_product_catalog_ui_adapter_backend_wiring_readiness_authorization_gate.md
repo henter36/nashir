@@ -55,7 +55,7 @@ Allowed scope:
 - Product Catalog-specific tests or lightweight validation if already supported by the current test stack.
 - Documentation update for how to run the Product Catalog UI against the backend locally.
 
-Allowed file areas, subject to actual repository paths:
+Allowed file areas are an exhaustive allowlist for this authorization gate. If an equivalent path is needed because the repository structure already differs, the PR must state that explicitly and reviewers must confirm it before approval:
 
 - `src/pages/ProductCatalogPage.jsx`
 - `src/utils/productCatalogApi.js`
@@ -122,7 +122,9 @@ Routes added or changed: YES/NO
 /nashir-products introduced: YES/NO
 Delete/archive/store-pull/status mutation introduced: YES/NO
 Fallback/mock separation preserved: YES/NO
-Acceptance Criteria for the Next PR
+```
+
+## Acceptance Criteria for the Next PR
 
 The next implementation PR can be accepted only if:
 
@@ -135,7 +137,7 @@ Only the accepted four Product API routes are used.
 No new backend behavior is required.
 No OpenAPI, generated client, schema, migration, auth, workspace, or permission model files change.
 Product API runtime acceptance remains partial and limited to covered DB-backed Product API behavior.
-Next Step After Implementation
+## Next Step After Implementation
 
 After the Product Catalog UI Adapter Backend Wiring Implementation PR is merged, open:
 
