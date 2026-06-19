@@ -34,6 +34,7 @@ stays in fallback/mock mode and never sends a backend request.
 cd apps/api
 cp .env.example .env
 # Edit .env: set DATABASE_URL to a local PostgreSQL instance.
+# Create the target local database first if it does not already exist.
 pnpm install --frozen-lockfile
 pnpm run db:migrate
 pnpm run dev
@@ -50,6 +51,7 @@ git-ignored):
 ```bash
 VITE_NASHIR_BACKEND_URL=http://127.0.0.1:5000
 VITE_NASHIR_WORKSPACE_ID=<your-local-workspace-id>
+# A workspace with this ID must exist in the local database.
 # Optional, only if the backend session requires it locally:
 # VITE_NASHIR_ACCESS_TOKEN=<token>
 ```
