@@ -12,14 +12,16 @@ Product API runtime acceptance remains NO-GO until the authorized DB-backed cove
 
 ## Inputs
 
-After the previous accepted gates and merged PRs:
+After the previously accepted gates and merged PRs:
 
 - Backend CI database validation exists.
 - Backend CI now uses Node 22.
 - `apps/api/package.json` declares `engines.node >=22`.
 - `apps/api/package.json` currently defines `test:db` as `vitest run tests/migrations.test.ts`.
+- The active repository-level Backend CI workflow is `.github/workflows/backend-ci.yml`.
 - `.github/workflows/backend-ci.yml` currently runs `pnpm run test:db` in the `database-tests` job.
-- Therefore, current DB-backed CI validates migrations, but does not yet prove complete Product API DB-backed behavior.
+- A nested workflow file exists at `apps/api/.github/workflows/ci.yml`, but it is not the active repository-level GitHub Actions workflow for this monorepo and must not be treated as the implementation authority for this gate.
+- Therefore, current active DB-backed CI validates migrations, but does not yet prove complete Product API DB-backed behavior.
 
 ## Current Gap
 
@@ -50,6 +52,27 @@ Allowed files:
 - additive test helpers under `apps/api/tests/helpers/`
 
 The next PR should prefer enabling existing tests before adding new tests.
+
+## Enforcement Requirement
+
+The next implementation PR must include an explicit changed-files check in its PR description.
+
+The reviewer must verify the PR file list against the Allowed files list above before approving.
+
+If the implementation PR changes any file outside the Allowed files list, the PR must be treated as NO-GO unless a separate authorization gate explicitly allows that file.
+
+A path-based CI guard may be added only if it checks the implementation PR scope without changing runtime behavior. CODEOWNERS changes are not authorized by this gate.
+
+Minimum required review evidence for the next PR:
+
+```text
+Changed files reviewed: YES
+All changed files are inside the Allowed files list: YES/NO
+Runtime files changed outside tests/helpers/package/workflow scope: YES/NO
+Schema or migration files changed: YES/NO
+OpenAPI or generated client files changed: YES/NO
+Frontend files changed: YES/NO
+```
 
 ## Preferred Implementation Direction
 
@@ -111,6 +134,24 @@ The next implementation PR can be accepted only if:
 - CI passes.
 - No OpenAPI, frontend, migration, deployment, or production configuration files change.
 - Any newly added tests assert existing behavior only and do not expand runtime behavior.
+
+Concrete checklist for "tests only, no runtime expansion":
+
+- no new routes
+- no new route aliases
+- no `/nashir-products`
+- no new HTTP status codes
+- no new response fields
+- no new request fields
+- no OpenAPI changes
+- no generated client changes
+- no new DB tables
+- no DB column changes
+- no migration edits
+- no permission model changes
+- no workspace context model changes
+- no Auth/RBAC behavior changes
+- no frontend integration
 
 ## Next Step After Implementation
 
