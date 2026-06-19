@@ -1,5 +1,6 @@
 import { loadAuthConfig } from "./auth-config.js";
 import { buildApp } from "./app.js";
+import { createLocalProductRuntimeDependencies } from "./local-product-runtime.js";
 
 let authConfig: ReturnType<typeof loadAuthConfig>;
 try {
@@ -9,7 +10,26 @@ try {
   process.exit(1);
 }
 
-const app = buildApp({ authConfig });
+let localProductRuntimeDependencies: ReturnType<
+  typeof createLocalProductRuntimeDependencies
+>;
+try {
+  localProductRuntimeDependencies = createLocalProductRuntimeDependencies();
+} catch (err) {
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exit(1);
+}
+
+const app = buildApp({
+  authConfig,
+  ...localProductRuntimeDependencies?.buildAppOptions
+});
+
+if (localProductRuntimeDependencies) {
+  app.addHook("onClose", async () => {
+    await localProductRuntimeDependencies.close();
+  });
+}
 const host = process.env.HOST ?? "127.0.0.1";
 const rawPort = process.env.PORT ?? "3000";
 const port = Number.parseInt(rawPort, 10);
