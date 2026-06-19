@@ -19,7 +19,7 @@
     "validate:runtime-conformance": "node --import tsx scripts/validate-runtime-conformance.mjs",
     "db:migrate": "node scripts/migrate.mjs up",
     "db:migrate:status": "node scripts/migrate.mjs status",
-    "test:db": "vitest run tests/migrations.test.ts tests/products/product-repository.test.ts tests/idempotency/idempotency-repository.test.ts tests/audit/audit-repository.test.ts tests/products/product-route-handler.test.ts"
+    "test:db": "vitest run --fileParallelism=false tests/migrations.test.ts tests/products/product-repository.test.ts tests/idempotency/idempotency-repository.test.ts tests/audit/audit-repository.test.ts tests/products/product-route-handler.test.ts"
   },
   "dependencies": {
     "fastify": "^5.4.0",
