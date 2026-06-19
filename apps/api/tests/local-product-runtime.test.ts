@@ -49,6 +49,27 @@ function buildLocalRuntimeApp(env: Record<string, string | undefined>) {
 }
 
 describe("local Product runtime bootstrap wiring", () => {
+  it("does not wire Product runtime dependencies when DATABASE_URL is missing and local runtime is not requested", () => {
+    const runtime = createLocalProductRuntimeDependencies({
+      env: {
+        NODE_ENV: "development"
+      }
+    });
+
+    expect(runtime).toBeUndefined();
+  });
+
+  it("does not wire Product runtime dependencies when DATABASE_URL exists but local runtime is not requested", () => {
+    const runtime = createLocalProductRuntimeDependencies({
+      env: {
+        NODE_ENV: "development",
+        DATABASE_URL: databaseUrl
+      }
+    });
+
+    expect(runtime).toBeUndefined();
+  });
+
   it("does not wire Product runtime dependencies in production", () => {
     const runtime = createLocalProductRuntimeDependencies({
       env: {
@@ -59,6 +80,38 @@ describe("local Product runtime bootstrap wiring", () => {
 
     expect(runtime).toBeUndefined();
   });
+
+  it.each(["true", "TRUE", "1"] as const)(
+    "enables local Product runtime dependencies when the opt-in flag is %s",
+    async (flagValue) => {
+      const runtime = createLocalProductRuntimeDependencies({
+        env: {
+          NODE_ENV: "development",
+          DATABASE_URL: databaseUrl,
+          [LOCAL_PRODUCT_RUNTIME_REQUEST_ENV]: flagValue
+        }
+      });
+
+      closeCallbacks.add(runtime?.close ?? (async () => {}));
+
+      expect(runtime).toBeDefined();
+    }
+  );
+
+  it.each(["false", "0", ""] as const)(
+    "does not wire local Product runtime dependencies when the opt-in flag is %s",
+    (flagValue) => {
+      const runtime = createLocalProductRuntimeDependencies({
+        env: {
+          NODE_ENV: "development",
+          DATABASE_URL: databaseUrl,
+          [LOCAL_PRODUCT_RUNTIME_REQUEST_ENV]: flagValue
+        }
+      });
+
+      expect(runtime).toBeUndefined();
+    }
+  );
 
   it("fails safely when local Product runtime wiring is requested without DATABASE_URL", () => {
     expect(() =>
@@ -90,7 +143,8 @@ describe("local Product runtime bootstrap wiring", () => {
   it("keeps health available and registers accepted Product routes in local/dev runtime", async () => {
     const app = buildLocalRuntimeApp({
       NODE_ENV: "development",
-      DATABASE_URL: databaseUrl
+      DATABASE_URL: databaseUrl,
+      [LOCAL_PRODUCT_RUNTIME_REQUEST_ENV]: "true"
     });
 
     await app.ready();

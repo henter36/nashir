@@ -33,7 +33,9 @@ interface CreateLocalProductRuntimeDependenciesOptions {
 }
 
 function isLocalProductRuntimeRequested(env: LocalProductRuntimeEnv): boolean {
-  const rawValue = env[LOCAL_PRODUCT_RUNTIME_REQUEST_ENV]?.trim().toLowerCase();
+  const rawValue = (env[LOCAL_PRODUCT_RUNTIME_REQUEST_ENV] ?? "")
+    .trim()
+    .toLowerCase();
 
   return rawValue === "1" || rawValue === "true";
 }
@@ -47,31 +49,34 @@ export function createLocalProductRuntimeDependencies(
   options: CreateLocalProductRuntimeDependenciesOptions = {}
 ): LocalProductRuntimeDependencies | undefined {
   const env = options.env ?? process.env;
-  const nodeEnv = env.NODE_ENV?.trim().toLowerCase();
-  const databaseUrl = env.DATABASE_URL?.trim();
   const requested = isLocalProductRuntimeRequested(env);
 
-  if (nodeEnv === "production") {
-    if (requested) {
-      throw new Error(
-        `${LOCAL_PRODUCT_RUNTIME_REQUEST_ENV} cannot be enabled when NODE_ENV=production.`
-      );
-    }
-
+  if (!requested) {
     return undefined;
+  }
+
+  const nodeEnv = (env.NODE_ENV ?? "").trim().toLowerCase();
+  const databaseUrl = env.DATABASE_URL?.trim();
+
+  if (nodeEnv === "production") {
+    throw new Error(
+      `${LOCAL_PRODUCT_RUNTIME_REQUEST_ENV} cannot be enabled when NODE_ENV=production.`
+    );
   }
 
   if (!databaseUrl) {
-    if (requested) {
-      throw new Error(
-        `DATABASE_URL is required when ${LOCAL_PRODUCT_RUNTIME_REQUEST_ENV} is enabled.`
-      );
-    }
-
-    return undefined;
+    throw new Error(
+      `DATABASE_URL is required when ${LOCAL_PRODUCT_RUNTIME_REQUEST_ENV} is enabled.`
+    );
   }
 
   const pool = new Pool({ connectionString: databaseUrl });
+  pool.on("error", (err) => {
+    console.error(
+      "Unexpected error on idle local Product runtime database client",
+      err
+    );
+  });
 
   return {
     buildAppOptions: {
