@@ -2,7 +2,7 @@
 
 ## Decision
 
-Decision: GO to Product Catalog Local Backend Validation Gate.
+Refer to the [Final Decision](#final-decision) section for the detailed gate outcome.
 
 This review accepts PR #243 as a documentation-only local setup completion for Product Catalog backend wiring.
 
