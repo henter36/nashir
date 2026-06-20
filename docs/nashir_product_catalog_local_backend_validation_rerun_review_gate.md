@@ -2,11 +2,11 @@
 
 ## Decision
 
-Decision: GO to Product Catalog Local Backend Validation Acceptance Gate.
+**Decision: GO to Product Catalog Local Backend Validation Acceptance Gate.**
 
 This is a documentation-only review gate. It records the local validation re-run evidence after PR #248 was merged.
 
-This decision does not authorize production readiness, pilot readiness, frontend changes, OpenAPI edits, generated client updates, migration changes, schema changes, route expansion, `/nashir-products`, delete/archive/store-pull/status mutation, or Product API full runtime acceptance.
+This decision authorizes acceptance review only. It does not authorize production readiness, pilot readiness, frontend changes, OpenAPI edits, generated client updates, migration changes, schema changes, route expansion, `/nashir-products`, delete/archive/store-pull/status mutation, or Product API full runtime acceptance.
 
 ## Inputs
 
@@ -78,7 +78,7 @@ statusCode: 401
 Interpretation:
 
 401 is acceptable for this re-run because the request reached the registered Product API route and was rejected by authentication.
-This confirms the route no longer fails as Route not found.
+This confirms the route no longer fails with a "Route not found" error.
 Blocked /nashir-products alias
 
 Observed evidence:
@@ -114,35 +114,39 @@ Production readiness.
 Pilot readiness.
 Product API full runtime acceptance.
 Risks and Constraints
+Authentication and validation limitation
 The accepted Product route returned 401, not 200, because real authentication was not supplied during this local validation.
 This is acceptable for route-registration validation, but not sufficient for Product Catalog end-to-end acceptance.
 A later acceptance gate must decide whether authenticated local validation or UI-backed validation is required before marking Product Catalog Local Backend Validation fully accepted.
+Contract authority and alignment readiness
+This gate does not change the OpenAPI authority location.
+This gate does not assert OpenAPI/content alignment readiness beyond the already accepted Product route contract.
+Contract drift risk remains distinct from the risk of defining or changing a contract before prerequisite Auth/RBAC/Workspace Identity designs are ready.
+No OpenAPI contract definition or generated type update is authorized by this gate.
 Blocked Scope
 
 Still blocked unless separately authorized:
 
-production readiness
-pilot readiness
-real tenant/workspace membership model
-app-wide session integration
-broader Auth/RBAC changes
-Product Catalog delete/archive/store-pull/status mutation
-/nashir-products
-OpenAPI edits
-generated client updates
-database migrations
-schema changes
-frontend changes
-Product API full runtime acceptance
-E2E browser automation
-deployment configuration
-real Auth0 tenant/secrets
+Production readiness.
+Pilot readiness.
+Real tenant/workspace membership model.
+App-wide session integration.
+Broader Auth/RBAC changes.
+Product Catalog delete/archive/store-pull/status mutation.
+/nashir-products.
+OpenAPI edits.
+Generated client updates.
+Database migrations.
+Schema changes.
+Frontend changes.
+Product API full runtime acceptance.
+E2E browser automation.
+Deployment configuration.
+Real Auth0 tenant/secrets.
 Required Next Gate
 
 The next gate should decide whether the observed evidence is sufficient for Product Catalog Local Backend Validation Acceptance, or whether additional authenticated curl evidence / browser UI evidence is required.
 
-Final Decision
+Transition Recommendation
 
-Decision: GO to Product Catalog Local Backend Validation Acceptance Gate.
-
-This recommendation authorizes acceptance review only. It does not authorize production/pilot readiness or any Product Catalog feature expansion.
+GO to Product Catalog Local Backend Validation Acceptance Gate.
