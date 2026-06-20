@@ -14,7 +14,7 @@ Prior accepted gates and implementation:
 
 - PR #247 authorized Product API Local Runtime Repository Wiring Implementation.
 - PR #248 implemented local/dev Product API runtime repository wiring.
-- Product local runtime wiring requires explicit opt-in with `NASHIR_ENABLE_LOCAL_PRODUCT_RUNTIME=true`.
+- Product local runtime wiring requires explicit opt-in with `NASHIR_ENABLE_LOCAL_PRODUCT_RUNTIME=1` or `true`.
 - Local backend was run with:
   - `HOST=127.0.0.1`
   - `PORT=5050`
@@ -74,9 +74,7 @@ Server log evidence:
 
 GET /workspaces/local-validation-workspace/products?limit=50&sort=updatedAt:desc
 statusCode: 401
-
-Interpretation:
-
+Interpretation
 401 is acceptable for this re-run because the request reached the registered Product API route and was rejected by authentication.
 This confirms the route no longer fails with a "Route not found" error.
 Blocked /nashir-products alias
@@ -91,9 +89,7 @@ Server log evidence:
 
 GET /workspaces/local-validation-workspace/nashir-products?limit=50
 statusCode: 404
-
-Interpretation:
-
+Interpretation
 404 is expected and acceptable because /nashir-products remains blocked in V1.
 Review Findings
 Confirmed
