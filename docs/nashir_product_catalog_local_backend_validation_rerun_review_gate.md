@@ -50,99 +50,130 @@ Server log evidence:
 
 ```text
 Server listening at http://127.0.0.1:5050
-Health route
+```
+
+### Health route
 
 Observed evidence:
 
+```text
 GET /health
 Result:
 200
+```
 
 Server log evidence:
 
+```text
 GET /health
 statusCode: 200
-Accepted Product API route
+```
+
+### Accepted Product API route
 
 Observed evidence:
 
+```text
 GET /workspaces/local-validation-workspace/products?limit=50&sort=updatedAt:desc
 Result:
 401
+```
 
 Server log evidence:
 
+```text
 GET /workspaces/local-validation-workspace/products?limit=50&sort=updatedAt:desc
 statusCode: 401
-Interpretation
-401 is acceptable for this re-run because the request reached the registered Product API route and was rejected by authentication.
-This confirms the route no longer fails with a "Route not found" error.
-Blocked /nashir-products alias
+```
+
+#### Interpretation
+
+- `401` is acceptable for this re-run because the request reached the registered Product API route and was rejected by authentication.
+- This confirms the route no longer fails with a `"Route not found"` error.
+
+### Blocked `/nashir-products` alias
 
 Observed evidence:
 
+```text
 GET /workspaces/local-validation-workspace/nashir-products?limit=50
 Result:
 404
+```
 
 Server log evidence:
 
+```text
 GET /workspaces/local-validation-workspace/nashir-products?limit=50
 statusCode: 404
-Interpretation
-404 is expected and acceptable because /nashir-products remains blocked in V1.
-Review Findings
-Confirmed
-Local database migration state is valid.
-Backend starts successfully with explicit local Product runtime opt-in.
-/health remains available.
-Accepted Product API list route is registered and no longer returns route-not-found behavior.
-/nashir-products remains unavailable.
-Product runtime wiring remains local/dev-only and opt-in based on the previous implementation.
-Not Confirmed Yet
+```
+
+#### Interpretation
+
+- `404` is expected and acceptable because `/nashir-products` remains blocked in V1.
+
+## Review Findings
+
+### Confirmed
+
+- Local database migration state is valid.
+- Backend starts successfully with explicit local Product runtime opt-in.
+- `/health` remains available.
+- Accepted Product API list route is registered and no longer returns route-not-found behavior.
+- `/nashir-products` remains unavailable.
+- Product runtime wiring remains local/dev-only and opt-in based on the previous implementation.
+
+### Not Confirmed Yet
 
 This re-run does not yet confirm:
 
-Product Catalog browser UI end-to-end behavior.
-Real Auth0 token flow.
-Real workspace membership model.
-Production readiness.
-Pilot readiness.
-Product API full runtime acceptance.
-Risks and Constraints
-Authentication and validation limitation
-The accepted Product route returned 401, not 200, because real authentication was not supplied during this local validation.
-This is acceptable for route-registration validation, but not sufficient for Product Catalog end-to-end acceptance.
-A later acceptance gate must decide whether authenticated local validation or UI-backed validation is required before marking Product Catalog Local Backend Validation fully accepted.
-Contract authority and alignment readiness
-This gate does not change the OpenAPI authority location.
-This gate does not assert OpenAPI/content alignment readiness beyond the already accepted Product route contract.
-Contract drift risk remains distinct from the risk of defining or changing a contract before prerequisite Auth/RBAC/Workspace Identity designs are ready.
-No OpenAPI contract definition or generated type update is authorized by this gate.
-Blocked Scope
+- Product Catalog browser UI end-to-end behavior.
+- Real Auth0 token flow.
+- Real workspace membership model.
+- Production readiness.
+- Pilot readiness.
+- Product API full runtime acceptance.
+
+## Risks and Constraints
+
+### Authentication and validation limitation
+
+- The accepted Product route returned `401`, not `200`, because real authentication was not supplied during this local validation.
+- This is acceptable for route-registration validation, but not sufficient for Product Catalog end-to-end acceptance.
+- A later acceptance gate must decide whether authenticated local validation or UI-backed validation is required before marking Product Catalog Local Backend Validation fully accepted.
+
+### Contract authority and alignment readiness
+
+- This gate does not change the OpenAPI authority location.
+- This gate does not assert OpenAPI/content alignment readiness beyond the already accepted Product route contract.
+- Contract drift risk remains distinct from the risk of defining or changing a contract before prerequisite Auth/RBAC/Workspace Identity designs are ready.
+- No OpenAPI contract definition or generated type update is authorized by this gate.
+
+## Blocked Scope
 
 Still blocked unless separately authorized:
 
-Production readiness.
-Pilot readiness.
-Real tenant/workspace membership model.
-App-wide session integration.
-Broader Auth/RBAC changes.
-Product Catalog delete/archive/store-pull/status mutation.
-/nashir-products.
-OpenAPI edits.
-Generated client updates.
-Database migrations.
-Schema changes.
-Frontend changes.
-Product API full runtime acceptance.
-E2E browser automation.
-Deployment configuration.
-Real Auth0 tenant/secrets.
-Required Next Gate
+- Production readiness.
+- Pilot readiness.
+- Real tenant/workspace membership model.
+- App-wide session integration.
+- Broader Auth/RBAC changes.
+- Product Catalog delete/archive/store-pull/status mutation.
+- `/nashir-products`.
+- OpenAPI edits.
+- Generated client updates.
+- Database migrations.
+- Schema changes.
+- Frontend changes.
+- Product API full runtime acceptance.
+- E2E browser automation.
+- Deployment configuration.
+- Real Auth0 tenant/secrets.
+
+## Required Next Gate
 
 The next gate should decide whether the observed evidence is sufficient for Product Catalog Local Backend Validation Acceptance, or whether additional authenticated curl evidence / browser UI evidence is required.
 
-Transition Recommendation
+## Transition Recommendation
 
 GO to Product Catalog Local Backend Validation Acceptance Gate.
