@@ -15,7 +15,7 @@
 **Backend:** Fastify/TypeScript under `apps/api`  
 **Database:** PostgreSQL-backed migration validation exists in CI; production database readiness is not accepted  
 **Routing:** Local UI screen state داخل `App.jsx`، وليس React Router  
-**Latest stabilization:** Backend Database CI baseline added; Product API runtime acceptance remains NO-GO pending Node runtime alignment and expanded DB-backed Product API coverage.
+**Latest stabilization:** An opt-in local Product runtime is available for the accepted `/workspaces/{workspaceId}/products` route family. It is enabled with `NASHIR_ENABLE_LOCAL_PRODUCT_RUNTIME=1` or `true`, requires a valid `DATABASE_URL`, and cannot be enabled when `NODE_ENV=production`. Production readiness, pilot readiness, and general backend completion remain NO-GO.
 
 ## القيود الصريحة
 
