@@ -3,6 +3,8 @@
 > **Repository status:** هذا المستودع هو المصدر المعتمد لواجهة منتج Nashir، ويحتوي الآن أيضًا على Backend/API داخل `apps/api` ضمن نطاق تنفيذ مضبوط عبر بوابات مراجعة. الواجهة المعتمدة لا تزال 23 صفحة عربية نشطة فقط، معرفة في `src/App.jsx` ومنفذة في `src/pages`. المستودع ليس جاهزًا للإنتاج بعد.
 >
 > **Repository status (English):** This repository is the approved Nashir Product UI source and now also contains a governed Backend/API implementation under `apps/api`. The approved Product UI is still exactly the 23 active Arabic screens defined in `src/App.jsx` and implemented in `src/pages`. It is not production-ready yet.
+>
+> **Backend implementation authority:** `henter36/nashir/apps/api` is the sole current Backend/API implementation authority for Nashir. The separate `henter36/nashir-backend` repository is a legacy/reference repository and is not authorized for new implementation. See [Backend Implementation Authority Decision Gate](docs/nashir_backend_implementation_authority_decision_gate.md).
 
 واجهة React/Vite تجريبية لمنصة **ناشر** ضمن تصور Marketing OS، مع Backend/API قيد التأسيس داخل `apps/api`.
 
