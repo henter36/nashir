@@ -1,17 +1,27 @@
 # Nashir Backend
 
-This repository is the private backend repository for Nashir.
+This directory contains the governed Nashir Backend/API implementation inside the approved Nashir monorepo.
 
 ## Governance Status
 
-This repository contains the Nashir backend runtime foundation. The canonical
-`/workspaces/{workspaceId}/products` route family is accepted as a
-contract-aligned backend slice candidate for Product Catalog UI consumption
-planning; UI integration and production readiness remain blocked.
+This directory contains the Nashir backend runtime foundation. The canonical
+`/workspaces/{workspaceId}/products` route family is the first governed
+backend slice with local/dev runtime wiring and DB-backed validation evidence.
 
-The selected setup stack is TypeScript, Node.js LTS, Fastify, pnpm, Zod,
-PostgreSQL, and node-postgres / pg. The `pg` package is declared only; no
-database connection is created or executed.
+The Product runtime is disabled by default and may be enabled only through the
+approved local/development configuration. This local validation capability does
+not authorize production readiness, pilot readiness, deployment readiness,
+general backend completion, or expansion of the accepted Product route family.
+
+The selected stack is TypeScript, Node.js LTS, Fastify, pnpm, Zod,
+PostgreSQL, and node-postgres / `pg`. Local/development Product runtime wiring
+can create PostgreSQL-backed Product, idempotency, and audit repositories when
+the runtime is explicitly enabled and a valid `DATABASE_URL` is supplied.
+
+Database connectivity is not enabled globally or by default. Production
+database readiness, production connection configuration, operational backup
+and restore, deployment configuration, and production migration acceptance
+remain outside the currently accepted scope.
 
 The `/health` endpoint is an infrastructure smoke check only. It is not a
 product, business, or workspace-scoped API route.
