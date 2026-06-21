@@ -6,17 +6,24 @@ This directory contains the governed Nashir Backend/API implementation inside th
 
 This directory contains the Nashir backend runtime foundation. The canonical
 `/workspaces/{workspaceId}/products` route family is the first governed
-backend slice with local/dev runtime wiring and DB-backed validation evidence.
+backend slice with an opt-in local Product runtime and DB-backed validation
+evidence.
 
-The Product runtime is disabled by default and may be enabled only through the
-approved local/development configuration. This local validation capability does
-not authorize production readiness, pilot readiness, deployment readiness,
-general backend completion, or expansion of the accepted Product route family.
+The opt-in local Product runtime is disabled by default. It is enabled only
+when `NASHIR_ENABLE_LOCAL_PRODUCT_RUNTIME` is set to `1` or `true`, requires a
+valid `DATABASE_URL`, and cannot be enabled when `NODE_ENV=production`.
+
+This local capability does not authorize production readiness, pilot readiness,
+deployment readiness, general backend completion, or expansion of the accepted
+Product route family.
 
 The selected stack is TypeScript, Node.js LTS, Fastify, pnpm, Zod,
-PostgreSQL, and node-postgres / `pg`. Local/development Product runtime wiring
-can create PostgreSQL-backed Product, idempotency, and audit repositories when
-the runtime is explicitly enabled and a valid `DATABASE_URL` is supplied.
+PostgreSQL, and node-postgres / `pg`. When enabled, the opt-in local Product
+runtime initializes a PostgreSQL connection pool and instantiates the Product,
+idempotency, and audit repository classes against that pool.
+
+It does not create database tables or schemas at application startup. Database
+objects are created and updated only through the approved SQL migrations.
 
 Database connectivity is not enabled globally or by default. Production
 database readiness, production connection configuration, operational backup
