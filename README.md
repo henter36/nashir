@@ -156,6 +156,6 @@ npm run lint
 2. ~~Backend CI Node Runtime Alignment Fix.~~ — مكتملة.
 3. ~~Product API DB-backed Coverage Authorization.~~ — مكتملة.
 4. ~~Product API Runtime Acceptance Re-Review.~~ — مكتملة، انظر بوابة `NASHIR-PRODUCT-API-DB-VALIDATION-FINAL-2026-06-22`: [Product API DB-Backed Validation Final Review Gate](docs/nashir_product_api_db_backed_validation_final_review_gate.md).
-5. Product Catalog End-to-End Acceptance Gate — الخطوة التالية المصرح بها فقط.
+5. Product Catalog End-to-End Acceptance Gate — الخطوة التالية المصرح بها فقط، انظر بوابة `NASHIR-PRODUCT-CATALOG-E2E-ACCEPTANCE-2026-06-22`: [Product Catalog End-to-End Acceptance Gate](docs/nashir_product_catalog_end_to_end_acceptance_gate.md).
 
 أي توسعة Backend/API/Database أو UI integration يجب أن تمر عبر بوابة صريحة، ولا تُستنتج من وجود `apps/api` وحده.
