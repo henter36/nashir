@@ -145,7 +145,25 @@ This decision does not authorize:
 
 ---
 
-## 10. Acceptance criteria
+## 10. Supersession and amendment rule
+
+This document records the authority decision effective on its status date.
+
+A future change to Backend/API implementation authority must not be made by silently editing this decision in place. Any material change must be recorded through a new, separately reviewed decision gate that:
+
+- identifies this document as the prior decision,
+- states whether it supersedes or narrowly amends this decision,
+- records the new authority location and effective date,
+- documents migration, CI, security, release, and repository-lifecycle consequences,
+- preserves the historical decision trail.
+
+Non-material corrections, such as spelling, broken links, or formatting, may be applied to this document without creating a new authority decision, provided they do not alter its meaning.
+
+Until a later decision gate explicitly supersedes or amends this document, `henter36/nashir/apps/api` remains the sole current Backend/API implementation authority.
+
+---
+
+## 11. Acceptance criteria
 
 - The sole current backend implementation authority is unambiguous: `henter36/nashir/apps/api`.
 - The legacy repository status of `henter36/nashir-backend` is unambiguous: legacy/reference, not authorized for new implementation.
