@@ -11,6 +11,10 @@ import type { AuditRepository } from "./audit/audit-repository.js";
 import type { AuthConfig } from "./auth-config.js";
 import { createAuthGuardHook, type JwksGetKey } from "./auth-guard.js";
 import { createHttpErrorResponse } from "./error-model.js";
+import {
+  parseLocalGrantedPermissionsHeader,
+  type LocalE2eAuthGuardHook
+} from "./local-e2e-auth.js";
 import { evaluatePermissionGuard } from "./permission-guard.js";
 import {
   createWorkspaceContextGuardHook,
@@ -175,6 +179,11 @@ export interface BuildAppOptions extends FastifyServerOptions {
   productRepository?: ProductRepository;
   idempotencyRepository?: IdempotencyRepository;
   auditRepository?: AuditRepository;
+  // Set only by the bootstrap layer when NASHIR_ENABLE_LOCAL_E2E_AUTH is
+  // explicitly authorized (see local-e2e-auth.ts and index.ts). When
+  // present, it fully replaces the real Auth0 guard for this app instance;
+  // it is never consulted as a fallback after a failed Auth0 verification.
+  localE2eAuthGuardHook?: LocalE2eAuthGuardHook | null;
 }
 
 export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
@@ -188,6 +197,7 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
     productRepository,
     idempotencyRepository,
     auditRepository,
+    localE2eAuthGuardHook,
     ...fastifyOpts
   } = opts;
   const app = Fastify({ logger: true, ...fastifyOpts });
@@ -196,15 +206,43 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   app.decorateRequest("verifiedIdentityContext", undefined);
   app.decorateRequest("correlationId", undefined);
 
-  const authGuardHook = authConfig
-    ? createAuthGuardHook({ config: authConfig, getKey: jwksGetKey })
-    : null;
+  const authGuardHook = localE2eAuthGuardHook
+    ? localE2eAuthGuardHook
+    : authConfig
+      ? createAuthGuardHook({ config: authConfig, getKey: jwksGetKey })
+      : null;
 
   let workspaceContextGuardHook = null;
   if (authGuardHook && workspaceMembershipResolver) {
     workspaceContextGuardHook = createWorkspaceContextGuardHook({
       resolveMembership: workspaceMembershipResolver
     });
+
+    // Local E2E mode only: the production workspace-context guard never
+    // attaches grantedPermissions (see workspace-context-guard.ts), so
+    // Product permission enforcement (permission-guard.ts) would otherwise
+    // be untestable locally. This enrichment runs strictly after the base
+    // guard succeeds and is gated entirely behind an explicit
+    // bootstrap-supplied localE2eAuthGuardHook -- it never executes when
+    // local mode is disabled, so production behavior is unchanged.
+    if (localE2eAuthGuardHook) {
+      app.decorateRequest("localE2eAuth", undefined);
+      const baseWorkspaceContextGuardHook = workspaceContextGuardHook;
+      workspaceContextGuardHook = async (
+        request: FastifyRequest,
+        reply: FastifyReply
+      ): Promise<void> => {
+        await baseWorkspaceContextGuardHook(request, reply);
+        if (reply.sent || !request.requestContext) return;
+
+        request.requestContext = {
+          ...request.requestContext,
+          grantedPermissions: parseLocalGrantedPermissionsHeader(
+            request.headers
+          )
+        };
+      };
+    }
   }
 
   if (
