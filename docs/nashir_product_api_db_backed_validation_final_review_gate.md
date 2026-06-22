@@ -2,8 +2,10 @@
 
 | Field | Value |
 |---|---|
+| Gate ID | `NASHIR-PRODUCT-API-DB-VALIDATION-FINAL-2026-06-22` |
 | Gate type | DB-backed validation final review — documentation only |
 | Status date | 2026-06-22 |
+| Roadmap reference | Root `README.md` — current next steps |
 | Scope | Records local PostgreSQL-backed validation evidence for the accepted Product API slice and authorizes progression to one named next gate |
 | Implementation approved | NO |
 | Production/pilot/deployment readiness approved | NO |
@@ -83,6 +85,12 @@ No passwords, secrets, or credentials are recorded in this document.
 | Total tests | 86 passed |
 
 No DB-backed tests were skipped in this run.
+
+The counts above are point-in-time evidence from the validation run performed on
+2026-06-22. Future test-suite additions, removals, renames, or regrouping may
+change the number of test files or tests without invalidating this recorded
+result. Future validation must evaluate the then-current required DB-backed
+suite rather than require these historical counts to remain unchanged.
 
 ---
 
