@@ -32,8 +32,8 @@ Only the existing Product Catalog slice is in scope. No functionality is to be e
 **Frontend:**
 
 - `src/pages/ProductCatalogPage.jsx`
-- Product Catalog API adapter/configuration utilities actually used by that page
-- Existing state/store utilities used by Product Catalog
+- `src/utils/productCatalogApi.js` — Product Catalog API adapter and runtime configuration utilities used by the page.
+- `src/utils/productCatalogStore.js` — Product Catalog normalization, merge, and local-store utilities used by the page.
 
 **Backend:**
 
@@ -264,7 +264,7 @@ Do not record tokens, secrets, passwords, or full sensitive headers.
 
 Verify:
 
-- Canonical `/products` paths only.
+- Canonical `/workspaces/{workspaceId}/products` route family only, including `/workspaces/{workspaceId}/products/{productId}` where applicable.
 - Request/response envelopes match the accepted OpenAPI contract.
 - Product public version type is contract-aligned.
 - `nextCursor` behavior is present and nullable as accepted.
