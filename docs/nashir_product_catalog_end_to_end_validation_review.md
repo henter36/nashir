@@ -125,9 +125,9 @@ These do not resolve to a real Auth0 tenant or JWKS endpoint and cannot be used 
 | 7.f | Unknown workspace/resource | BLOCKED | — | Same as 7.e |
 | 7.g | Malformed identifier | BLOCKED | — | Same as 7.e (request never reaches identifier validation) |
 | 7.h | 500 / unexpected backend response | NOT EXERCISED | — | Not safely reproducible without fault injection, which was out of scope for this run |
-| 9 | Workspace isolation (A cannot see B) | BLOCKED | §9 | Auth boundary (§5); additionally, the local membership shim always returns `"member"` for any actor/workspace pair, so it could not validate isolation even with a token — see §9 |
+| 9 | Workspace isolation (A cannot see B) | BLOCKED | §11 | Auth boundary (§5); additionally, the local membership shim always returns `"member"` for any actor/workspace pair, so it could not validate isolation even with a token — see §11 |
 | 13 (mock/fallback) | No silent mock fallback in backend mode | NOT EXERCISED | — | Requires a running, browser-rendered UI session; no browser automation tool available |
-| 14 (contract) | Flat ErrorModel / canonical paths / no alias | PASS | §7, §11 | — |
+| 14 (contract) | Flat ErrorModel / canonical paths / no alias | PASS | §7, §14 | — |
 
 ---
 
