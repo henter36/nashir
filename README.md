@@ -152,10 +152,10 @@ npm run lint
 - **PR #65** Nashir V1 Scope Decision Review Gate
 
 الخطوات التالية الحالية:
-1. Backend Database CI Implementation Review Gate.
-2. Backend CI Node Runtime Alignment Fix.
-3. Product API DB-backed Coverage Authorization.
-4. Product API Runtime Acceptance Re-Review.
-5. Product Catalog UI integration only after the required backend/runtime acceptance gates.
+1. ~~Backend Database CI Implementation Review Gate.~~ — مكتملة.
+2. ~~Backend CI Node Runtime Alignment Fix.~~ — مكتملة.
+3. ~~Product API DB-backed Coverage Authorization.~~ — مكتملة.
+4. ~~Product API Runtime Acceptance Re-Review.~~ — مكتملة، انظر [Product API DB-Backed Validation Final Review Gate](docs/nashir_product_api_db_backed_validation_final_review_gate.md).
+5. Product Catalog End-to-End Acceptance Gate — الخطوة التالية المصرح بها فقط.
 
 أي توسعة Backend/API/Database أو UI integration يجب أن تمر عبر بوابة صريحة، ولا تُستنتج من وجود `apps/api` وحده.
