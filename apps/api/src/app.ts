@@ -13,6 +13,7 @@ import { createAuthGuardHook, type JwksGetKey } from "./auth-guard.js";
 import { createHttpErrorResponse } from "./error-model.js";
 import {
   parseLocalGrantedPermissionsHeader,
+  runWithLocalE2eMembership,
   type LocalE2eAuthGuardHook
 } from "./local-e2e-auth.js";
 import { evaluatePermissionGuard } from "./permission-guard.js";
@@ -166,6 +167,63 @@ function resolveCorrelationId(headers: FastifyRequest["headers"]): string {
   return randomUUID();
 }
 
+type WorkspaceContextGuardHook = (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => Promise<void>;
+
+// Selects exactly one auth guard at app-build time: the explicit local E2E
+// hook when the bootstrap layer supplied one, otherwise the real Auth0
+// guard when authConfig is present, otherwise none. The two are mutually
+// exclusive by construction -- there is no per-request fallback between
+// them.
+function resolveAuthGuardHook(input: {
+  localE2eAuthGuardHook?: LocalE2eAuthGuardHook | null;
+  authConfig?: AuthConfig;
+  jwksGetKey?: JwksGetKey;
+}): LocalE2eAuthGuardHook | null {
+  if (input.localE2eAuthGuardHook) {
+    return input.localE2eAuthGuardHook;
+  }
+
+  if (input.authConfig) {
+    return createAuthGuardHook({
+      config: input.authConfig,
+      getKey: input.jwksGetKey
+    });
+  }
+
+  return null;
+}
+
+// Local E2E mode only: the production workspace-context guard never
+// attaches grantedPermissions (see workspace-context-guard.ts), so Product
+// permission enforcement (permission-guard.ts) would otherwise be
+// untestable locally. Membership resolution is scoped strictly to the
+// execution of the base guard via runWithLocalE2eMembership(); permission
+// enrichment then runs only after that scoped call completes successfully.
+// This wrapper is only ever installed when localE2eAuthGuardHook is
+// present, so production behavior is unchanged.
+function createLocalE2eWorkspaceContextGuard(
+  baseWorkspaceContextGuardHook: WorkspaceContextGuardHook
+): WorkspaceContextGuardHook {
+  return async function localE2eWorkspaceContextGuard(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> {
+    await runWithLocalE2eMembership(request.headers, async () => {
+      await baseWorkspaceContextGuardHook(request, reply);
+    });
+
+    if (reply.sent || !request.requestContext) return;
+
+    request.requestContext = {
+      ...request.requestContext,
+      grantedPermissions: parseLocalGrantedPermissionsHeader(request.headers)
+    };
+  };
+}
+
 export interface BuildAppOptions extends FastifyServerOptions {
   // Internal-only diagnostic routes (e.g. the workspace route harness) are
   // opt-in and disabled by default so they are never exposed by accident in
@@ -206,42 +264,23 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   app.decorateRequest("verifiedIdentityContext", undefined);
   app.decorateRequest("correlationId", undefined);
 
-  const authGuardHook = localE2eAuthGuardHook
-    ? localE2eAuthGuardHook
-    : authConfig
-      ? createAuthGuardHook({ config: authConfig, getKey: jwksGetKey })
-      : null;
+  const authGuardHook = resolveAuthGuardHook({
+    localE2eAuthGuardHook,
+    authConfig,
+    jwksGetKey
+  });
 
-  let workspaceContextGuardHook = null;
+  let workspaceContextGuardHook: WorkspaceContextGuardHook | null = null;
   if (authGuardHook && workspaceMembershipResolver) {
     workspaceContextGuardHook = createWorkspaceContextGuardHook({
       resolveMembership: workspaceMembershipResolver
     });
 
-    // Local E2E mode only: the production workspace-context guard never
-    // attaches grantedPermissions (see workspace-context-guard.ts), so
-    // Product permission enforcement (permission-guard.ts) would otherwise
-    // be untestable locally. This enrichment runs strictly after the base
-    // guard succeeds and is gated entirely behind an explicit
-    // bootstrap-supplied localE2eAuthGuardHook -- it never executes when
-    // local mode is disabled, so production behavior is unchanged.
     if (localE2eAuthGuardHook) {
       app.decorateRequest("localE2eAuth", undefined);
-      const baseWorkspaceContextGuardHook = workspaceContextGuardHook;
-      workspaceContextGuardHook = async (
-        request: FastifyRequest,
-        reply: FastifyReply
-      ): Promise<void> => {
-        await baseWorkspaceContextGuardHook(request, reply);
-        if (reply.sent || !request.requestContext) return;
-
-        request.requestContext = {
-          ...request.requestContext,
-          grantedPermissions: parseLocalGrantedPermissionsHeader(
-            request.headers
-          )
-        };
-      };
+      workspaceContextGuardHook = createLocalE2eWorkspaceContextGuard(
+        workspaceContextGuardHook
+      );
     }
   }
 

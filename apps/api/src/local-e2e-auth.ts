@@ -193,13 +193,24 @@ export function createLocalE2eAuthGuardHook(): LocalE2eAuthGuardHook {
       },
       "Local E2E validation auth accepted (non-production, explicit opt-in only)."
     );
-
-    const allowedWorkspaceIds = parseLocalWorkspacesHeader(
-      firstHeaderValue(request.headers, LOCAL_WORKSPACES_HEADER)
-    );
-
-    localE2eMembershipStorage.enterWith({ allowedWorkspaceIds });
   };
+}
+
+// Scopes local workspace-membership state strictly to the execution of
+// `callback` via AsyncLocalStorage.run(), rather than mutating the ambient
+// async context for the rest of the request (as `enterWith()` would). The
+// store is guaranteed to be absent again as soon as `callback` settles, so
+// it can never leak into unrelated work scheduled on the same request or
+// bleed across requests.
+export async function runWithLocalE2eMembership<T>(
+  headers: HeadersLike,
+  callback: () => Promise<T>
+): Promise<T> {
+  const allowedWorkspaceIds = parseLocalWorkspacesHeader(
+    firstHeaderValue(headers, LOCAL_WORKSPACES_HEADER)
+  );
+
+  return localE2eMembershipStorage.run({ allowedWorkspaceIds }, callback);
 }
 
 // Workspace-membership resolver used only in local E2E mode. Deliberately

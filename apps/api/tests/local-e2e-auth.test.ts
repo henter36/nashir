@@ -8,13 +8,14 @@ import {
   createLocalE2eAuthGuardHook,
   createLocalE2eWorkspaceMembershipResolver,
   isLocalE2eAuthRequested,
+  runWithLocalE2eMembership,
   LOCAL_ACTOR_ID_HEADER,
   LOCAL_E2E_AUTH_REQUEST_ENV,
   LOCAL_WORKSPACES_HEADER
 } from "../src/local-e2e-auth.js";
+import { expectErrorResponse } from "./helpers/http-assertions.js";
 
 const ROUTE_WORKSPACE_ID = "workspace-route";
-const harnessPath = `/internal/workspace-route-harness/${ROUTE_WORKSPACE_ID}`;
 const GRANTED_PERMISSIONS_HEADER = "x-nashir-granted-permissions";
 
 const apps: FastifyInstance[] = [];
@@ -22,6 +23,10 @@ const apps: FastifyInstance[] = [];
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((app) => app.close()));
 });
+
+function workspaceHarnessPath(workspaceId: string): string {
+  return `/internal/workspace-route-harness/${workspaceId}`;
+}
 
 function localApp(options: Partial<BuildAppOptions> = {}): FastifyInstance {
   const app = buildApp({
@@ -33,6 +38,36 @@ function localApp(options: Partial<BuildAppOptions> = {}): FastifyInstance {
   });
   apps.push(app);
   return app;
+}
+
+// Injects a GET against the workspace-route harness with the given local
+// E2E headers. `actorId`/`workspaces` are omitted entirely when undefined,
+// so callers can exercise the "header absent" boundary precisely.
+function injectLocalHarness(
+  app: FastifyInstance,
+  params: {
+    workspaceId?: string;
+    actorId?: string;
+    workspaces?: string;
+    extraHeaders?: Record<string, string>;
+  } = {}
+): Promise<Awaited<ReturnType<FastifyInstance["inject"]>>> {
+  const {
+    workspaceId = ROUTE_WORKSPACE_ID,
+    actorId,
+    workspaces,
+    extraHeaders = {}
+  } = params;
+
+  const headers: Record<string, string> = { ...extraHeaders };
+  if (actorId !== undefined) headers[LOCAL_ACTOR_ID_HEADER] = actorId;
+  if (workspaces !== undefined) headers[LOCAL_WORKSPACES_HEADER] = workspaces;
+
+  return app.inject({
+    method: "GET",
+    url: workspaceHarnessPath(workspaceId),
+    headers
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -90,12 +125,9 @@ describe("assertLocalE2eAuthProductionSafe", () => {
 // ---------------------------------------------------------------------------
 
 describe("default mode (local E2E auth disabled)", () => {
-  const issuer = "https://default-mode-auth.example.com/";
-  const audience = "https://default-mode-api.example.com";
-
   const authConfig: AuthConfig = {
-    AUTH0_ISSUER_URL: issuer,
-    AUTH0_AUDIENCE: audience,
+    AUTH0_ISSUER_URL: "https://default-mode-auth.example.com/",
+    AUTH0_AUDIENCE: "https://default-mode-api.example.com",
     JWKS_CACHE_TTL_SECONDS: 600,
     JWKS_REFRESH_COOLDOWN_SECONDS: 30,
     TOKEN_LEEWAY_SECONDS: 0
@@ -113,47 +145,33 @@ describe("default mode (local E2E auth disabled)", () => {
   }
 
   it("still requires a real Authorization Bearer token (no localE2eAuthGuardHook wired)", async () => {
-    const app = defaultApp();
+    const res = await defaultApp().inject({
+      method: "GET",
+      url: workspaceHarnessPath(ROUTE_WORKSPACE_ID)
+    });
 
-    const res = await app.inject({ method: "GET", url: harnessPath });
-
-    expect(res.statusCode).toBe(401);
-    expect(res.json().errorCode).toBe("permission.denied");
+    expectErrorResponse(res, 401, "permission.denied");
   });
 
   it("ignores local headers entirely when local mode is disabled", async () => {
-    const app = defaultApp();
-
-    const res = await app.inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "local-actor-1",
-        [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID
-      }
+    const res = await injectLocalHarness(defaultApp(), {
+      actorId: "local-actor-1",
+      workspaces: ROUTE_WORKSPACE_ID
     });
 
     // No Authorization header was sent -- local headers must not substitute
     // for it. Same 401 as the case above with no headers at all.
-    expect(res.statusCode).toBe(401);
-    expect(res.json().errorCode).toBe("permission.denied");
+    expectErrorResponse(res, 401, "permission.denied");
   });
 
   it("never falls back to local mode after a real Auth0 verification failure", async () => {
-    const app = defaultApp();
-
-    const res = await app.inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        authorization: "Bearer not-a-valid-jwt",
-        [LOCAL_ACTOR_ID_HEADER]: "local-actor-1",
-        [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID
-      }
+    const res = await injectLocalHarness(defaultApp(), {
+      actorId: "local-actor-1",
+      workspaces: ROUTE_WORKSPACE_ID,
+      extraHeaders: { authorization: "Bearer not-a-valid-jwt" }
     });
 
-    expect(res.statusCode).toBe(401);
-    expect(res.json().errorCode).toBe("permission.denied");
+    expectErrorResponse(res, 401, "permission.denied");
   });
 });
 
@@ -163,55 +181,38 @@ describe("default mode (local E2E auth disabled)", () => {
 
 describe("createLocalE2eAuthGuardHook — actor identity boundary", () => {
   it("rejects a request with no local actor header", async () => {
-    const res = await localApp().inject({
-      method: "GET",
-      url: harnessPath,
-      headers: { [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID }
+    const res = await injectLocalHarness(localApp(), {
+      workspaces: ROUTE_WORKSPACE_ID
     });
 
-    expect(res.statusCode).toBe(401);
-    expect(res.json().errorCode).toBe("permission.denied");
+    expectErrorResponse(res, 401, "permission.denied");
   });
 
   it("rejects a blank local actor header", async () => {
-    const res = await localApp().inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "   ",
-        [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID
-      }
+    const res = await injectLocalHarness(localApp(), {
+      actorId: "   ",
+      workspaces: ROUTE_WORKSPACE_ID
     });
 
-    expect(res.statusCode).toBe(401);
-    expect(res.json().errorCode).toBe("permission.denied");
+    expectErrorResponse(res, 401, "permission.denied");
   });
 
   it.each(["has space", "weird/chars!", "semi;colon"])(
     "rejects a malformed local actor header: %s",
     async (actorId) => {
-      const res = await localApp().inject({
-        method: "GET",
-        url: harnessPath,
-        headers: {
-          [LOCAL_ACTOR_ID_HEADER]: actorId,
-          [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID
-        }
+      const res = await injectLocalHarness(localApp(), {
+        actorId,
+        workspaces: ROUTE_WORKSPACE_ID
       });
 
-      expect(res.statusCode).toBe(401);
-      expect(res.json().errorCode).toBe("permission.denied");
+      expectErrorResponse(res, 401, "permission.denied");
     }
   );
 
   it("accepts a well-formed local actor header and binds it as verified identity", async () => {
-    const res = await localApp().inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "local-actor-1",
-        [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID
-      }
+    const res = await injectLocalHarness(localApp(), {
+      actorId: "local-actor-1",
+      workspaces: ROUTE_WORKSPACE_ID
     });
 
     expect(res.statusCode).toBe(200);
@@ -229,38 +230,26 @@ describe("createLocalE2eAuthGuardHook — actor identity boundary", () => {
 
 describe("createLocalE2eWorkspaceMembershipResolver — workspace membership", () => {
   it("rejects when workspace-membership configuration is entirely missing", async () => {
-    const res = await localApp().inject({
-      method: "GET",
-      url: harnessPath,
-      headers: { [LOCAL_ACTOR_ID_HEADER]: "local-actor-1" }
+    const res = await injectLocalHarness(localApp(), {
+      actorId: "local-actor-1"
     });
 
-    expect(res.statusCode).toBe(503);
-    expect(res.json().errorCode).toBe("service.unavailable");
+    expectErrorResponse(res, 503, "service.unavailable");
   });
 
   it("rejects when the local-workspaces header is blank", async () => {
-    const res = await localApp().inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "local-actor-1",
-        [LOCAL_WORKSPACES_HEADER]: "   "
-      }
+    const res = await injectLocalHarness(localApp(), {
+      actorId: "local-actor-1",
+      workspaces: "   "
     });
 
-    expect(res.statusCode).toBe(503);
-    expect(res.json().errorCode).toBe("service.unavailable");
+    expectErrorResponse(res, 503, "service.unavailable");
   });
 
   it("allows membership when the route workspace is in the configured set (workspace A)", async () => {
-    const res = await localApp().inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "local-actor-1",
-        [LOCAL_WORKSPACES_HEADER]: `${ROUTE_WORKSPACE_ID},workspace-b`
-      }
+    const res = await injectLocalHarness(localApp(), {
+      actorId: "local-actor-1",
+      workspaces: `${ROUTE_WORKSPACE_ID},workspace-b`
     });
 
     expect(res.statusCode).toBe(200);
@@ -268,42 +257,30 @@ describe("createLocalE2eWorkspaceMembershipResolver — workspace membership", (
   });
 
   it("denies membership with a non-disclosing 404 when the route workspace is not configured (workspace B)", async () => {
-    const res = await localApp().inject({
-      method: "GET",
-      url: "/internal/workspace-route-harness/workspace-b",
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "local-actor-1",
-        // Configured for workspace A only -- workspace B must be denied.
-        [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID
-      }
+    const res = await injectLocalHarness(localApp(), {
+      workspaceId: "workspace-b",
+      actorId: "local-actor-1",
+      // Configured for workspace A only -- workspace B must be denied.
+      workspaces: ROUTE_WORKSPACE_ID
     });
 
-    expect(res.statusCode).toBe(404);
-    expect(res.json().errorCode).toBe("workspace.not_found");
+    expectErrorResponse(res, 404, "workspace.not_found");
   });
 
   it("does not use an unconditional member result -- two different actors get independent outcomes", async () => {
     const app = localApp();
 
-    const allowed = await app.inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "actor-a",
-        [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID
-      }
+    const allowed = await injectLocalHarness(app, {
+      actorId: "actor-a",
+      workspaces: ROUTE_WORKSPACE_ID
     });
     expect(allowed.statusCode).toBe(200);
 
-    const denied = await app.inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "actor-b",
-        [LOCAL_WORKSPACES_HEADER]: "workspace-b"
-      }
+    const denied = await injectLocalHarness(app, {
+      actorId: "actor-b",
+      workspaces: "workspace-b"
     });
-    expect(denied.statusCode).toBe(404);
+    expectErrorResponse(denied, 404, "workspace.not_found");
   });
 });
 
@@ -313,16 +290,10 @@ describe("createLocalE2eWorkspaceMembershipResolver — workspace membership", (
 
 describe("local E2E granted-permissions enrichment", () => {
   it("reads granted permissions from the existing x-nashir-granted-permissions header", async () => {
-    const app = localApp();
-
-    const res = await app.inject({
-      method: "GET",
-      url: harnessPath,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: "local-actor-1",
-        [LOCAL_WORKSPACES_HEADER]: ROUTE_WORKSPACE_ID,
-        [GRANTED_PERMISSIONS_HEADER]: "nashir.products.read"
-      }
+    const res = await injectLocalHarness(localApp(), {
+      actorId: "local-actor-1",
+      workspaces: ROUTE_WORKSPACE_ID,
+      extraHeaders: { [GRANTED_PERMISSIONS_HEADER]: "nashir.products.read" }
     });
 
     expect(res.statusCode).toBe(200);
@@ -338,6 +309,45 @@ describe("local E2E granted-permissions enrichment", () => {
 });
 
 // ---------------------------------------------------------------------------
+// runWithLocalE2eMembership scoping — proves the migration from
+// AsyncLocalStorage.enterWith() to .run() actually scopes membership state
+// to the callback, rather than leaving it set for the rest of the request
+// or leaking it to unrelated calls.
+// ---------------------------------------------------------------------------
+
+describe("runWithLocalE2eMembership — scoping", () => {
+  it("reports unavailable when the resolver is invoked outside any runWithLocalE2eMembership scope", () => {
+    const resolver = createLocalE2eWorkspaceMembershipResolver();
+
+    expect(
+      resolver({ actorId: "actor-x", workspaceId: "workspace-a" })
+    ).toEqual({ outcome: "unavailable" });
+  });
+
+  it("scopes membership strictly to the run() callback and clears it once the callback settles", async () => {
+    const resolver = createLocalE2eWorkspaceMembershipResolver();
+
+    await runWithLocalE2eMembership(
+      { [LOCAL_WORKSPACES_HEADER]: "workspace-a" },
+      async () => {
+        expect(
+          resolver({ actorId: "actor-x", workspaceId: "workspace-a" })
+        ).toEqual({ outcome: "member" });
+        expect(
+          resolver({ actorId: "actor-x", workspaceId: "workspace-b" })
+        ).toEqual({ outcome: "not_member" });
+      }
+    );
+
+    // Outside the scoped callback, the store must not still report the
+    // membership decided inside it.
+    expect(
+      resolver({ actorId: "actor-x", workspaceId: "workspace-a" })
+    ).toEqual({ outcome: "unavailable" });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Concurrency isolation — the local membership resolver threads per-request
 // state through AsyncLocalStorage (see local-e2e-auth.ts), not a shared
 // module-level variable. A single shared app instance handling many
@@ -348,49 +358,38 @@ describe("local E2E granted-permissions enrichment", () => {
 describe("local E2E workspace membership — concurrency isolation", () => {
   const CONCURRENT_PAIRS = 30;
 
-  function workspaceHarnessPath(workspaceId: string): string {
-    return `/internal/workspace-route-harness/${workspaceId}`;
+  function concurrentPairs<T>(
+    build: (i: number, actorA: string, actorB: string) => [T, T]
+  ): T[] {
+    return Array.from({ length: CONCURRENT_PAIRS }, (_, i) => i).flatMap(
+      (i) => build(i, `actor-a-${i}`, `actor-b-${i}`)
+    );
   }
 
   it("does not leak actor/workspace context between concurrent allowed requests", async () => {
     const app = localApp();
 
     const results = await Promise.all(
-      Array.from({ length: CONCURRENT_PAIRS }, (_, i) => i).flatMap((i) => {
-        const actorA = `actor-a-${i}`;
-        const actorB = `actor-b-${i}`;
-
-        return [
-          app
-            .inject({
-              method: "GET",
-              url: workspaceHarnessPath("workspace-a"),
-              headers: {
-                [LOCAL_ACTOR_ID_HEADER]: actorA,
-                [LOCAL_WORKSPACES_HEADER]: "workspace-a"
-              }
-            })
-            .then((res) => ({
-              expectedActorId: actorA,
-              expectedWorkspaceId: "workspace-a",
-              res
-            })),
-          app
-            .inject({
-              method: "GET",
-              url: workspaceHarnessPath("workspace-b"),
-              headers: {
-                [LOCAL_ACTOR_ID_HEADER]: actorB,
-                [LOCAL_WORKSPACES_HEADER]: "workspace-b"
-              }
-            })
-            .then((res) => ({
-              expectedActorId: actorB,
-              expectedWorkspaceId: "workspace-b",
-              res
-            }))
-        ];
-      })
+      concurrentPairs((_i, actorA, actorB) => [
+        injectLocalHarness(app, {
+          workspaceId: "workspace-a",
+          actorId: actorA,
+          workspaces: "workspace-a"
+        }).then((res) => ({
+          expectedActorId: actorA,
+          expectedWorkspaceId: "workspace-a",
+          res
+        })),
+        injectLocalHarness(app, {
+          workspaceId: "workspace-b",
+          actorId: actorB,
+          workspaces: "workspace-b"
+        }).then((res) => ({
+          expectedActorId: actorB,
+          expectedWorkspaceId: "workspace-b",
+          res
+        }))
+      ])
     );
 
     for (const { expectedActorId, expectedWorkspaceId, res } of results) {
@@ -406,36 +405,24 @@ describe("local E2E workspace membership — concurrency isolation", () => {
     const app = localApp();
 
     const results = await Promise.all(
-      Array.from({ length: CONCURRENT_PAIRS }, (_, i) => i).flatMap((i) => {
-        const actorA = `actor-a-${i}`;
-        const actorB = `actor-b-${i}`;
-
-        return [
-          // actorA is only a member of workspace-a, but requests workspace-b.
-          app.inject({
-            method: "GET",
-            url: workspaceHarnessPath("workspace-b"),
-            headers: {
-              [LOCAL_ACTOR_ID_HEADER]: actorA,
-              [LOCAL_WORKSPACES_HEADER]: "workspace-a"
-            }
-          }),
-          // actorB is only a member of workspace-b, but requests workspace-a.
-          app.inject({
-            method: "GET",
-            url: workspaceHarnessPath("workspace-a"),
-            headers: {
-              [LOCAL_ACTOR_ID_HEADER]: actorB,
-              [LOCAL_WORKSPACES_HEADER]: "workspace-b"
-            }
-          })
-        ];
-      })
+      concurrentPairs((_i, actorA, actorB) => [
+        // actorA is only a member of workspace-a, but requests workspace-b.
+        injectLocalHarness(app, {
+          workspaceId: "workspace-b",
+          actorId: actorA,
+          workspaces: "workspace-a"
+        }),
+        // actorB is only a member of workspace-b, but requests workspace-a.
+        injectLocalHarness(app, {
+          workspaceId: "workspace-a",
+          actorId: actorB,
+          workspaces: "workspace-b"
+        })
+      ])
     );
 
     for (const res of results) {
-      expect(res.statusCode).toBe(404);
-      expect(res.json().errorCode).toBe("workspace.not_found");
+      expectErrorResponse(res, 404, "workspace.not_found");
     }
   });
 });

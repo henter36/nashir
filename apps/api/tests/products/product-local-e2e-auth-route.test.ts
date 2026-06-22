@@ -13,6 +13,7 @@ import {
 } from "../../src/local-e2e-auth.js";
 import { IdempotencyRepository } from "../../src/idempotency/idempotency-repository.js";
 import { ProductRepository } from "../../src/products/product-repository.js";
+import { expectErrorResponse } from "../helpers/http-assertions.js";
 import {
   getRequiredTestDatabaseUrl,
   resetDatabase,
@@ -118,24 +119,22 @@ describeDb("Product routes — local E2E auth mode", () => {
       method: "GET",
       url: `/workspaces/${WORKSPACE_A}/products?limit=10`
     });
-    expect(response.statusCode).toBe(401);
-    expect(response.json().errorCode).toBe("permission.denied");
+    expectErrorResponse(response, 401, "permission.denied");
   });
 
   it("rejects with 503 when no local workspace-membership configuration is supplied", async () => {
     const app = buildLocalE2eApp();
-    const { response, body } = await localInject(app, {
+    const { response } = await localInject(app, {
       method: "GET",
       url: `/workspaces/${WORKSPACE_A}/products?limit=10`,
       headers: { [LOCAL_WORKSPACES_HEADER]: "" }
     });
-    expect(response.statusCode).toBe(503);
-    expect(body.errorCode).toBe("service.unavailable");
+    expectErrorResponse(response, 503, "service.unavailable");
   });
 
   it("returns 403 when nashir.products.manage is missing from local granted permissions", async () => {
     const app = buildLocalE2eApp();
-    const { response, body } = await localInject(app, {
+    const { response } = await localInject(app, {
       method: "POST",
       url: `/workspaces/${WORKSPACE_A}/products`,
       permissions: PERM_READ,
@@ -145,8 +144,7 @@ describeDb("Product routes — local E2E auth mode", () => {
       },
       payload: JSON.stringify({ name: "Should Be Forbidden" })
     });
-    expect(response.statusCode).toBe(403);
-    expect(body.errorCode).toBe("permission.denied");
+    expectErrorResponse(response, 403, "permission.denied");
   });
 
   it("creates a product end-to-end with one audit event, scoped to the allowed workspace", async () => {
@@ -222,27 +220,25 @@ describeDb("Product routes — local E2E auth mode", () => {
     // (see "returns 404 when product belongs to a different workspace" in
     // product-route-handler.test.ts) -- never as a distinguishable
     // workspace-membership error that would leak its existence.
-    const { response, body } = await localInject(app, {
+    const { response } = await localInject(app, {
       method: "GET",
       url: `/workspaces/${WORKSPACE_B}/products/${created.productId}`,
       allowedWorkspaces: WORKSPACE_B
     });
 
-    expect(response.statusCode).toBe(404);
-    expect(body.errorCode).toBe("resource.not_found");
+    expectErrorResponse(response, 404, "resource.not_found");
   });
 
   it("denies membership entirely when the actor's local-workspaces configuration excludes the requested workspace", async () => {
     const app = buildLocalE2eApp();
 
-    const { response, body } = await localInject(app, {
+    const { response } = await localInject(app, {
       method: "GET",
       url: `/workspaces/${WORKSPACE_B}/products?limit=10`,
       allowedWorkspaces: WORKSPACE_A
     });
 
-    expect(response.statusCode).toBe(404);
-    expect(body.errorCode).toBe("workspace.not_found");
+    expectErrorResponse(response, 404, "workspace.not_found");
   });
 
   it("allows read and returns the product when the local actor is configured as a member", async () => {
@@ -347,7 +343,6 @@ describeDb("Product routes — default mode unaffected by local E2E auth module"
       }
     });
 
-    expect(response.statusCode).toBe(401);
-    expect(response.json().errorCode).toBe("permission.denied");
+    expectErrorResponse(response, 401, "permission.denied");
   });
 });
