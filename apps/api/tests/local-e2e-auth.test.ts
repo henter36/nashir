@@ -336,3 +336,106 @@ describe("local E2E granted-permissions enrichment", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Concurrency isolation — the local membership resolver threads per-request
+// state through AsyncLocalStorage (see local-e2e-auth.ts), not a shared
+// module-level variable. A single shared app instance handling many
+// concurrent requests for different actors/workspaces must never let one
+// request's context leak into another's response.
+// ---------------------------------------------------------------------------
+
+describe("local E2E workspace membership — concurrency isolation", () => {
+  const CONCURRENT_PAIRS = 30;
+
+  function workspaceHarnessPath(workspaceId: string): string {
+    return `/internal/workspace-route-harness/${workspaceId}`;
+  }
+
+  it("does not leak actor/workspace context between concurrent allowed requests", async () => {
+    const app = localApp();
+
+    const results = await Promise.all(
+      Array.from({ length: CONCURRENT_PAIRS }, (_, i) => i).flatMap((i) => {
+        const actorA = `actor-a-${i}`;
+        const actorB = `actor-b-${i}`;
+
+        return [
+          app
+            .inject({
+              method: "GET",
+              url: workspaceHarnessPath("workspace-a"),
+              headers: {
+                [LOCAL_ACTOR_ID_HEADER]: actorA,
+                [LOCAL_WORKSPACES_HEADER]: "workspace-a"
+              }
+            })
+            .then((res) => ({
+              expectedActorId: actorA,
+              expectedWorkspaceId: "workspace-a",
+              res
+            })),
+          app
+            .inject({
+              method: "GET",
+              url: workspaceHarnessPath("workspace-b"),
+              headers: {
+                [LOCAL_ACTOR_ID_HEADER]: actorB,
+                [LOCAL_WORKSPACES_HEADER]: "workspace-b"
+              }
+            })
+            .then((res) => ({
+              expectedActorId: actorB,
+              expectedWorkspaceId: "workspace-b",
+              res
+            }))
+        ];
+      })
+    );
+
+    for (const { expectedActorId, expectedWorkspaceId, res } of results) {
+      expect(res.statusCode).toBe(200);
+      expect(res.json().requestContext).toEqual({
+        workspaceId: expectedWorkspaceId,
+        actorId: expectedActorId
+      });
+    }
+  });
+
+  it("does not leak denial state between concurrent cross-workspace requests (non-disclosing 404 preserved per actor)", async () => {
+    const app = localApp();
+
+    const results = await Promise.all(
+      Array.from({ length: CONCURRENT_PAIRS }, (_, i) => i).flatMap((i) => {
+        const actorA = `actor-a-${i}`;
+        const actorB = `actor-b-${i}`;
+
+        return [
+          // actorA is only a member of workspace-a, but requests workspace-b.
+          app.inject({
+            method: "GET",
+            url: workspaceHarnessPath("workspace-b"),
+            headers: {
+              [LOCAL_ACTOR_ID_HEADER]: actorA,
+              [LOCAL_WORKSPACES_HEADER]: "workspace-a"
+            }
+          }),
+          // actorB is only a member of workspace-b, but requests workspace-a.
+          app.inject({
+            method: "GET",
+            url: workspaceHarnessPath("workspace-a"),
+            headers: {
+              [LOCAL_ACTOR_ID_HEADER]: actorB,
+              [LOCAL_WORKSPACES_HEADER]: "workspace-b"
+            }
+          })
+        ];
+      })
+    );
+
+    for (const res of results) {
+      expect(res.statusCode).toBe(404);
+      expect(res.json().errorCode).toBe("workspace.not_found");
+    }
+  });
+});

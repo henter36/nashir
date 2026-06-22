@@ -142,6 +142,5 @@ The new local E2E auth tests live in:
 
 - `apps/api/tests/local-e2e-auth.test.ts` (no database required)
 - `apps/api/tests/products/product-local-e2e-auth-route.test.ts`
-  (database-backed; requires `TEST_DATABASE_URL`, run directly via
-  `pnpm exec vitest run tests/products/product-local-e2e-auth-route.test.ts`
-  since it is not yet wired into the `test:db` npm script)
+  (database-backed; requires `TEST_DATABASE_URL` and is included in
+  `pnpm run test:db`)
