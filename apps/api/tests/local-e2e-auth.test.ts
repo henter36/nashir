@@ -361,8 +361,8 @@ describe("local E2E workspace membership — concurrency isolation", () => {
   function concurrentPairs<T>(
     build: (i: number, actorA: string, actorB: string) => [T, T]
   ): T[] {
-    return Array.from({ length: CONCURRENT_PAIRS }, (_, i) => i).flatMap(
-      (i) => build(i, `actor-a-${i}`, `actor-b-${i}`)
+    return Array.from({ length: CONCURRENT_PAIRS }, (_, i) => i).flatMap((i) =>
+      build(i, `actor-a-${i}`, `actor-b-${i}`)
     );
   }
 

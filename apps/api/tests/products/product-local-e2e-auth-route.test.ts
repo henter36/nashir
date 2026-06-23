@@ -298,51 +298,54 @@ describeDb("Product routes — local E2E auth mode", () => {
   });
 });
 
-describeDb("Product routes — default mode unaffected by local E2E auth module", () => {
-  let pool: pg.Pool;
-  let productRepository: ProductRepository;
-  let idempotencyRepository: IdempotencyRepository;
-  let auditRepository: AuditRepository;
-  const openApps: FastifyInstance[] = [];
+describeDb(
+  "Product routes — default mode unaffected by local E2E auth module",
+  () => {
+    let pool: pg.Pool;
+    let productRepository: ProductRepository;
+    let idempotencyRepository: IdempotencyRepository;
+    let auditRepository: AuditRepository;
+    const openApps: FastifyInstance[] = [];
 
-  beforeAll(async () => {
-    const databaseUrl = getRequiredTestDatabaseUrl(
-      "default-mode regression check"
-    );
-    pool = new Pool({ connectionString: databaseUrl });
-    await resetDatabase(pool);
-    runMigrationsForTestDatabase(databaseUrl);
+    beforeAll(async () => {
+      const databaseUrl = getRequiredTestDatabaseUrl(
+        "default-mode regression check"
+      );
+      pool = new Pool({ connectionString: databaseUrl });
+      await resetDatabase(pool);
+      runMigrationsForTestDatabase(databaseUrl);
 
-    productRepository = new ProductRepository(pool);
-    idempotencyRepository = new IdempotencyRepository(pool);
-    auditRepository = new AuditRepository(pool);
-  });
-
-  afterAll(async () => {
-    await resetDatabase(pool);
-    await pool.end();
-    await Promise.all(openApps.splice(0).map((app) => app.close()));
-  });
-
-  it("still returns 401 for Product routes when neither authConfig nor localE2eAuthGuardHook is provided", async () => {
-    const app = buildApp({
-      logger: false,
-      enableTransitionalRequestContextHeaders: false,
-      productRepository,
-      idempotencyRepository,
-      auditRepository
-    });
-    openApps.push(app);
-
-    const response = await app.inject({
-      method: "GET",
-      url: `/workspaces/${WORKSPACE_A}/products?limit=10`,
-      headers: {
-        [LOCAL_ACTOR_ID_HEADER]: LOCAL_ACTOR,
-        [LOCAL_WORKSPACES_HEADER]: WORKSPACE_A
-      }
+      productRepository = new ProductRepository(pool);
+      idempotencyRepository = new IdempotencyRepository(pool);
+      auditRepository = new AuditRepository(pool);
     });
 
-    expectErrorResponse(response, 401, "permission.denied");
-  });
-});
+    afterAll(async () => {
+      await resetDatabase(pool);
+      await pool.end();
+      await Promise.all(openApps.splice(0).map((app) => app.close()));
+    });
+
+    it("still returns 401 for Product routes when neither authConfig nor localE2eAuthGuardHook is provided", async () => {
+      const app = buildApp({
+        logger: false,
+        enableTransitionalRequestContextHeaders: false,
+        productRepository,
+        idempotencyRepository,
+        auditRepository
+      });
+      openApps.push(app);
+
+      const response = await app.inject({
+        method: "GET",
+        url: `/workspaces/${WORKSPACE_A}/products?limit=10`,
+        headers: {
+          [LOCAL_ACTOR_ID_HEADER]: LOCAL_ACTOR,
+          [LOCAL_WORKSPACES_HEADER]: WORKSPACE_A
+        }
+      });
+
+      expectErrorResponse(response, 401, "permission.denied");
+    });
+  }
+);
