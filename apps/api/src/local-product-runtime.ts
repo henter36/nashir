@@ -30,9 +30,16 @@ export interface LocalProductRuntimeDependencies {
 
 interface CreateLocalProductRuntimeDependenciesOptions {
   env?: LocalProductRuntimeEnv;
+  // Overrides the unconditional-member shim below. The only intended caller
+  // is the local E2E auth bootstrap path (see local-e2e-auth.ts and
+  // index.ts), which must not rely on an unconditional "member" outcome.
+  // Defaults to the unconditional shim, so default behavior is unchanged.
+  workspaceMembershipResolver?: WorkspaceMembershipResolver;
 }
 
-function isLocalProductRuntimeRequested(env: LocalProductRuntimeEnv): boolean {
+export function isLocalProductRuntimeRequested(
+  env: LocalProductRuntimeEnv
+): boolean {
   const rawValue = (env[LOCAL_PRODUCT_RUNTIME_REQUEST_ENV] ?? "")
     .trim()
     .toLowerCase();
@@ -83,7 +90,9 @@ export function createLocalProductRuntimeDependencies(
       productRepository: new ProductRepository(pool),
       idempotencyRepository: new IdempotencyRepository(pool),
       auditRepository: new AuditRepository(pool),
-      workspaceMembershipResolver: localDevOnlyWorkspaceMembershipResolver
+      workspaceMembershipResolver:
+        options.workspaceMembershipResolver ??
+        localDevOnlyWorkspaceMembershipResolver
     },
     close: () => pool.end()
   };

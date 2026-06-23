@@ -11,6 +11,11 @@ import type { AuditRepository } from "./audit/audit-repository.js";
 import type { AuthConfig } from "./auth-config.js";
 import { createAuthGuardHook, type JwksGetKey } from "./auth-guard.js";
 import { createHttpErrorResponse } from "./error-model.js";
+import {
+  parseLocalGrantedPermissionsHeader,
+  runWithLocalE2eMembership,
+  type LocalE2eAuthGuardHook
+} from "./local-e2e-auth.js";
 import { evaluatePermissionGuard } from "./permission-guard.js";
 import {
   createWorkspaceContextGuardHook,
@@ -162,6 +167,63 @@ function resolveCorrelationId(headers: FastifyRequest["headers"]): string {
   return randomUUID();
 }
 
+type WorkspaceContextGuardHook = (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => Promise<void>;
+
+// Selects exactly one auth guard at app-build time: the explicit local E2E
+// hook when the bootstrap layer supplied one, otherwise the real Auth0
+// guard when authConfig is present, otherwise none. The two are mutually
+// exclusive by construction -- there is no per-request fallback between
+// them.
+function resolveAuthGuardHook(input: {
+  localE2eAuthGuardHook?: LocalE2eAuthGuardHook | null;
+  authConfig?: AuthConfig;
+  jwksGetKey?: JwksGetKey;
+}): LocalE2eAuthGuardHook | null {
+  if (input.localE2eAuthGuardHook) {
+    return input.localE2eAuthGuardHook;
+  }
+
+  if (input.authConfig) {
+    return createAuthGuardHook({
+      config: input.authConfig,
+      getKey: input.jwksGetKey
+    });
+  }
+
+  return null;
+}
+
+// Local E2E mode only: the production workspace-context guard never
+// attaches grantedPermissions (see workspace-context-guard.ts), so Product
+// permission enforcement (permission-guard.ts) would otherwise be
+// untestable locally. Membership resolution is scoped strictly to the
+// execution of the base guard via runWithLocalE2eMembership(); permission
+// enrichment then runs only after that scoped call completes successfully.
+// This wrapper is only ever installed when localE2eAuthGuardHook is
+// present, so production behavior is unchanged.
+function createLocalE2eWorkspaceContextGuard(
+  baseWorkspaceContextGuardHook: WorkspaceContextGuardHook
+): WorkspaceContextGuardHook {
+  return async function localE2eWorkspaceContextGuard(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> {
+    await runWithLocalE2eMembership(request.headers, async () => {
+      await baseWorkspaceContextGuardHook(request, reply);
+    });
+
+    if (reply.sent || !request.requestContext) return;
+
+    request.requestContext = {
+      ...request.requestContext,
+      grantedPermissions: parseLocalGrantedPermissionsHeader(request.headers)
+    };
+  };
+}
+
 export interface BuildAppOptions extends FastifyServerOptions {
   // Internal-only diagnostic routes (e.g. the workspace route harness) are
   // opt-in and disabled by default so they are never exposed by accident in
@@ -175,6 +237,11 @@ export interface BuildAppOptions extends FastifyServerOptions {
   productRepository?: ProductRepository;
   idempotencyRepository?: IdempotencyRepository;
   auditRepository?: AuditRepository;
+  // Set only by the bootstrap layer when NASHIR_ENABLE_LOCAL_E2E_AUTH is
+  // explicitly authorized (see local-e2e-auth.ts and index.ts). When
+  // present, it fully replaces the real Auth0 guard for this app instance;
+  // it is never consulted as a fallback after a failed Auth0 verification.
+  localE2eAuthGuardHook?: LocalE2eAuthGuardHook | null;
 }
 
 export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
@@ -188,6 +255,7 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
     productRepository,
     idempotencyRepository,
     auditRepository,
+    localE2eAuthGuardHook,
     ...fastifyOpts
   } = opts;
   const app = Fastify({ logger: true, ...fastifyOpts });
@@ -196,15 +264,24 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
   app.decorateRequest("verifiedIdentityContext", undefined);
   app.decorateRequest("correlationId", undefined);
 
-  const authGuardHook = authConfig
-    ? createAuthGuardHook({ config: authConfig, getKey: jwksGetKey })
-    : null;
+  const authGuardHook = resolveAuthGuardHook({
+    localE2eAuthGuardHook,
+    authConfig,
+    jwksGetKey
+  });
 
-  let workspaceContextGuardHook = null;
+  let workspaceContextGuardHook: WorkspaceContextGuardHook | null = null;
   if (authGuardHook && workspaceMembershipResolver) {
     workspaceContextGuardHook = createWorkspaceContextGuardHook({
       resolveMembership: workspaceMembershipResolver
     });
+
+    if (localE2eAuthGuardHook) {
+      app.decorateRequest("localE2eAuth", undefined);
+      workspaceContextGuardHook = createLocalE2eWorkspaceContextGuard(
+        workspaceContextGuardHook
+      );
+    }
   }
 
   if (

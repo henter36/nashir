@@ -68,6 +68,8 @@ function mapErrorCode(input: CreateErrorModelInput): string {
     INVALID_TOKEN: "permission.denied",
     INVALID_WORKSPACE_ID: "validation.failed",
     JWKS_UNAVAILABLE: "service.unavailable",
+    LOCAL_ACTOR_CONTEXT_INVALID: "permission.denied",
+    LOCAL_ACTOR_CONTEXT_REQUIRED: "permission.denied",
     MISSING_AUTHORIZATION_TOKEN: "permission.denied",
     NOT_FOUND: "resource.not_found",
     REQUEST_CONTEXT_REQUIRED: "permission.denied",
